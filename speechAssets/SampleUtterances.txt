@@ -1,0 +1,47 @@
+DialogSmartDoorIntent {WhichDoor}
+DialogSmartDoorIntent {LockOperation}
+DialogSmartDoorIntent {UnlockOperation}
+
+OneshotLockIntent {LockOperation} the {WhichDoor}
+OneshotLockIntent {LockOperation} {WhichDoor}
+OneshotLockIntent {LockOperation} {AllDoors}
+
+OneshotUnlockIntent {UnlockOperation} the {WhichDoor}
+OneshotUnlockIntent {UnlockOperation} {WhichDoor}
+
+OneshotStatusIntent what is the status of {WhichDoor}
+OneshotStatusIntent what is the status of the {WhichDoor}
+OneshotStatusIntent what is the status of {AllDoors}
+OneshotStatusIntent what's the status of {WhichDoor}
+OneshotStatusIntent what's the status of the {WhichDoor}
+OneshotStatusIntent what's the status of {AllDoors}
+OneshotStatusIntent status of {WhichDoor}
+OneshotStatusIntent status of the {WhichDoor}
+OneshotStatusIntent status of {AllDoors}
+OneshotStatusIntent status {WhichDoor}
+OneshotStatusIntent status {AllDoors}
+OneshotStatusIntent status
+OneshotStatusIntent tell me about {WhichDoor}
+OneshotStatusIntent tell me about the {WhichDoor}
+OneshotStatusIntent tell me about {AllDoors}
+
+SupportedDoorsIntent what doors
+SupportedDoorsIntent what locks
+SupportedDoorsIntent what doors do you know
+SupportedDoorsIntent what locks do you know
+SupportedDoorsIntent what doors do you know about
+SupportedDoorsIntent what locks do you know about
+SupportedDoorsIntent what doors do you know of
+SupportedDoorsIntent what locks do you know of
+SupportedDoorsIntent tell me the doors you know
+SupportedDoorsIntent tell me the locks you know
+SupportedDoorsIntent tell me the doors you know about
+SupportedDoorsIntent tell me the locks you know about
+SupportedDoorsIntent tell me the doors you know of
+SupportedDoorsIntent tell me the locks you know of
+SupportedDoorsIntent tell me about the doors you know
+SupportedDoorsIntent tell me about the locks you know
+SupportedDoorsIntent tell me about the doors you know of
+SupportedDoorsIntent tell me about the locks you know of
+SupportedDoorsIntent tell me about your doors
+SupportedDoorsIntent tell me about your locks

@@ -1,0 +1,82 @@
+{
+    "intents": [
+        {
+            "intent": "DialogSmartDoorIntent",
+            "slots": [
+                {
+                    "name": "LockOperation",
+                    "type": "LOCK_OPS"
+                },
+                {
+                    "name": "UnlockOperation",
+                    "type": "UNLOCK_OPS"
+                },
+                {
+                    "name": "WhichDoor",
+                    "type": "DOORS"
+                },
+                {
+                    "name": "LockState",
+                    "type": "DOOR_STATES"
+                }
+            ]
+        },
+        {
+            "intent": "OneshotLockIntent",
+            "slots": [
+                {
+                    "name": "LockOperation",
+                    "type": "LOCK_OPS"
+                },
+                {
+                    "name": "WhichDoor",
+                    "type": "DOORS"
+                }
+            ]
+        },
+        {
+            "intent": "OneshotUnlockIntent",
+            "slots": [
+                {
+                    "name": "UnlockOperation",
+                    "type": "UNLOCK_OPS"
+                },
+                {
+                    "name": "WhichDoor",
+                    "type": "DOORS"
+                }
+            ]
+        },
+        {
+            "intent": "OneshotStatusIntent",
+            "slots": [
+                {
+                    "name": "WhichDoor",
+                    "type": "DOORS"
+                }
+                {
+                    "name": "LockState",
+                    "type": "DOOR_STATES"
+                }
+            ]
+        },
+        {
+            "intent": "SupportedDoorsIntent"
+        },
+        {
+            "intent": "AMAZON.YesIntent"
+        },
+        {
+            "intent": "AMAZON.NoIntent"
+        },
+        {
+            "intent": "AMAZON.HelpIntent"
+        },
+        {
+            "intent": "AMAZON.StopIntent"
+        },
+        {
+            "intent": "AMAZON.CancelIntent"
+        }
+    ]
+}
