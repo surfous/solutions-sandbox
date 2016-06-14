@@ -1,18 +1,31 @@
 // Lambda service for SmartThings - Echo Integration
 
 var http = require('https');
+// var smartthingsCustomSkill = require('./smartthingsCustomSkill.js');
 
 var ST_HOSTNAME = "graph.api.smartthings.com";
 
 // Note the client id and log settings are unique for each different lambda service (development, Internal QA, production)
 
- // ====== Production Start (SA on superuser) ========
+// ====== kshuk dev Start (SA on superuser) ========
+// ARN: arn:aws:lambda:us-east-1:747017778629:function:amazonEcho
+var AMAZON_CLIENT_ID = "ae89baa0-62c7-4bea-8985-1eef12534c99";
+var AMAZON_COHO_SKILL_APP_ID = "amzn1.ask.skill.5c7bce44-5049-4d92-b9a3-f8b1f3a5a496";
+var AMAZON_CUSTOM_SKILL_APP_ID = "amzn1.echo-sdk-ams.app.f1fc7835-a6ed-4ada-bb1a-26c251c91ab8";
+
+var logsEnabled = true;
+var networkLogsEnabled = true;
+// ====== kshuk dev End ========
+
+/*
+ // ====== Production Start ========
  // ARN: arn:aws:lambda:us-east-1:747017778629:function:amazonEcho
 var AMAZON_CLIENT_ID = "83ed14bc-e192-47fa-b877-40d1d421086e";
 
 var logsEnabled = true;
 var networkLogsEnabled = false;
  // ====== Production End ========
+*/
 
 /*
 // ====== Development Start ========
@@ -114,6 +127,17 @@ function getHostName(url) {
     return hostName;
 }
 
+function getCustomSkillOptions(installationId, accessToken, baseUrl) {
+    var customSkillPath = '/api/smartapps/installations/' + installationId + '/custom';
+    return {
+        hostname: getHostName(baseUrl),
+        port: 443,
+        path: customSkillPath,
+        method: 'GET',
+        headers: {accept: '*/*',  Authorization: 'Bearer ' + accessToken}
+    };
+}
+
 function getDiscoveryOptions(installationId, accessToken, baseUrl) {
     var discoveryPath = '/api/smartapps/installations/' + installationId + '/discovery';
     return {
@@ -155,7 +179,15 @@ exports.handler = function (event, context) {
     logNetwork("echo->lambda handler", event);
 
     // Protocol sanity check
-    if (event.header === null) {
+	if (isEventCustomSkill(event)) {
+		// this is a custom skill!!
+		log("Info", "session: " + event.session + "; request: " + event.request + "; version: " + event.version);
+
+        // punt the request wholesale to the custom skill handler
+        //smartthingsCustomSkill.handler(event, context);
+
+		getSmartAppPath(event, context, handleCustomSkill);
+	} else if (event.header === null) {
         sendErrorResponseV1(context, event, UNEXPECTED_INFORMATION_RECEIVED, "Missing header", "Unknown", "Request");
     } else if (event.payload === null) {
         sendErrorResponseV1(context, event, UNEXPECTED_INFORMATION_RECEIVED, "Missing payload");
@@ -186,6 +218,76 @@ exports.handler = function (event, context) {
         }
     }
 };
+
+
+function sendCustomSkillResponse(context, event) {
+	var cardTitle = "Called by Custom Skill";
+    var speechOutput = "Thank you for trying the SmartThings Alexa Custom Skill.";
+    // Setting this to true ends the session and exits the skill.
+    var shouldEndSession = true;
+	var alexaResponse = buildResponse({}, buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
+	context.succeed(alexaResponse);
+}
+
+
+
+/**
+	Handles any custom skill request and brokers it based on intent
+ */
+function handleCustomSkill(event, context, installationId, baseUrl) {
+	log("handleCustomSkill", "");
+	logNetwork("echo->lambda handleCustomSkill", event);
+
+	var options;
+
+	var callback = function (response) {
+		var str = '';
+
+		response.on('data', function (chunk) {
+			str += chunk;
+		});
+		response.on('error', function (e) {
+			log("handleCustomSkill", e.message);
+			sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Unknown error while receiving SmartApp response: " + e.message);
+		});
+		response.on('end', function () {
+			log("handleCustomSkill", "response statusCode: " + response.statusCode);
+			if (response.statusCode == 200 || response.statusCode == 204) {
+				var json = parseResponseCheckForError(event, context, str);
+				sendCustomSkillErrorResponse(context, event, json, true);
+			} else if (response.statusCode == 429) {
+				sendCustomSkillErrorResponse(context, event, DEPENDENT_SERVICE_UNAVAILABLE, "Rate limit exceeded, too many requests received");
+			} else {
+				sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Unknown error");
+			}
+		});
+	};
+
+	switch (request.type) {
+		case "IntentRequest":
+		case "LaunchRequest":
+		case "SessionEndedRequest":
+			options = getCustomSkillOptions(installationId, getAccessTokenFromEvent(event), baseUrl);
+			logNetwork("lambda->echo handleControl", options);
+			http.get(options, callback).end();
+
+			break;
+		default:
+			// return an error
+			log("handleCustomSkill", "ERROR: Invalid request type '" + request.type + "'");
+	}
+
+	sendCustomSkillResponse(context, event);
+}
+
+function sendCustomSkillErrorResponse(context, event, errorCode, errorDescription, namespace, name) {
+	var cardTitle = "SmartThings Error: " + errorCode;
+	// Setting this to true ends the session and exits the skill.
+	var shouldEndSession = true;
+	var alexaResponse = buildResponse({}, buildSpeechletResponse(cardTitle, errorDescription, null, shouldEndSession));
+	context.succeed(alexaResponse); // succeed? Yeah...
+}
+
 
 function handleDiscovery(event, context, installationId, baseUrl) {
     log("handleDiscovery", "");
@@ -330,12 +432,58 @@ function handleSystem(event, context) {
     }
 }
 
+/**
+* If request event has top level header, and payload elements, it's a smart home skill rewqest
+* @param  Map  event unmarshaled JSON event into javascript map stucture
+* @return Boolean     true if event is a Smart Home event, false otherwise
+ */
+function isEventSmartHome(event) {
+    if (event.header == null || event.payload == null) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * If request event has top level session, request, and version elements, it's a custom skill rewqest
+ * @param  Map  event unmarshaled JSON event into javascript map stucture
+ * @return Boolean     true if event is a Custom Skill event, false otherwise
+ */
+function isEventCustomSkill(event) {
+    if (event.session == undefined || event.request == undefined || event.version == undefined) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Returns the OAUTH2 session Access Token from the appropriate path for the request type
+ * @param  Map event unmarshaled JSON event into javascript map stucture
+ * @return String      the access token
+ */
+function getAccessTokenFromEvent(event) {
+    var accessToken = null;
+    if (isEventCustomSkill(event)) {
+        accessToken = event.session.user.accessToken.trim();
+    }
+    else if (isEventSmartHome(event)) {
+        accessToken = event.payload.accessToken.trim();
+    }
+    else {
+        log("getAccessTokenFromEvent ERROR", "request object has no accessToken at payload.accessToken or user.accessToken\n" + event);
+    }
+    return accessToken;
+}
+
+
+
 // Resolve the correct SmartApp URL using the client id and access token
 // Each user's Amazon Echo SmartApp has its own URL
 // When successful, call the resultCallback(event, context, URL) function
 function getSmartAppPath(event, context, resultCallback) {
     log("getSmartAppPath", "");
-    var accessToken = event.payload.accessToken.trim();
+    //var accessToken = event.payload.accessToken.trim();
+    var accessToken = getAccessTokenFromEvent(event);
 
     var options = getSmartAppPathOptions(accessToken);
 
@@ -467,6 +615,53 @@ function sendErrorResponseV2(context, event, error, payload, namespace, name) {
 // If there is a problem, then execution will stop, an error will be sent back to the requester and
 // function returns null.
 function parseResponseCheckForError(event, context, data) {
+	var json = null;
+	if (isEventSmartHome(event)) {
+		json = parseSmartHomeResponseCheckForError(event, context, data);
+	}
+	else if (isEventCustomSkill(event)) {
+		json = parseCustomSkillResponseCheckForError(event, context, data);
+	}
+	else {
+		log("parseResponseCheckForError FATAL", "This doesnt look like a Smart Home or Custom skill: ");
+		context.fail();
+	}
+	return json;
+}
+
+function parseCustomSkillResponseCheckForError(event, context, data) {
+    var json = null;
+    if (data === null || data.length === 0) {
+        log("parseResponseCheckForError", "No response received from SmartApp");
+        sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Did not receive an expected response from SmartApp");
+    }
+
+    log("parseResponseCheckForError", "Data received from SmartApp: " + data);
+
+    json = JSON.parse(data);
+
+    if (json === null) {
+        log("parseResponseCheckForError", "Non-JSON response received from SmartApp");
+        sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Did not receive an expected response from SmartApp");
+    }
+    else if (json.error != undefined && json.error_description != undefined) {
+        log("parseResponseCheckForError", "Error message received from SmartApp " + json.error + " " + json.error_description);
+        var amazonError = "INTERNAL_ERROR";
+        if (json.error == "invalid_token") {
+            amazonError = "INVALID_ACCESS_TOKEN";
+        }
+        logNetwork("lambda<-SmartApp", json);
+        sendCustomSkillErrorResponse(context, event, amazonError, "" + json.error_description);
+        json = null;
+    } else {
+        log("parseResponseCheckForError", "No errors found");
+        logNetwork("lambda<-SmartApp", json);
+    }
+    return json;
+}
+
+
+function parseSmartHomeResponseCheckForError(event, context, data) {
     var json = null;
     if (data === null || data.length === 0) {
         log("parseResponseCheckForError", "No response received from SmartApp");
@@ -509,4 +704,35 @@ function logNetwork(tag, msg) {
         console.log("\n" + JSON.stringify(msg, null, '  '));
         console.log('*************** ' + tag + ' End*************');
     }
+}
+
+// --------------- Helpers that build all of custom skill responses -----------------------
+
+function buildSpeechletResponse(titleText, outputText, repromptText, shouldEndSession) {
+    return {
+        outputSpeech: {
+            type: "PlainText",
+            text: outputText
+        },
+        card: {
+            type: "Simple",
+            title: titleText,
+            content: outputText
+        },
+        reprompt: {
+            outputSpeech: {
+                type: "PlainText",
+                text: repromptText
+            }
+        },
+        shouldEndSession: shouldEndSession
+    };
+}
+
+function buildResponse(sessionAttributes, speechletResponse) {
+    return {
+        version: "1.0",
+        sessionAttributes: sessionAttributes,
+        response: speechletResponse
+    };
 }

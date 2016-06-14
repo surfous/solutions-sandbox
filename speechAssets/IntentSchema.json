@@ -11,8 +11,12 @@
                     "name": "UnlockOperation",
                     "type": "UNLOCK_OPS"
                 },
-                {
+				{
                     "name": "WhichDoor",
+                    "type": "DOORS"
+                },
+				{
+                    "name": "AllDoors",
                     "type": "DOORS"
                 },
                 {
@@ -30,6 +34,10 @@
                 },
                 {
                     "name": "WhichDoor",
+                    "type": "DOORS"
+                },
+				{
+                    "name": "AllDoors",
                     "type": "DOORS"
                 }
             ]
@@ -53,10 +61,10 @@
                 {
                     "name": "WhichDoor",
                     "type": "DOORS"
-                }
-                {
-                    "name": "LockState",
-                    "type": "DOOR_STATES"
+                },
+				{
+                    "name": "AllDoors",
+                    "type": "DOORS"
                 }
             ]
         },
