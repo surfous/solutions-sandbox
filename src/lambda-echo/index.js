@@ -7,11 +7,11 @@ var ST_HOSTNAME = "graph.api.smartthings.com";
 
 // Note the client id and log settings are unique for each different lambda service (development, Internal QA, production)
 
-// ====== kshuk dev Start (SA on superuser) ========
+// ====== kshuk dev Start ========
 // ARN: arn:aws:lambda:us-east-1:747017778629:function:amazonEcho
 var AMAZON_CLIENT_ID = "ae89baa0-62c7-4bea-8985-1eef12534c99";
 var AMAZON_COHO_SKILL_APP_ID = "amzn1.ask.skill.5c7bce44-5049-4d92-b9a3-f8b1f3a5a496";
-var AMAZON_CUSTOM_SKILL_APP_ID = "amzn1.echo-sdk-ams.app.f1fc7835-a6ed-4ada-bb1a-26c251c91ab8";
+var AMAZON_CUSTOM_SKILL_APP_ID = "amzn1.echo-sdk-ams.app.563420d2-8402-41c3-b9a8-f55daca14adb";
 
 var logsEnabled = true;
 var networkLogsEnabled = true;
