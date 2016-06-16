@@ -3,8 +3,8 @@
 var http = require('https');
 // var smartthingsCustomSkill = require('./smartthingsCustomSkill.js');
 
-const var HTTP_GET = "GET";
-const var HTTP_POST = "POST";
+const HTTP_GET = "GET";
+const HTTP_POST = "POST";
 
 var ST_HOSTNAME = "graph.api.smartthings.com";
 
@@ -134,42 +134,43 @@ function getHostName(url) {
 
 function buildSmartappRequestOptions(httpMethod, smartappInstallId, oauth2AccessToken, baseUrl) {
 	var url = '/api/smartapps/installations/' + smartappInstallId;
-    return {
+    var reqOpts = {
         hostname: getHostName(baseUrl),
         path: url,
+        port: 443,
         method: httpMethod,
         headers: {
 				accept: '*/*',
-				Authorization: 'Bearer ' + oauth2AccessToken}
+				Authorization: 'Bearer ' + oauth2AccessToken,
+        }
     };
+    return reqOpts;
 }
 
-function buildCustomSkillOptions(smartappInstallId, oauth2AccessToken, baseUrl, avsAskCustomVersion, postBody=undefined) {
-	var httpMethod = HTTP_GET;
-	if (postBody != undefined) {
-		httpMethod = HTTP_POST;
-	}
-	var reqOpts = buildSmartappRequest(httpMethod, smartappInstallId, oauth2AccessToken, baseUrl);
-	reqOpts.path += '/custom/' + avsAskCustomVersion;
+function buildCustomSkillOptions(smartappInstallId, oauth2AccessToken, baseUrl) {
+	var reqOpts = buildSmartappRequestOptions(HTTP_GET, smartappInstallId, oauth2AccessToken, baseUrl);
+	reqOpts.path += '/custom';
+    log("buildCustomSkillOptions", JSON.stringify(reqOpts, null, 2));
 	return reqOpts;
 }
 
-function buildCustomSkillCommandRequest(smartappInstallId, oauth2AccessToken, baseUrl, avsAskCustomVersion) {
-	var request = buildSmartappRequest(HTTP_POST, smartappInstallId, oauth2AccessToken, baseUrl);
-	request.path += '/custom/' + avsAskCustomVersion;
-	return request;
+function buildCustomSkillCommandOptions(smartappInstallId, oauth2AccessToken, baseUrl) {
+	var reqOpts = buildCustomSkillOptions(smartappInstallId, oauth2AccessToken, baseUrl);
+    reqOpts.method = HTTP_POST;
+    log("buildCustomSkillCommandOptions", JSON.stringify(reqOpts, null, 2));
+	return reqOpts;
 }
 
-function getCustomSkillCommand(installationId, accessToken, baseUrl) {
-    var customSkillPath = '/api/smartapps/installations/' + installationId + '/custom';
-    return {
-        hostname: getHostName(baseUrl),
-        port: 443,
-        path: customSkillPath,
-        method: 'GET',
-        headers: {accept: '*/*',  Authorization: 'Bearer ' + accessToken}
-    };
-}
+// function getCustomSkillCommand(installationId, accessToken, baseUrl) {
+//     var customSkillPath = '/api/smartapps/installations/' + installationId + '/custom';
+//     return {
+//         hostname: getHostName(baseUrl),
+//         port: 443,
+//         path: customSkillPath,
+//         method: 'GET',
+//         headers: {accept: '*/*',  Authorization: 'Bearer ' + accessToken}
+//     };
+// }
 
 function getDiscoveryOptions(installationId, accessToken, baseUrl) {
     var discoveryPath = '/api/smartapps/installations/' + installationId + '/discovery';
@@ -255,10 +256,11 @@ exports.handler = function (event, context) {
 /**
 	Handles any custom skill request and brokers it based on intent
  */
-function handleCustomSkill(event, context, installationId, baseUrl) {
+function handleCustomSkill(event, context, smartappInstallId, baseUrl) {
 	log("handleCustomSkill", "");
 	logNetwork("echo->lambda handleCustomSkill", event);
 
+    var reqOptions;
 	var httpRequest;
 	var httpPostBody = null;
 
@@ -275,7 +277,7 @@ function handleCustomSkill(event, context, installationId, baseUrl) {
 		});
 		httpResponse.on('end', function () {
 			log("handleCustomSkill", "httpResponse statusCode: " + httpResponse.statusCode);
-			if (httpResponse.statusCode == 200 || httpResponse.statusCode == 204) {
+			if (httpResponse.statusCode == 200 || httpResponse.statusCode == 204 || httpResponse.statusCode == 201) {
 				var json = parseResponseCheckForError(event, context, responseBodyStr);
 				sendCustomSkillResponse(context, event, json);
 			} else if (httpResponse.statusCode == 429) {
@@ -287,12 +289,16 @@ function handleCustomSkill(event, context, installationId, baseUrl) {
 	};
 
 	switch (event.request.type) {
-		case "LaunchRequest":
 		case "SessionEndedRequest":
-			reqOptions = buildCustomSkillRequestOptions(installationId, getAccessTokenFromEvent(event), baseUrl);
+            log("handleCustomSkill", "Session ended: " + event.request.reason);
+            context.succeed();
 			break;
-		case "IntentRequest":
-			reqOptions = buildCustomSkillRequestOptions(installationId, getAccessTokenFromEvent(event), baseUrl);
+        case "LaunchRequest":
+            reqOptions = buildCustomSkillOptions(smartappInstallId, getAccessTokenFromEvent(event), baseUrl);
+            break;
+    	case "IntentRequest":
+			reqOptions = buildCustomSkillCommandOptions(smartappInstallId, getAccessTokenFromEvent(event), baseUrl);
+            httpPostBody = event;
 			break;
 		default:
 			// The request type or specific intent was not handled, so respond with an error
@@ -303,14 +309,13 @@ function handleCustomSkill(event, context, installationId, baseUrl) {
 	// dispatch the handled request to the SmartApp for processing,
 	// and provide the callback funtion to process the response
 	logNetwork("lambda->echo handleCustomSkill calling SmartApp", reqOptions);
-	httpRequest = http.get(reqOptions, processSmartAppResponse);
+	httpRequest = http.request(reqOptions, processSmartAppResponse);
 	if (httpPostBody !== null) {
-		httpRequest.write(httpPostBody);
+        logNetwork("lambda->echo handleCustomSkill posting data", httpPostBody);
+		httpRequest.write(JSON.stringify(httpPostBody));
 	}
 	httpRequest.end();
 }
-
-
 
 function handleDiscovery(event, context, installationId, baseUrl) {
     log("handleDiscovery", "");
@@ -346,7 +351,6 @@ function handleDiscovery(event, context, installationId, baseUrl) {
                     sendErrorResponseV1(context, event, INTERNAL_ERROR, "Unknown error");
                 }
             });
-
         };
     }
     else {

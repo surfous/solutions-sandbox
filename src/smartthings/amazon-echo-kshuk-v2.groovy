@@ -7,7 +7,7 @@
  */
 import groovy.transform.Field
 
-@Field final String CUSTOM_SKILL_RESPONSE_FORMAT_VERSION = "1.0"
+@Field String CUSTOM_SKILL_RESPONSE_FORMAT_VERSION = "1.0"
 
 definition(
         name: "Amazon Alexa Kshuk (CoHo+Custom)",
@@ -104,7 +104,7 @@ preferences(oauthPage: "deviceAuthorization") {
     page(name: "deviceAuthorization", title: "", nextPage: "instructionPage", uninstall: false) {
         section("Basic Skills") {
 			paragraph "Alexa can control these devices directly:\n\n" +
-					"    \"Alexa, turn on my cat lamp\"\n"
+					"    \"Alexa, turn on my cat lamp\"\n" +
 					"    \"Alexa, set the temperature to 68 degrees\"\n\n"
             input "switches", "capability.switch", multiple: true, required: false, title: "My Switches"
             input "thermostats", "capability.thermostat", title: "My Thermostats", multiple: true, required: false
@@ -115,8 +115,8 @@ preferences(oauthPage: "deviceAuthorization") {
 					"They won't appear in the Smart Home section of your Alexa app.\n" +
 					"You have to ask SmartThings to control these devices. For example:\n" +
 					"   \"Alexa, tell SmartThings to lock my door\"\n" +
-					"   \"Alexa, ask SmartThings if my door is locked\"\n"
-			paragraph "Also, Alexa currently isn't allowed to unlock your doors for you.\n\n"
+					"   \"Alexa, ask SmartThings if my door is locked\"\n\n" +
+			        "Also, Alexa currently isn't allowed to unlock your doors for you.\n"
 
 			input "locks", "capability.lock", title: "My Door Locks", multiple: true, required: false
 		}
@@ -150,11 +150,11 @@ preferences(oauthPage: "deviceAuthorization") {
 mappings {
 
 	// handle custom skill
-    path("/custom/:version") {
+    path("/custom") {
         action:
         [
-                GET: "customGet",
-				GET: "customPost"
+                GET:  "customGet",
+				POST: "customPost"
         ]
     }
 
@@ -226,40 +226,55 @@ def discovery() {
 }
 
 
-// handles the custom skill GET request
-// returns a fully formed AVS Custom Skill Response object in JSON
-def customGet() {
-	Date today = new Date()
 
-	String dateStr = today.format('yyyy-MM-dd')
-	String dateSSML = '<say-as interpret-as=date format=ymd>' + dateStr + '</say-as>'
+Map buildSimpleCustomResponse(String version, String titleText, String sayText, String cardText=null, Map sessionAttributesObj=null) {
+    Map customSkillResponse = [version: version]
+    if (sessionAttributesObj != null) {
+        customSkillResponse.sessionAttributes = sessionAttributesObj
+    }
 
-	String timeStr = today.format('h:mm a z', TimeZone.getDefault());
-	String timeSSML = '<say-as interpret-as=time>' + timeStr + '</say-as>'
+    Map outputSpeechObj = [type: 'PlainText', text: sayText]
+    Map cardObj = [type: 'Simple', title: titleText, content: cardText?:sayText]
+    Map responseObj = [outputSpeech: outputSpeechObj, card: cardObj, shouldEndSession: true]
 
-	String outputSSML = "<speak>This custom skill was run on $dateStr at $timeStr</speak>"
-	String outputText = "This custom skill was run on $dateStr at $timeStr"
+    customSkillResponse.response = responseObj
 
-	// def outputSpeechObj = [type: 'SSML', ssml: outputSSML]
-	def outputSpeechObj = [type: 'PlainText', text: outputText]
-	def cardObj = [type: 'Simple', title: 'Custom Skill Date & Time', content: outputText]
-
-	def responseObj = [outputSpeech: outputSpeechObj, card: cardObj, shouldEndSession: true]
-
-	def sessionAttributesObj = [:]
-
-	def customSkillResponse = [
-			version: CUSTOM_SKILL_RESPONSE_FORMAT_VERSION,
-			response: responseObj
-			]
-	log.debug "custom skill return map: $customSkillResponse"
+    log.debug "custom skill return map: $customSkillResponse"
 	return customSkillResponse
 }
 
+Map buildDateAndTimeResponse(String version) {
+    Date today = new Date()
 
+    String dateStr = today.format('yyyy-MM-dd')
+    String dateSSML = '<say-as interpret-as=date format=ymd>' + dateStr + '</say-as>'
+
+    String timeStr = today.format('h:mm a z', TimeZone.getDefault())
+    String timeSSML = '<say-as interpret-as=time>' + timeStr + '</say-as>'
+
+    String outputSSML = "<speak>This custom skill was run on $dateStr at $timeStr</speak>"
+    String outputText = "This custom skill was run on $dateStr at $timeStr"
+
+    String titleText = 'Custom Skill Date & Time'
+    return buildSimpleCustomResponse(version, titleText, outputText)
+}
+
+// handles the custom skill GET request
+// returns a fully formed AVS Custom Skill Response object in JSON
+def customGet() {
+    var requestJSON = request.JSON
+	return buildDateAndTimeResponse(requestJSON.version)
+}
+
+var VERSION
 def customPost() {
-	// request.JSON 
-
+	// request.JSON
+	var requestJSON = request.JSON
+    VERSION = requestJSON.version
+    SESSION = reqeuestJSON.sessionAttributes
+    COMMAND = requestJSON.request
+    log.debug(requestJSON)
+    return buildSimpleCustomResponse(requestJSON.version, 'Yeah!', 'I got the posted JSON request body!')
 }
 /**
  * Sends a command to a device
@@ -368,7 +383,7 @@ private deviceItem(it) {
     }
 	if (it.hasCapability("Lock")) {
 		actions.add "lockLock"
-		actions.add "unlockLock"
+		// actions.add "unlockLock"
 	}
     // Format according to Alexa API
     it ? [applianceId: it.id, manufacturerName: "SmartThings", modelName: it.name, version: "V1.0", friendlyName: it.displayName, friendlyDescription: createFriendlyText(it), isReachable: checkDeviceOnLine(it), actions: actions] : null
@@ -406,6 +421,8 @@ private createFriendlyText(device) {
         if (device.hasCapability("Switch Level")) {
             result += " (dimmable)"
         }
+    } else if (device.hasCapability("Lock")) {
+        result += "Lock"
     } else {
         result += "Unknown"
     }
@@ -445,6 +462,30 @@ def toFahrenheit(temp) {
 }
 
 /////////////// Commands ///////////////
+/**
+ * Lock or unlock* a door lock
+ *
+ * @param device a device to update
+ * @param turnOn true if device should be turned on, false otherwise
+ * @param response the response to modify according to result
+ */
+def lockUnlockCommand(device, turnOn, response) {
+    if (unlockLock) {
+        log.debug "Unlock $device *** NOT PERMITTED"
+
+        if (device.currentLock == "unlocked") {
+            // Call on() anyways just in case platform is out of sync and currentLevel is wrong
+            response << [error: "AlreadySetToTargetError", payload: [:]]
+        }
+    } else (lockLock) {
+        log.debug "Lock $device"
+        if (device.currentSwitch == "locked") {
+            // Call off() anyways just in case platform is out of sync and currentLevel is wrong
+            response << [error: "AlreadySetToTargetError", payload: [:]]
+        }
+        device.lock()
+    }
+}
 
 /**
  * Turn on or off a device
