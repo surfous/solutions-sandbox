@@ -5,6 +5,10 @@
  *
  * Author: SmartThings
  */
+import groovy.transform.Field
+
+@Field final String CUSTOM_SKILL_RESPONSE_FORMAT_VERSION = "1.0"
+
 definition(
         name: "Amazon Alexa Kshuk (CoHo+Custom)",
         namespace: "smartthings",
@@ -17,7 +21,7 @@ definition(
         oauth: [displayName: "Amazon Echo Dev (V2)", displayLink: ""]
 )
 
-// Version 1.1.7
+// Version 1.2.0a build 20160615-01
 
 // Changelist:
 // 1.1.7
@@ -146,10 +150,11 @@ preferences(oauthPage: "deviceAuthorization") {
 mappings {
 
 	// handle custom skill
-    path("/custom") {
+    path("/custom/:version") {
         action:
         [
-                GET: "custom"
+                GET: "customGet",
+				GET: "customPost"
         ]
     }
 
@@ -221,24 +226,41 @@ def discovery() {
 }
 
 
-def custom() {
+// handles the custom skill GET request
+// returns a fully formed AVS Custom Skill Response object in JSON
+def customGet() {
 	Date today = new Date()
 
-	String dateStr = today.format('yyyy-MM-DD')
-	String dateSSML = "<say-as interpret-as=\"date\" format=\"ymd\">$dateStr</say-as>"
+	String dateStr = today.format('yyyy-MM-dd')
+	String dateSSML = '<say-as interpret-as=date format=ymd>' + dateStr + '</say-as>'
 
-	String timeStr = today.format('hh:mm a', TimeZone.getDefault());
-	String timeSSML = "<say-as interpret-as=\"time\" format=\"hms12\">$timeStr</say-as>"
+	String timeStr = today.format('h:mm a z', TimeZone.getDefault());
+	String timeSSML = '<say-as interpret-as=time>' + timeStr + '</say-as>'
 
-	String outputSSML = "This custom skill was run on $dateSSML at $timeSSML"
+	String outputSSML = "<speak>This custom skill was run on $dateStr at $timeStr</speak>"
 	String outputText = "This custom skill was run on $dateStr at $timeStr"
 
-	def outputSpeech = [type: 'SSML', ssml: outputSSML]
-	def card = [type: 'simple', title: 'Custom Skill Date & Time', content: outputText]
+	// def outputSpeechObj = [type: 'SSML', ssml: outputSSML]
+	def outputSpeechObj = [type: 'PlainText', text: outputText]
+	def cardObj = [type: 'Simple', title: 'Custom Skill Date & Time', content: outputText]
 
-	return [outputSpeech: outputSpeech, card: card]
+	def responseObj = [outputSpeech: outputSpeechObj, card: cardObj, shouldEndSession: true]
+
+	def sessionAttributesObj = [:]
+
+	def customSkillResponse = [
+			version: CUSTOM_SKILL_RESPONSE_FORMAT_VERSION,
+			response: responseObj
+			]
+	log.debug "custom skill return map: $customSkillResponse"
+	return customSkillResponse
 }
 
+
+def customPost() {
+	// request.JSON 
+
+}
 /**
  * Sends a command to a device
  *

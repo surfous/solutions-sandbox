@@ -1,0 +1,83 @@
+{
+	"header": {
+		"namespace": "Discovery",
+		"name": "DiscoverAppliancesResponse",
+		"payloadVersion": "1"
+	},
+	"payload": {
+		"discoveredAppliances": [
+			{
+				"applianceId": "testApplianceId1",
+				"manufacturerName": "testManufacturerName",
+				"modelName": "testModelName",
+				"version": "testVersion",
+				"friendlyName": "testFriendlyName",
+				"friendlyDescription": "testFriendlyDescription",
+				"isReachable": true,
+				"additionalApplianceDetails": {}
+			},
+			{
+				"applianceId": "testApplianceId2",
+				"manufacturerName": "testManufacturerName",
+				"modelName": "testModelName",
+				"version": "testVersion",
+				"friendlyName": "testFriendlyName",
+				"friendlyDescription": "testFriendlyDescription",
+				"isReachable": true,
+				"additionalApplianceDetails": {
+					"key2": "value2",
+					"key1": "value1"
+				}
+			}
+		]
+	}
+}
+
+{
+  "header": {
+    "payloadVersion": "1",
+    "namespace": "Control",
+    "name": "SwitchOnOffRequest"
+  },
+  "payload": {
+    "switchControlAction": "TURN_ON",
+    "appliance": {
+      "additionalApplianceDetails": {
+        "key2": "value2",
+        "key1": "value1"
+      },
+      "applianceId": "sampleId"
+    },
+    "accessToken": "sampleAccessToken"
+  }
+}
+
+
+{
+  "session": {
+    "new": false,
+    "sessionId": "session1234",
+    "attributes": {},
+    "user": {
+      "userId": null
+	  "accessToken": "sampleAccessToken"
+    },
+    "application": {
+      "applicationId": "amzn1.echo-sdk-ams.app.f1fc7835-a6ed-4ada-bb1a-26c251c91ab8"
+    }
+  },
+  "version": "1.0",
+  "request": {
+    "intent": {
+      "slots": {
+        "Color": {
+          "name": "Color",
+          "value": "blue"
+        }
+      },
+      "name": "MyColorIsIntent"
+    },
+    "type": "IntentRequest",
+    "requestId": "request5678"
+  }
+}

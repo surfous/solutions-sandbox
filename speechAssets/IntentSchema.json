@@ -71,6 +71,12 @@
         {
             "intent": "SupportedDoorsIntent"
         },
+		{
+			"intent": "CustomBaseIntent"
+		},
+		{
+			"intent": "IntentionalErrorIntent"
+		},
         {
             "intent": "AMAZON.YesIntent"
         },
