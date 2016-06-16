@@ -228,7 +228,7 @@ def discovery() {
 @Field Map customSkillSessionAttrs = [:]
 
 Map buildSimpleCustomResponse(String titleText, String sayText, String cardText=null, Boolean doesResponseEndSession=true) {
-    Map customSkillResponse = [version: version]
+    Map customSkillResponse = [version: "1.0"] // FIXME - plumb this through better
     if (customSkillSessionAttrs) {
         customSkillResponse.sessionAttributes = customSkillSessionAttrs
     }
@@ -256,7 +256,7 @@ Map buildDateAndTimeResponse() {
     String outputText = "This custom skill was run on $dateStr at $timeStr"
 
     String titleText = 'Custom Skill Date & Time'
-    return buildSimpleCustomResponse(version, titleText, outputText)
+    return buildSimpleCustomResponse(titleText, outputText)
 }
 
 Map buildSimpleDeviceResponse(command, device, String outputText) {
@@ -292,8 +292,8 @@ def customPost() {
         }
     }
 
-    string deviceKind = null
-    string deviceKindPlural = null
+    String deviceKind = null
+    String deviceKindPlural = null
     List candidateDevices = []
     List devices = []
 
@@ -317,44 +317,33 @@ def customPost() {
         }
     }
 
+    log.debug "deviceKind: $deviceKind ($deviceKindPlural)"
+    log.debug "candidateDevices: $candidateDevices"
+    log.debug "devices: $devices"
+
+    Map responseToLambda = [:]
     switch (intentName) {
         case 'OneshotUnlockIntent':
-            return lockUnlockCommand(devices)
+            responseToLambda = lockUnlockCommand(devices)
             break
         case 'OneshotLockIntent':
-            return lockLockCommand(devices)
+            responseToLambda = lockLockCommand(devices)
             break
         case 'OneshotLockStatusIntent':
-            return lockStatusCommand(devices)
+            responseToLambda = lockStatusCommand(devices)
             break
         case 'SupportedLockIntent':
-            return whichDevicesCommand()
+            responseToLambda = whichDevicesCommand(deviceKind, deviceKindPlural, candidateDevices)
             break
         default:
             log.warn 'could not determine which kind of device this command is for'
+            responseToLambda = buildSimpleCustomResponse('SmartThings', "I'm not sure what you wanted me to do.")
             break
     }
 
-    return buildSimpleCustomResponse('SmartThings', "I'm not sure what you wanted me to do.")
+    return responseToLambda
 }
 
-
-Map interpretSlots(String deviceKind, List devices, Map intentSlots)
-{
-    Map interpretedSlots = [:]
-
-    // first simplify the slot schema
-    requestObj?.intent?.slots?: [:].each {
-        key, valmap ->
-        if (valmap?.value != null) {
-            interpretedSlots[key] = valmap?.value
-        }
-    }
-
-    // find which devices
-    switch
-
-}
 /**
  * Sends a command to a device
  *
@@ -592,8 +581,8 @@ def lockStatusCommand(def devices) {
     return buildSimpleDeviceResponse("status", statusTarget, outputText)
 }
 
-def whichDevicesCommand(def devices) {
-    String devicesOutput = listDevicesForOutput(String deviceKind, String deviceKindPlural, def devices)
+def whichDevicesCommand(String deviceKind, String deviceKindPlural, def devices) {
+    String devicesOutput = listDevicesForOutput(deviceKind, deviceKindPlural, devices)
     return buildSimpleDeviceResponse("list", deviceKindPlural, devicesOutput)
 }
 
@@ -611,10 +600,17 @@ def listDevicesForOutput(String deviceKind, String deviceKindPlural, def devices
         devicesOutput = "I know about one $deviceKind, $knownDeviceList[0].displayName."
     } else if (knownDeviceList.size() > 1 ) {
         devicesOutput =  "I know about the following $deviceKindPlural: \n"
+        dev ctr = 1
         knownDeviceList.each {
             device ->
-            devicesOutput += "  $device.displayName"
+            if (ctr == knownDeviceList.size()) {
+                devicesOutput += "  and $device.displayName."
+            } else {
+                devicesOutput += "  $device.displayName,"
+            }
+            ctr++
         }
+
     } else {
         devicesOutput = "I don't know about any $deviceKindPlural."
     }
