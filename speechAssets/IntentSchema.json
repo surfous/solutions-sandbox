@@ -1,7 +1,7 @@
 {
     "intents": [
         {
-            "intent": "DialogSmartDoorIntent",
+            "intent": "DialogLockIntent",
             "slots": [
                 {
                     "name": "LockOperation",
@@ -56,7 +56,7 @@
             ]
         },
         {
-            "intent": "OneshotStatusIntent",
+            "intent": "OneshotLockStatusIntent",
             "slots": [
                 {
                     "name": "WhichDoor",
@@ -69,14 +69,8 @@
             ]
         },
         {
-            "intent": "SupportedDoorsIntent"
+            "intent": "SupportedLockIntent"
         },
-		{
-			"intent": "CustomBaseIntent"
-		},
-		{
-			"intent": "IntentionalErrorIntent"
-		},
         {
             "intent": "AMAZON.YesIntent"
         },

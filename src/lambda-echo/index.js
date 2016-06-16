@@ -260,6 +260,7 @@ function handleCustomSkill(event, context, smartappInstallId, baseUrl) {
 	log("handleCustomSkill", "");
 	logNetwork("echo->lambda handleCustomSkill", event);
 
+    var amazonJsonVersion = event.version;
     var reqOptions;
 	var httpRequest;
 	var httpPostBody = null;
@@ -279,6 +280,7 @@ function handleCustomSkill(event, context, smartappInstallId, baseUrl) {
 			log("handleCustomSkill", "httpResponse statusCode: " + httpResponse.statusCode);
 			if (httpResponse.statusCode == 200 || httpResponse.statusCode == 204 || httpResponse.statusCode == 201) {
 				var json = parseResponseCheckForError(event, context, responseBodyStr);
+                json.version = amazonJsonVersion; // Response format version must match request
 				sendCustomSkillResponse(context, event, json);
 			} else if (httpResponse.statusCode == 429) {
 				sendCustomSkillErrorResponse(context, event, DEPENDENT_SERVICE_UNAVAILABLE, "Rate limit exceeded, too many requests received");

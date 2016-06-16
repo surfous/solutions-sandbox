@@ -225,17 +225,17 @@ def discovery() {
     [discoveredAppliances: applianceList]
 }
 
+@Field Map customSkillSessionAttrs = [:]
 
-
-Map buildSimpleCustomResponse(String version, String titleText, String sayText, String cardText=null, Map sessionAttributesObj=null) {
+Map buildSimpleCustomResponse(String titleText, String sayText, String cardText=null, Boolean doesResponseEndSession=true) {
     Map customSkillResponse = [version: version]
-    if (sessionAttributesObj != null) {
-        customSkillResponse.sessionAttributes = sessionAttributesObj
+    if (customSkillSessionAttrs) {
+        customSkillResponse.sessionAttributes = customSkillSessionAttrs
     }
 
     Map outputSpeechObj = [type: 'PlainText', text: sayText]
     Map cardObj = [type: 'Simple', title: titleText, content: cardText?:sayText]
-    Map responseObj = [outputSpeech: outputSpeechObj, card: cardObj, shouldEndSession: true]
+    Map responseObj = [outputSpeech: outputSpeechObj, card: cardObj, shouldEndSession: doesResponseEndSession]
 
     customSkillResponse.response = responseObj
 
@@ -243,7 +243,7 @@ Map buildSimpleCustomResponse(String version, String titleText, String sayText, 
 	return customSkillResponse
 }
 
-Map buildDateAndTimeResponse(String version) {
+Map buildDateAndTimeResponse() {
     Date today = new Date()
 
     String dateStr = today.format('yyyy-MM-dd')
@@ -259,22 +259,101 @@ Map buildDateAndTimeResponse(String version) {
     return buildSimpleCustomResponse(version, titleText, outputText)
 }
 
+Map buildSimpleDeviceResponse(command, device, String outputText) {
+    def titleText = "SmartThings, $command $device"
+    return buildSimpleCustomResponse(titleText, outputText)
+}
+
+Map buildSuccessDeviceResponse(command, device) {
+    return buildSimpleDeviceResponse(command, device, "OK")
+}
+
 // handles the custom skill GET request
 // returns a fully formed AVS Custom Skill Response object in JSON
 def customGet() {
-    var requestJSON = request.JSON
-	return buildDateAndTimeResponse(requestJSON.version)
+	return buildDateAndTimeResponse()
 }
-
-var VERSION
 def customPost() {
 	// request.JSON
-	var requestJSON = request.JSON
-    VERSION = requestJSON.version
-    SESSION = reqeuestJSON.sessionAttributes
-    COMMAND = requestJSON.request
-    log.debug(requestJSON)
-    return buildSimpleCustomResponse(requestJSON.version, 'Yeah!', 'I got the posted JSON request body!')
+	def customSkillReq = request.JSON // preserve the request
+    def sessionAttrsObj = customSkillReq?.sessionAttributes
+    def requestObj = customSkillReq?.request
+    log.debug(customSkillReq)
+
+    // what was the intended command?
+    String intentName = requestObj?.intent?.name
+
+    // simplify the slot map
+    Map interpretedSlots = [:]
+    requestObj?.intent?.slots?: [:].each {
+        key, valmap ->
+        if (valmap?.value != null) {
+            interpretedSlots[key] = valmap?.value
+        }
+    }
+
+    string deviceKind = null
+    string deviceKindPlural = null
+    List candidateDevices = []
+    List devices = []
+
+    if (intentName.contains('Lock') || intentName.contains('Unlock')) {
+        deviceKind = 'lock'
+        deviceKindPlural = 'locks'
+        candidateDevices.addAll(locks)
+
+        if (interpretedSlots?.AllDoors != null || candidateDevices.size() == 1) {
+            devices = candidateDevices
+        } else if (interpretedSlots?.WhichDoor != null) {
+            candidateDevices.each {
+                device ->
+                if (device.displayName.toLowerCase() == interpretedSlots.WhichDoor.toLowerCase()) {
+                    devices.add(device)
+                }
+            }
+            if (devices.size() == 0) {
+                return buildSimpleDeviceResponse("some command", interpretedSlots.WhichDoor, "I don't know which $deviceKind you mean by $interpretedSlots.WhichDoor.")
+            }
+        }
+    }
+
+    switch (intentName) {
+        case 'OneshotUnlockIntent':
+            return lockUnlockCommand(devices)
+            break
+        case 'OneshotLockIntent':
+            return lockLockCommand(devices)
+            break
+        case 'OneshotLockStatusIntent':
+            return lockStatusCommand(devices)
+            break
+        case 'SupportedLockIntent':
+            return whichDevicesCommand()
+            break
+        default:
+            log.warn 'could not determine which kind of device this command is for'
+            break
+    }
+
+    return buildSimpleCustomResponse('SmartThings', "I'm not sure what you wanted me to do.")
+}
+
+
+Map interpretSlots(String deviceKind, List devices, Map intentSlots)
+{
+    Map interpretedSlots = [:]
+
+    // first simplify the slot schema
+    requestObj?.intent?.slots?: [:].each {
+        key, valmap ->
+        if (valmap?.value != null) {
+            interpretedSlots[key] = valmap?.value
+        }
+    }
+
+    // find which devices
+    switch
+
 }
 /**
  * Sends a command to a device
@@ -469,22 +548,77 @@ def toFahrenheit(temp) {
  * @param turnOn true if device should be turned on, false otherwise
  * @param response the response to modify according to result
  */
-def lockUnlockCommand(device, turnOn, response) {
-    if (unlockLock) {
-        log.debug "Unlock $device *** NOT PERMITTED"
+def lockUnlockCommand(def devices) {
+    List deviceList = listDevices(devices)
+    String targetName = "all locks"
+    if (deviceList.size() == 1) {
+        targetName = deviceList[0].displayName
+    }
+    log.warn "Unlock $targetName *** NOT PERMITTED"
 
-        if (device.currentLock == "unlocked") {
-            // Call on() anyways just in case platform is out of sync and currentLevel is wrong
-            response << [error: "AlreadySetToTargetError", payload: [:]]
-        }
-    } else (lockLock) {
-        log.debug "Lock $device"
-        if (device.currentSwitch == "locked") {
-            // Call off() anyways just in case platform is out of sync and currentLevel is wrong
-            response << [error: "AlreadySetToTargetError", payload: [:]]
+    return buildSimpleDeviceResponse("unlock", targetName, "I'm sorry, Dave. I'm afraid I can't do that. You said your name was Dave, right?")
+}
+
+def lockLockCommand(def devices) {
+    List deviceList = listDevices(devices)
+    String targetName = "all locks"
+    if (deviceList.size() == 1) {
+        targetName = deviceList[0].displayName
+    }
+    log.info "Lock $targetName"
+    deviceList.each {
+        device ->
+        if (device.currentLock == "locked") {
+            // Call lock() anyways just in case platform is out of sync and currentLevel is wrong
+            log.info "$device.displayName already locked"
         }
         device.lock()
     }
+    return buildSuccessDeviceResponse("lock", targetName)
+}
+
+def lockStatusCommand(def devices) {
+    List deviceList = listDevices(devices)
+    String statusTarget = "your locks"
+    if (deviceList.size() == 1) {
+        statusTarget = deviceList[0].displayName
+    }
+    String outputText = ""
+    deviceList.each {
+        device ->
+        outputText += "Your $device.displayName is $device.currentLock. \n"
+    }
+
+    return buildSimpleDeviceResponse("status", statusTarget, outputText)
+}
+
+def whichDevicesCommand(def devices) {
+    String devicesOutput = listDevicesForOutput(String deviceKind, String deviceKindPlural, def devices)
+    return buildSimpleDeviceResponse("list", deviceKindPlural, devicesOutput)
+}
+
+def listDevices(def devices) {
+    List knownDeviceList = []
+    knownDeviceList.addAll(devices)
+    return knownDeviceList
+}
+
+def listDevicesForOutput(String deviceKind, String deviceKindPlural, def devices) {
+    List knownDeviceList = listDevices(devices)
+    knownDeviceList.addAll(devices)
+    String devicesOutput = ""
+    if (knownDeviceList.size() == 1 ) {
+        devicesOutput = "I know about one $deviceKind, $knownDeviceList[0].displayName."
+    } else if (knownDeviceList.size() > 1 ) {
+        devicesOutput =  "I know about the following $deviceKindPlural: \n"
+        knownDeviceList.each {
+            device ->
+            devicesOutput += "  $device.displayName"
+        }
+    } else {
+        devicesOutput = "I don't know about any $deviceKindPlural."
+    }
+    return devicesOutput
 }
 
 /**
