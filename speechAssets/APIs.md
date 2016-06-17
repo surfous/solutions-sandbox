@@ -2,7 +2,7 @@
 
 ## Intents
 
-DialogSmartDoorIntent
+LockDialogIntent
 > Skill was invoked with no information or partial information.
 We need to ask for what's missing
 

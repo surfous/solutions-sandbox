@@ -22,7 +22,7 @@
             ]
         },
         {
-            "intent": "LockDialogLockIntent",
+            "intent": "LockDialogIntent",
             "slots": [
                 {
                     "name": "LockOperation",

@@ -1,8 +1,8 @@
-LockDialogLockIntent {Whichlock}
-LockDialogLockIntent {LockOperation}
-LockDialogLockIntent {UnlockOperation}
-LockDialogLockIntent to {LockOperation}
-LockDialogLockIntent to {UnlockOperation}
+LockDialogIntent {Whichlock}
+LockDialogIntent {LockOperation}
+LockDialogIntent {UnlockOperation}
+LockDialogIntent to {LockOperation}
+LockDialogIntent to {UnlockOperation}
 
 LockLockIntent to {LockOperation} the {Whichlock}
 LockLockIntent to {LockOperation} {Whichlock}
