@@ -23,12 +23,12 @@
                     "name": "LockOperation",
                     "value": "lock"
                 },
-                "WhichDoor": {
-                    "name": "WhichDoor",
+                "Whichlock": {
+                    "name": "Whichlock",
                     "value": "my door"
                 },
-                "AllDoors": {
-                    "name": "AllDoors"
+                "AllLocks": {
+                    "name": "AllLocks"
                 }
             }
         }

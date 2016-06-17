@@ -1,27 +1,15 @@
-// Our Lambda function fle is required
-var lambdafy = require('./index.js');
+var testMessages = {
+	"smartHome": {
+		"discovery": smartHomeDiscoveryRequest,
+		"control": smartHomeControlRequest
+	},
+	"customSkill": {
+		"IntentRequest": customSkillEvent
+	}
+}
 
-// The Lambda context "done" function is called when complete with/without error
-var context = {
-    done: function (err, result) {
-        console.log('------------');
-        console.log('Context done');
-        console.log('   error:', err);
-        console.log('   result:', result);
-    },
-    succeed: function (result) {
-        console.log('------------');
-        console.log('Context succeed');
-        console.log('   result:', result);
-    },
-    fail: function (err) {
-        console.log('------------');
-        console.log('Context fail');
-        console.log('   error:', err);
-    }
-};
 
-var smartHomeDiscoveryEvent = {
+var smartHomeDiscoveryRequest = {
 	"header": {
 		"namespace": "Alexa.ConnectedHome.Discovery",
 		"name": "DiscoverAppliancesResponse",
@@ -57,7 +45,7 @@ var smartHomeDiscoveryEvent = {
 	}
 };
 
-var smartHomeControlEvent = {
+var smartHomeControlRequest = {
   "header": {
     "payloadVersion": "2",
     "namespace": "Alexa.ConnectedHome.Control",
@@ -76,7 +64,7 @@ var smartHomeControlEvent = {
   }
 };
 
-var customSkillEvent = {
+var customSkillIntentRequest = {
   "session": {
     "new": false,
     "sessionId": "session1234",
@@ -108,11 +96,3 @@ var customSkillEvent = {
     "requestId": "request5678"
   }
 };
-
-// event to send to the lambda function
-var event = customSkillEvent;
-// var event = smartHomeControlEvent;
-// ar event = smartHomeDiscoveryEvent;
-
-// Call the Lambda function
-lambdafy.handler(event, context);

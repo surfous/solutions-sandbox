@@ -1,81 +1,7 @@
 {
     "intents": [
-        {
-            "intent": "DialogLockIntent",
-            "slots": [
-                {
-                    "name": "LockOperation",
-                    "type": "LOCK_OPS"
-                },
-                {
-                    "name": "UnlockOperation",
-                    "type": "UNLOCK_OPS"
-                },
-				{
-                    "name": "WhichDoor",
-                    "type": "DOORS"
-                },
-				{
-                    "name": "AllDoors",
-                    "type": "DOORS"
-                },
-                {
-                    "name": "LockState",
-                    "type": "DOOR_STATES"
-                }
-            ]
-        },
-        {
-            "intent": "OneshotLockIntent",
-            "slots": [
-                {
-                    "name": "LockOperation",
-                    "type": "LOCK_OPS"
-                },
-                {
-                    "name": "WhichDoor",
-                    "type": "DOORS"
-                },
-				{
-                    "name": "AllDoors",
-                    "type": "DOORS"
-                }
-            ]
-        },
-        {
-            "intent": "OneshotUnlockIntent",
-            "slots": [
-                {
-                    "name": "UnlockOperation",
-                    "type": "UNLOCK_OPS"
-                },
-                {
-                    "name": "WhichDoor",
-                    "type": "DOORS"
-                }
-            ]
-        },
-        {
-            "intent": "OneshotLockStatusIntent",
-            "slots": [
-                {
-                    "name": "WhichDoor",
-                    "type": "DOORS"
-                },
-				{
-                    "name": "AllDoors",
-                    "type": "DOORS"
-                }
-            ]
-        },
-        {
-            "intent": "SupportedLockIntent"
-        },
-        {
-            "intent": "AMAZON.YesIntent"
-        },
-        {
-            "intent": "AMAZON.NoIntent"
+		{
+            "intent": "LaunchIntent"
         },
         {
             "intent": "AMAZON.HelpIntent"
@@ -85,6 +11,87 @@
         },
         {
             "intent": "AMAZON.CancelIntent"
+        },
+        {
+            "intent": "LockSupportedIntent",
+            "slots": [
+                {
+                    "name": "DoorsOrLocks",
+                    "type": "DOORS_OR_LOCKS"
+                }
+            ]
+        },
+        {
+            "intent": "LockDialogLockIntent",
+            "slots": [
+                {
+                    "name": "LockOperation",
+                    "type": "LOCK_OPS"
+                },
+                {
+                    "name": "UnlockOperation",
+                    "type": "UNLOCK_OPS"
+                },
+				{
+                    "name": "Whichlock",
+                    "type": "LOCKS"
+                },
+				{
+                    "name": "AllLocks",
+                    "type": "ALL_LOCKS"
+                },
+                {
+                    "name": "LockState",
+                    "type": "LOCK_STATES"
+                }
+            ]
+        },
+        {
+            "intent": "LockLockIntent",
+            "slots": [
+                {
+                    "name": "LockOperation",
+                    "type": "LOCK_OPS"
+                },
+                {
+                    "name": "Whichlock",
+                    "type": "LOCKS"
+                },
+				{
+                    "name": "AllLocks",
+                    "type": "ALL_LOCKS"
+                }
+            ]
+        },
+        {
+            "intent": "LockUnlockIntent",
+            "slots": [
+                {
+                    "name": "UnlockOperation",
+                    "type": "UNLOCK_OPS"
+                },
+                {
+                    "name": "Whichlock",
+                    "type": "LOCKS"
+                }
+            ]
+        },
+        {
+            "intent": "LockStatusIntent",
+            "slots": [
+                {
+                    "name": "Whichlock",
+                    "type": "LOCKS"
+                },
+				{
+                    "name": "AllLocks",
+                    "type": "ALL_LOCKS"
+                },
+				{
+					"name": "LockState",
+					"type": "LOCK_STATES"
+				}
+            ]
         }
     ]
 }

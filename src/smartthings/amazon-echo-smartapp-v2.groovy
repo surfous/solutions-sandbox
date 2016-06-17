@@ -1,15 +1,19 @@
 /**
- * Amazon Echo
+ * Amazon Alexa
  *
  * Supports lights, dimmers and thermostats
  *
  * Author: SmartThings
  */
+import groovy.transform.Field
+
+@Field String CUSTOM_SKILL_RESPONSE_FORMAT_VERSION = "1.0"
+
 definition(
-        name: "Amazon Echo Dev (V2)",
+        name: "Amazon Alexa Kshuk (CoHo+Custom)",
         namespace: "smartthings",
         author: "SmartThings",
-        description: "Used for development of Amazon Echo - SmartThings integration",
+        description: "Used for development of Amazon Alexa - SmartThings integration",
         category: "Convenience",
         iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
         iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@2x.png",
@@ -17,7 +21,7 @@ definition(
         oauth: [displayName: "Amazon Echo Dev (V2)", displayLink: ""]
 )
 
-// Version 1.1.7
+// Version 1.2.0a build 20160615-01
 
 // Changelist:
 // 1.1.7
@@ -98,9 +102,23 @@ preferences(oauthPage: "deviceAuthorization") {
     // Assumption is that level switches all support regular switch as well. This is to avoid
     // having two inputs that might confuse the user
     page(name: "deviceAuthorization", title: "", nextPage: "instructionPage", uninstall: false) {
-        section("") {
+        section("Basic Skills") {
+            paragraph "Alexa can control these devices directly:\n\n" +
+                    "    \"Alexa, turn on my cat lamp\"\n" +
+                    "    \"Alexa, set the temperature to 68 degrees\"\n\n"
             input "switches", "capability.switch", multiple: true, required: false, title: "My Switches"
             input "thermostats", "capability.thermostat", title: "My Thermostats", multiple: true, required: false
+        }
+        section("Advanced skills") {
+            paragraph "You'll control the devices below little differently:\n\n" +
+                    "You do not need to ask Alexa to discover these devices.\n" +
+                    "They won't appear in the Smart Home section of your Alexa app.\n" +
+                    "You have to ask SmartThings to control these devices. For example:\n" +
+                    "   \"Alexa, tell SmartThings to lock my door\"\n" +
+                    "   \"Alexa, ask SmartThings if my back door lock is locked\"\n\n" +
+                    "Also, Alexa currently isn't allowed to unlock your door locks for you.\n"
+
+            input "locks", "capability.lock", title: "My Door Locks", multiple: true, required: false
         }
         section("") {
             href(name: "href",
@@ -130,6 +148,15 @@ preferences(oauthPage: "deviceAuthorization") {
 }
 
 mappings {
+
+    // handle custom skill
+    path("/custom") {
+        action:
+        [
+                GET:  "customGet",
+                POST: "customPost"
+        ]
+    }
 
     // list all available devices
     path("/discovery") {
@@ -198,14 +225,225 @@ def discovery() {
     [discoveredAppliances: applianceList]
 }
 
+@Field Map customSkillSessionAttrs = [:]
+
+Map buildOutputSpeechObj(String sayText) {
+    Map outputSpeechObj = [:]
+    if (sayText.startsWith("<speak>") && sayText.endsWith("</speak>")) {
+        outputSpeechObj.type = "SSML"
+        outputSpeechObj.ssml = sayText
+    } else {
+        outputSpeechObj.type = "PlainText"
+        outputSpeechObj.text = sayText
+    }
+    return outputSpeechObj
+}
+
+Map buildSimpleCustomResponse(String titleText, String sayText, String cardText=null, Boolean doesResponseEndSession=true) {
+    Map customSkillResponse = [version: CUSTOM_SKILL_RESPONSE_FORMAT_VERSION] // FIXME - plumb this through better
+    if (customSkillSessionAttrs) {
+        customSkillResponse.sessionAttributes = customSkillSessionAttrs
+    }
+
+    Map outputSpeechObj = buildOutputSpeechObj(sayText)
+    Map cardObj = [type: 'Simple', title: titleText, content: cardText?:sayText]
+    Map responseObj = [outputSpeech: outputSpeechObj, card: cardObj, shouldEndSession: doesResponseEndSession]
+
+    customSkillResponse.response = responseObj
+
+    log.debug "custom skill return map: $customSkillResponse"
+    return customSkillResponse
+}
+
+Map buildSimpleCustomResponse(String titleText, String sayText, String cardText=null, Map repromptSpeechOutput) {
+    Map customSkillResponse = buildSimpleCustomResponse(titleText, sayText, cardText, false)
+    customSkillResponse.reprompt = repromptSpeechObject
+    return customSkillResponse
+}
+
+Map buildSimpleResponseNoCard(string sayText) {
+    Map customSkillResponse = [version: CUSTOM_SKILL_RESPONSE_FORMAT_VERSION] // FIXME - plumb this through better
+    customSkillResponse.outputSpeech = buildOutputSpeechObj(sayText)
+    return customSkillResponse
+}
+
+Map buildDateAndTimeResponse() {
+    Date today = new Date()
+
+    String dateStr = today.format('yyyy-MM-dd')
+    String dateSSML = '<say-as interpret-as=date format=ymd>' + dateStr + '</say-as>'
+
+    String timeStr = today.format('h:mm a z', TimeZone.getDefault())
+    String timeSSML = '<say-as interpret-as=time>' + timeStr + '</say-as>'
+
+    String outputSSML = "<speak>This custom skill was run on $dateStr at $timeStr</speak>"
+    String outputText = "This custom skill was run on $dateStr at $timeStr"
+
+    String titleText = 'Custom Skill Date & Time'
+    return buildSimpleCustomResponse(titleText, outputText)
+}
+
+Map buildSimpleDeviceResponse(command, device, String outputText) {
+    def titleText = "SmartThings, $command $device"
+    return buildSimpleCustomResponse(titleText, outputText)
+}
+
+Map buildSimpleDeviceResponseToQuestion(String questionText, String outputText) {
+    def titleText = "SmartThings, $questionText"
+    return buildSimpleCustomResponse(titleText, outputText)
+}
+
+Map buildSuccessDeviceResponse(command, device) {
+    return buildSimpleDeviceResponse(command, device, "OK")
+}
+
+/**
+ * handles custom skill GET requests
+ * http request contains entire JSON message from AVS
+ * @return returns a fully formed AVS Custom Skill Response object in JSON
+ */
+def customGet() {
+    return buildDateAndTimeResponse()
+}
+
+
+@Field String transactiontransactionDeviceKind = null
+@Field String transactionDeviceKindPlural = null
+@Field List candidateDevices = []
+@Field List devices = []
+/**
+ * handles custom skill POST requests
+ * http request contains entire JSON message from AVS
+ * @return returns a fully formed AVS Custom Skill Response object in JSON
+ */
+def customPost() {
+    Map responseToLambda = [:]
+    try {
+        // request.JSON
+        log.debug request.JSON
+        log.debug "the JSON body of the request"
+        def customSkillReq = request?.JSON // preserve the request
+        def sessionAttrsObj = customSkillReq?.sessionAttributes
+        def requestObj = customSkillReq?.request
+        log.debug(requestObj)
+
+        // what was the intended command?
+        String intentName = customSkillReq?.request?.intent?.name
+
+        // simplify the slot map
+        Map interpretedSlots = [:]
+        def intentSlots = customSkillReq?.request?.intent?.slots
+        log.debug intentSlots
+        log.debug "Slots from the intent"
+        customSkillReq?.request?.intent?.slots?.each {
+            key, valmap ->
+            // log.debug "slot key is $key, valmap is $valmap"
+            if (valmap?.value != null) {
+                interpretedSlots.put(key, valmap?.value)
+            }
+        }
+
+        log.debug interpretedSlots
+        log.debug "Interpreted Slots"
+
+
+        /*
+        set if user said an utterance a slot which references all devices of a type:
+         - AllLocks
+         - AllLocks
+         NOTE: Utterances whould never include both the inidivual device slot and all devices slot
+         in the same utrterance,
+         */
+        Boolean usedAllDevicesSlot = false
+
+        // specific to locks
+        if (intentName.startsWith('Lock')) {
+            transactionDeviceKind = 'lock'
+            transactionDeviceKindPlural = 'locks'
+            candidateDevices.addAll(locks)
+
+            if (candidateDevices.size() == 0) {
+                // User has no matching devices
+                log.debug "No devices having the $transactionDeviceKind capability are among the user's SmartThings devices"
+                return buildSimpleDeviceResponse("No $transactionDeviceKindPlural devices found", "Sorry, I couldn't find any $transactionDeviceKindPlural connected to your SmartThings setup.")
+            } else if (interpretedSlots?.AllLocks != null || candidateDevices.size() == 1) {
+                if (interpretedSlots?.AllLocks != null) {
+                    usedAllDevicesSlot = true
+                }
+                devices = candidateDevices
+            } else if (interpretedSlots?.Whichlock != null) {
+                log.debug "Evaluating each known device to see if it matches ${interpretedSlots?.Whichlock}"
+                candidateDevices.each {
+                    device ->
+                    log.debug "device display name '${device.displayName.toLowerCase()}' Whichlock slot value '${interpretedSlots.Whichlock.toLowerCase()}'"
+                    if (device.displayName.toLowerCase() == interpretedSlots.Whichlock.toLowerCase()) {
+                        devices.add(device)
+                    }
+                }
+                if (devices == null || devices.size() == 0) {
+                    if (candidateDevices.size() == 1) {
+                        // If we have an ambiguous Whichlock slot and ony have one lock, then assume we mean that one
+                        devices = candidateDevices
+                    } else {
+                        return buildSimpleDeviceResponse("some command", interpretedSlots.Whichlock, "I don't know which $transactionDeviceKind you mean by $interpretedSlots.Whichlock.")
+                    }
+                }
+                // devices should be guaranteed not null and to have length past here
+            }
+        }
+
+        switch (intentName) {
+            case 'LockUnlockIntent':
+                responseToLambda = lockUnlockFailCommand(devices[0]) // Only one lock may be passed to unlock
+                break
+            case ('LockDialogIntent' && usedAllDevicesSlot):
+            case 'LockLockIntent':
+                responseToLambda = lockLockCommand(devices)
+                break
+            case 'LockStatusIntent':
+                if (devices.size() == 1 && interpretedSlots?.LockState != null) {
+                    responseToLambda = lockQueryCommand(devices[0], interpretedSlots.LockState)
+                } else {
+                    responseToLambda = lockStatusCommand(devices)
+                }
+                break
+            case 'LockSupportedIntent':
+                responseToLambda = whichDevicesCommand(transactionDeviceKind, transactionDeviceKindPlural, candidateDevices)
+                break
+            case 'LaunchIntetnt':
+            case 'LockDialogIntetnt':
+                responseToLambda = startCommand()
+                break
+            case 'AMAZON.HelpIntent':
+                responseToLambda = helpCommand()
+                break
+            case 'AMAZON.stopIntent':
+            case 'AMAZON.cancelIntent':
+                responseToLambda = stopCommand()
+                break
+            default:
+                log.warn 'could not determine which kind of device this command is for'
+                responseToLambda = buildSimpleCustomResponse('SmartThings', "I'm not sure what you wanted me to do.")
+                break
+        }
+    } catch ( Exception exc ) {
+        log.error exc
+        log.error "Caught exception in main custom skill POST handler of SmartApp"
+        if (!responseToLambda) {
+            responseToLambda = buildSimpleCustomResponse('SmartThings', "Internal error")
+        }
+        throw exc // so SumoLogic gets it, too
+    }
+}
+
 /**
  * Sends a command to a device
  *
  * Supported commands:
- * 	-TurnOnRequest
- * 	-TurnOffRequest
- * 	-SetPercentageRequest  (level between 0-100)
- * 	-IncrementPercentageRequest  (+level adjustment, an adjustment resulting in a level >100 will set level to 100)
+ *     -TurnOnRequest
+ *     -TurnOffRequest
+ *     -SetPercentageRequest  (level between 0-100)
+ *     -IncrementPercentageRequest  (+level adjustment, an adjustment resulting in a level >100 will set level to 100)
  *  -DecrementPercentageRequest  (-level adjustment, an adjustment resulting in a level < 0 will turn off switch)
  *  -SetTargetTemperatureRequest (expects temp in celcius, within allowed bounds if thermostat supports min/max attributes)
  *  -DecrementTargetTemperatureRequest (expects temp in celcius, within allowed bounds if thermostat supports min/max attributes)
@@ -303,6 +541,10 @@ private deviceItem(it) {
         actions.add "decrementTargetTemperature"
         actions.add "setTargetTemperature"
     }
+    if (it.hasCapability("Lock")) {
+        actions.add "lockLock"
+        // actions.add "unlockLock"
+    }
     // Format according to Alexa API
     it ? [applianceId: it.id, manufacturerName: "SmartThings", modelName: it.name, version: "V1.0", friendlyName: it.displayName, friendlyDescription: createFriendlyText(it), isReachable: checkDeviceOnLine(it), actions: actions] : null
 }
@@ -339,6 +581,8 @@ private createFriendlyText(device) {
         if (device.hasCapability("Switch Level")) {
             result += " (dimmable)"
         }
+    } else if (device.hasCapability("Lock")) {
+        result += "Lock"
     } else {
         result += "Unknown"
     }
@@ -378,6 +622,148 @@ def toFahrenheit(temp) {
 }
 
 /////////////// Commands ///////////////
+
+/**
+ * Runs when the skill is run with no additional information. Introduces the skill and provides
+ * additional information via a home card
+ * @return AVS response message
+ */
+def startCommand() {
+    String titleText = 'SmartThings Advanced Skill'
+    String sayText = 'This will briefly introduce the skill, maybe give a couple examples, and direct the user to the Alexa app to view the card with more information'
+    String cardText = 'This text is for a more in-depth description of the skill. More usage examples can be shown here.\n' +
+            '  - "Ask SmartThings to lock my front door lock"\n' +
+            '  - "Ask SmartThings which locks you know about\n"' +
+            '  - FOr more information, you can, "Ask SmartThings for help\n"' +
+            '  - But remember, no hyperlinks\n' +
+            '  - And the card must have less than 8000 characters\n' +
+            'We can also make this card have an image. '
+    String repromptText = 'What would you like to do?'
+    Map repromptObj = buildSpeechOutputObj(repromptText)
+    return buildSimpleCustomResponse(titleText, sayText, cardText, repromptObj)
+}
+
+def stopCommand() {
+    return buildNoCardResponse("Goodbye")
+}
+
+def helpCommand() {
+    String titleText = 'SmartThings Advanced Skill Help'
+    String sayText = 'This is less introductory and more help-oriented. Maybe we put more examples are on the card?'
+    String cardText = 'Here are a bunch of examples:\n' +
+            '  - To lock all your locks: "Ask SmartThings to lock all my locks"\n' +
+            '  - If you only have one lock: "Ask SmartThings to lock my lock"\n' +
+            '  - Ask for the status of your locks\n' +
+            '  - Ask for the status of a specific lock\n' +
+            '  - blah blah blah\n' +
+            '\n' +
+            'Epilogue, but keep this whole thing to less than 8000 char'
+    Map repromptObj = buildSpeechOutputObj(repromptText)
+    return buildSimpleCustomResponse(titleText, sayText, cardText, repromptObj)
+}
+
+/**
+ * lockUnlockFailCommand -
+ * No mass unlock - just one lock at a time
+ * @return AVS response indicating that unlocking is not supported.
+ */
+def lockUnlockFailCommand(def device) {
+    log.warn "Unlock ${device.displayName} *** NOT PERMITTED"
+    if (device?.displayName?.toLowerCase()) {
+        return buildSimpleDeviceResponse("open", device.displayName, "I'm sorry, Dave. I'm afraid I can't do that.")
+    }
+    return buildSimpleDeviceResponse("unlock", device.displayName, "For security reasons, that feature has been disabled. For more information, please refer to the notifications page in your SmartThings mobile app")
+}
+
+def lockLockCommand(List deviceList) {
+    String targetName = "all locks"
+    if (deviceList.size() == 1) {
+        targetName = deviceList[0].displayName
+    }
+    log.info "Lock $targetName"
+    deviceList.each {
+        device ->
+        if (device.currentLock == "locked") {
+            // Call lock() anyways just in case platform is out of sync and currentLevel is wrong
+            log.info "${device.displayName} is already locked"
+        }
+        device.lock()
+    }
+    return buildSuccessDeviceResponse("lock", targetName)
+}
+
+def lockStatusCommand(List deviceList) {
+    String statusTarget = "your locks"
+    if (deviceList.size() == 1) {
+        statusTarget = deviceList[0].displayName
+    }
+    String outputText = ""
+    deviceList.each {
+        device ->
+        outputText += "Your ${device.displayName} is ${device.currentLock}. \n"
+    }
+
+    return buildSimpleDeviceResponse("status", statusTarget, outputText)
+}
+
+def lockQueryCommand(def device, String queryState) {
+    log.debug "lockQueryCommand: is ${device.displayName} $queryState"
+    Set lockCapabilityStates = ['locked', 'unlocked']
+    Set lockedSynonyms = ['locked', 'closed', 'shut']
+    Set unlockedSynonyms = ['unlocked', 'opened', 'open']
+
+    String normalQueryState = 'locked'
+    if (unlockedSynonyms.contains(queryState.toLowerCase())) {
+        normalQueryState = 'unlocked'
+    } else if (!lockedSynonyms.contains(queryState.toLowerCase())) {
+        // canonicalLockState is still locked
+        log.warn "We don't know about the lock state queried: $queryState. Assuming it means 'locked'"
+    }
+
+    String outputText
+    if (normalQueryState == device.currentLock.toLowerCase()) {
+        // Yes!
+        outputText = "Yes, your ${device.displayName} is $queryState."
+    } else if (!lockCapabilityStates.contains(device.currentLock.toLowerCase())) {
+        // Uh oh
+        outputText = "Uh oh! Your ${device.displayName} is not $queryState, and I'm not sure what its status is"
+    } else {
+        // No
+        outputText = "No, your ${device.displayName} is ${device.currentLock}."
+    }
+
+    return buildSimpleDeviceResponseToQuestion("is my ${device.displayName} $queryState?", outputText)
+}
+
+// def whichDevicesCommand(String transactionDeviceKind, String transactionDeviceKindPlural, List deviceList) {
+//     String devicesOutput = listDevicesForOutput(transactionDeviceKind, transactionDeviceKindPlural, deviceList)
+//     return buildSimpleDeviceResponse("list", transactionDeviceKindPlural, devicesOutput)
+// }
+
+def whichDevicesCommand(String transactionDeviceKind=device, String transactionDeviceKindPlural, List deviceList) {
+    if (!transactionDeviceKind) transactionDeviceKind = 'device'
+    if (!transactionDeviceKindPlural) transactionDeviceKindPlural = 'devices'
+    String devicesOutput = ""
+    if (deviceList && deviceList.size() == 1 ) {
+        devicesOutput = "I know about one $transactionDeviceKind: ${knownDeviceList[0].displayName}."
+    } else if (deviceList && deviceList.size() > 1 ) {
+        devicesOutput =  "I know about the following $transactionDeviceKindPlural: \n"
+        Integer ctr = 1
+        deviceList.each {
+            device ->
+            if (ctr == deviceList.size()) {
+                devicesOutput += "  and ${device.displayName}."
+            } else {
+                devicesOutput += "  $device.displayName,"
+            }
+            ctr++
+        }
+
+    } else {
+        devicesOutput = "I don't know about any $transactionDeviceKindPlural."
+    }
+    return buildSimpleDeviceResponse("list", transactionDeviceKindPlural, devicesOutput)
+}
 
 /**
  * Turn on or off a device
@@ -666,8 +1052,8 @@ def setupHeartbeat() {
     switches?.each {
         def timeout = getDeviceHeartbeatTimeout(it)
         if (timeout > 0) {
-			state.heartbeatDevices[it.id] = [online: true, timeout: timeout]
-			// , label: it.label ?: it.name (useful for debugging)
+            state.heartbeatDevices[it.id] = [online: true, timeout: timeout]
+            // , label: it.label ?: it.name (useful for debugging)
         }
     }
 
@@ -778,7 +1164,7 @@ private getDeviceHeartbeatTimeout(device) {
 }
 
 /**
- * Determine if a device is online, temporary solution is to check only a restricted number of supported devices 
+ * Determine if a device is online, temporary solution is to check only a restricted number of supported devices
  * for lastActivity time. If timestamp has been updated the last X min (depending on DTH expectations), then the device is
  * considered online.
  *
@@ -796,10 +1182,10 @@ private checkDeviceOnLine(device) {
     // if 0 then device type is not supported and online status will default to true
     def timeout = getDeviceHeartbeatTimeout(device)
     if (timeout != 0) {
-		if (device.getLastActivity() == null) {
-			// getLastActivity() == null means platform has not seen any activity for a long time and erased the field
-			result = false
-		} else {
+        if (device.getLastActivity() == null) {
+            // getLastActivity() == null means platform has not seen any activity for a long time and erased the field
+            result = false
+        } else {
         Calendar c = Calendar.getInstance()
         c.add(Calendar.MINUTE, -timeout)
         Date deviceLastChecking = new Date(device.getLastActivity()?.getTime())
@@ -810,7 +1196,7 @@ private checkDeviceOnLine(device) {
                 device.refresh()
             }
             result = false
-			}
+            }
         }
     }
 
