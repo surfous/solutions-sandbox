@@ -14,7 +14,7 @@ var ST_HOSTNAME = "graph.api.smartthings.com";
 
 // ====== kshuk dev Start ========
 // ARN: arn:aws:lambda:us-east-1:747017778629:function:amazonEcho
-var AMAZON_CLIENT_ID = "ae89baa0-62c7-4bea-8985-1eef12534c99";
+var AMAZON_CLIENT_ID = "ae89baa0-62c7-4bea-8985-1eef12534c99"; // kevin.shuk@smartthings.com
 var AMAZON_COHO_SKILL_APP_ID = "amzn1.ask.skill.5c7bce44-5049-4d92-b9a3-f8b1f3a5a496";
 var AMAZON_CUSTOM_SKILL_APP_ID = "amzn1.echo-sdk-ams.app.563420d2-8402-41c3-b9a8-f55daca14adb";
 
@@ -133,32 +133,32 @@ function getHostName(url) {
 }
 
 function buildSmartappRequestOptions(httpMethod, smartappInstallId, oauth2AccessToken, baseUrl) {
-	var url = '/api/smartapps/installations/' + smartappInstallId;
+    var url = '/api/smartapps/installations/' + smartappInstallId;
     var reqOpts = {
         hostname: getHostName(baseUrl),
         path: url,
         port: 443,
         method: httpMethod,
         headers: {
-				accept: '*/*',
-				Authorization: 'Bearer ' + oauth2AccessToken,
+                accept: '*/*',
+                Authorization: 'Bearer ' + oauth2AccessToken,
         }
     };
     return reqOpts;
 }
 
 function buildCustomSkillOptions(smartappInstallId, oauth2AccessToken, baseUrl) {
-	var reqOpts = buildSmartappRequestOptions(HTTP_GET, smartappInstallId, oauth2AccessToken, baseUrl);
-	reqOpts.path += '/custom';
-    log("buildCustomSkillOptions", JSON.stringify(reqOpts, null, 2));
-	return reqOpts;
+    var reqOpts = buildSmartappRequestOptions(HTTP_GET, smartappInstallId, oauth2AccessToken, baseUrl);
+    reqOpts.path += '/custom';
+    //log("buildCustomSkillOptions", JSON.stringify(reqOpts, null, 2));
+    return reqOpts;
 }
 
 function buildCustomSkillCommandOptions(smartappInstallId, oauth2AccessToken, baseUrl) {
-	var reqOpts = buildCustomSkillOptions(smartappInstallId, oauth2AccessToken, baseUrl);
+    var reqOpts = buildCustomSkillOptions(smartappInstallId, oauth2AccessToken, baseUrl);
     reqOpts.method = HTTP_POST;
-    log("buildCustomSkillCommandOptions", JSON.stringify(reqOpts, null, 2));
-	return reqOpts;
+    //log("buildCustomSkillCommandOptions", JSON.stringify(reqOpts, null, 2));
+    return reqOpts;
 }
 
 // function getCustomSkillCommand(installationId, accessToken, baseUrl) {
@@ -213,15 +213,15 @@ exports.handler = function (event, context) {
     logNetwork("echo->lambda handler", event);
 
     // Protocol sanity check
-	if (isEventCustomSkill(event)) {
-		// this is a custom skill!!
-		log("Info", "session: " + event.session + "; request: " + event.request + "; version: " + event.version);
+    if (isEventCustomSkill(event)) {
+        // this is a custom skill!!
+        log("Info", "session: " + event.session + "; request: " + event.request + "; version: " + event.version);
 
         // punt the request wholesale to the custom skill handler
         //smartthingsCustomSkill.handler(event, context);
 
-		getSmartAppPath(event, context, handleCustomSkill);
-	} else if (event.header === null) {
+        getSmartAppPath(event, context, handleCustomSkill);
+    } else if (event.header === null) {
         sendErrorResponseV1(context, event, UNEXPECTED_INFORMATION_RECEIVED, "Missing header", "Unknown", "Request");
     } else if (event.payload === null) {
         sendErrorResponseV1(context, event, UNEXPECTED_INFORMATION_RECEIVED, "Missing payload");
@@ -254,69 +254,69 @@ exports.handler = function (event, context) {
 };
 
 /**
-	Handles any custom skill request and brokers it based on intent
+    Handles any custom skill request and brokers it based on intent
  */
 function handleCustomSkill(event, context, smartappInstallId, baseUrl) {
-	log("handleCustomSkill", "");
-	logNetwork("echo->lambda handleCustomSkill", event);
+    log("handleCustomSkill", "");
+    logNetwork("echo->lambda handleCustomSkill", event);
 
     var amazonJsonVersion = event.version;
     var reqOptions;
-	var httpRequest;
-	var httpPostBody = null;
+    var httpRequest;
+    var httpPostBody = null;
 
-	// define an anonymous function to process the SmartApp's response and store it in the callback var
-	var processSmartAppResponse = function (httpResponse) {
-		var responseBodyStr = '';
+    // define an anonymous function to process the SmartApp's response and store it in the callback var
+    var processSmartAppResponse = function (httpResponse) {
+        var responseBodyStr = '';
 
-		httpResponse.on('data', function (chunk) {
-			responseBodyStr += chunk;
-		});
-		httpResponse.on('error', function (e) {
-			log("handleCustomSkill", e.message);
-			sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Unknown error while receiving SmartApp httpResponse: " + e.message);
-		});
-		httpResponse.on('end', function () {
-			log("handleCustomSkill", "httpResponse statusCode: " + httpResponse.statusCode);
-			if (httpResponse.statusCode == 200 || httpResponse.statusCode == 204 || httpResponse.statusCode == 201) {
-				var json = parseResponseCheckForError(event, context, responseBodyStr);
+        httpResponse.on('data', function (chunk) {
+            responseBodyStr += chunk;
+        });
+        httpResponse.on('error', function (e) {
+            log("handleCustomSkill", e.message);
+            sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Unknown error while receiving SmartApp httpResponse: " + e.message);
+        });
+        httpResponse.on('end', function () {
+            log("handleCustomSkill", "httpResponse statusCode: " + httpResponse.statusCode);
+            if (httpResponse.statusCode == 200 || httpResponse.statusCode == 204 || httpResponse.statusCode == 201) {
+                var json = parseResponseCheckForError(event, context, responseBodyStr);
                 json.version = amazonJsonVersion; // Response format version must match request
-				sendCustomSkillResponse(context, event, json);
-			} else if (httpResponse.statusCode == 429) {
-				sendCustomSkillErrorResponse(context, event, DEPENDENT_SERVICE_UNAVAILABLE, "Rate limit exceeded, too many requests received");
-			} else {
-				sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Unknown error");
-			}
-		});
-	};
+                sendCustomSkillResponse(context, event, json);
+            } else if (httpResponse.statusCode == 429) {
+                sendCustomSkillErrorResponse(context, event, DEPENDENT_SERVICE_UNAVAILABLE, "Rate limit exceeded, too many requests received");
+            } else {
+                sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Unknown error");
+            }
+        });
+    };
 
-	switch (event.request.type) {
-		case "SessionEndedRequest":
+    switch (event.request.type) {
+        case "SessionEndedRequest":
             log("handleCustomSkill", "Session ended: " + event.request.reason);
             context.succeed();
-			break;
+            break;
         case "LaunchRequest":
             reqOptions = buildCustomSkillOptions(smartappInstallId, getAccessTokenFromEvent(event), baseUrl);
             break;
-    	case "IntentRequest":
-			reqOptions = buildCustomSkillCommandOptions(smartappInstallId, getAccessTokenFromEvent(event), baseUrl);
+        case "IntentRequest":
+            reqOptions = buildCustomSkillCommandOptions(smartappInstallId, getAccessTokenFromEvent(event), baseUrl);
             httpPostBody = event;
-			break;
-		default:
-			// The request type or specific intent was not handled, so respond with an error
-			log("handleCustomSkill", "ERROR: Invalid request type '" + event.request.type + "'");
-			sendCustomSkillErrorResponse(context, event, UNSUPPORTED_OPERATION, "Unsupported namespace or name");
-	}
+            break;
+        default:
+            // The request type or specific intent was not handled, so respond with an error
+            log("handleCustomSkill", "ERROR: Invalid request type '" + event.request.type + "'");
+            sendCustomSkillErrorResponse(context, event, UNSUPPORTED_OPERATION, "Unsupported namespace or name");
+    }
 
-	// dispatch the handled request to the SmartApp for processing,
-	// and provide the callback funtion to process the response
-	logNetwork("lambda->echo handleCustomSkill calling SmartApp", reqOptions);
-	httpRequest = http.request(reqOptions, processSmartAppResponse);
-	if (httpPostBody !== null) {
-        logNetwork("lambda->echo handleCustomSkill posting data", httpPostBody);
-		httpRequest.write(JSON.stringify(httpPostBody));
-	}
-	httpRequest.end();
+    // dispatch the handled request to the SmartApp for processing,
+    // and provide the callback funtion to process the response
+    logNetwork("lambda->SmartApp handleCustomSkill open request", reqOptions);
+    httpRequest = http.request(reqOptions, processSmartAppResponse);
+    if (httpPostBody !== null) {
+        logNetwork("lambda->SmartApp handleCustomSkill posting data", httpPostBody);
+        httpRequest.write(JSON.stringify(httpPostBody));
+    }
+    httpRequest.end();
 }
 
 function handleDiscovery(event, context, installationId, baseUrl) {
@@ -574,9 +574,9 @@ function sendResponse(context, event, payload, response) {
 }
 
 function sendCustomSkillResponse(context, event, jsonResponse) {
-	// jsonResponse is the fully-formatted  alexa custom skill response
-	logNetwork("echo<-lambda sendResponse", jsonResponse);
-	context.succeed(jsonResponse);
+    // jsonResponse is the fully-formatted  alexa custom skill response
+    logNetwork("echo<-lambda sendResponse", jsonResponse);
+    context.succeed(jsonResponse);
 }
 
 // Utility function for sending DriverInternalError according to Alexa COHO V2 protocol
@@ -648,11 +648,11 @@ function sendErrorResponseV2(context, event, error, payload, namespace, name) {
 
 
 function sendCustomSkillErrorResponse(context, event, errorCode, errorDescription, namespace, name) {
-	var cardTitle = "SmartThings Error: " + errorCode;
-	// Setting this to true ends the session and exits the skill.
-	var shouldEndSession = true;
-	var alexaResponse = buildResponse({}, buildSpeechletResponse(cardTitle, errorDescription, null, shouldEndSession));
-	context.succeed(alexaResponse); // succeed? Yeah...
+    var cardTitle = "SmartThings Error: " + errorCode;
+    // Setting this to true ends the session and exits the skill.
+    var shouldEndSession = true;
+    var alexaResponse = buildResponse({}, buildSpeechletResponse(cardTitle, errorDescription, null, shouldEndSession));
+    context.succeed(alexaResponse); // succeed? Yeah...
 }
 
 
@@ -661,18 +661,18 @@ function sendCustomSkillErrorResponse(context, event, errorCode, errorDescriptio
 // If there is a problem, then execution will stop, an error will be sent back to the requester and
 // function returns null.
 function parseResponseCheckForError(event, context, data) {
-	var json = null;
-	if (isEventSmartHome(event)) {
-		json = parseSmartHomeResponseCheckForError(event, context, data);
-	}
-	else if (isEventCustomSkill(event)) {
-		json = parseCustomSkillResponseCheckForError(event, context, data);
-	}
-	else {
-		log("parseResponseCheckForError FATAL", "This doesnt look like a Smart Home or Custom skill: ");
-		context.fail();
-	}
-	return json;
+    var json = null;
+    if (isEventSmartHome(event)) {
+        json = parseSmartHomeResponseCheckForError(event, context, data);
+    }
+    else if (isEventCustomSkill(event)) {
+        json = parseCustomSkillResponseCheckForError(event, context, data);
+    }
+    else {
+        log("parseResponseCheckForError FATAL", "This doesnt look like a Smart Home or Custom skill: ");
+        context.fail();
+    }
+    return json;
 }
 
 function parseCustomSkillResponseCheckForError(event, context, data) {

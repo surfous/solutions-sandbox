@@ -1,41 +1,51 @@
-LockDialogIntent {Whichlock}
+LockDialogIntent {WhichLock}
 LockDialogIntent {LockOperation}
 LockDialogIntent {UnlockOperation}
 LockDialogIntent to {LockOperation}
 LockDialogIntent to {UnlockOperation}
 
-LockLockIntent to {LockOperation} the {Whichlock}
-LockLockIntent to {LockOperation} {Whichlock}
+LockLockIntent to {LockOperation} {WhichLock}
+LockLockIntent to {LockOperation} the {WhichLock}
+LockLockIntent to {LockOperation} my {WhichLock}
 LockLockIntent to {LockOperation} {AllLocks}
-LockLockIntent {LockOperation} the {Whichlock}
-LockLockIntent {LockOperation} {Whichlock}
+LockLockIntent {LockOperation} the {WhichLock}
+LockLockIntent {LockOperation} my {WhichLock}
+LockLockIntent {LockOperation} {WhichLock}
 LockLockIntent {LockOperation} {AllLocks}
 
-LockUnlockIntent to {UnlockOperation} {Whichlock}
-LockUnlockIntent to {UnlockOperation}
+LockUnlockIntent to {UnlockOperation} {WhichLock}
+LockUnlockIntent to {UnlockOperation} the {WhichLock}
+LockUnlockIntent to {UnlockOperation} my {WhichLock}
 
-LockStatusIntent what is the status of {Whichlock}
-LockStatusIntent what is the status of the {Whichlock}
-LockStatusIntent what is the status of my {Whichlock}
+LockStatusIntent what is the status of {WhichLock}
+LockStatusIntent what is the status of the {WhichLock}
+LockStatusIntent what is the status of my {WhichLock}
 LockStatusIntent what is the status of {AllLocks}
-LockStatusIntent what's the status of {Whichlock}
-LockStatusIntent what's the status of the {Whichlock}
-LockStatusIntent what's the status of my {Whichlock}
+LockStatusIntent what's the status of {WhichLock}
+LockStatusIntent what's the status of the {WhichLock}
+LockStatusIntent what's the status of my {WhichLock}
 LockStatusIntent what's the status of {AllLocks}
-LockStatusIntent status of {Whichlock}
-LockStatusIntent status of the {Whichlock}
-LockStatusIntent status of my {Whichlock}
+LockStatusIntent status of {WhichLock}
+LockStatusIntent status of the {WhichLock}
+LockStatusIntent status of my {WhichLock}
 LockStatusIntent status of {AllLocks}
-LockStatusIntent status {Whichlock}
+LockStatusIntent status {WhichLock}
 LockStatusIntent status {AllLocks}
-LockStatusIntent status
-LockStatusIntent tell me about {Whichlock}
-LockStatusIntent tell me about the {Whichlock}
-LockStatusIntent tell me about my {Whichlock}
+LockStatusIntent lock status
+LockStatusIntent lock statuses
+LockStatusIntent door status
+LockStatusIntent door statuses
+LockStatusIntent tell me about {WhichLock}
+LockStatusIntent tell me about the {WhichLock}
+LockStatusIntent tell me about my {WhichLock}
 LockStatusIntent tell me about {AllLocks}
-LockStatusIntent is {Whichlock} {LockState}
-LockStatusIntent is my {Whichlock} {LockState}
-LockStatusIntent is the {Whichlock} {LockState}
+LockStatusIntent to tell me about {WhichLock}
+LockStatusIntent to tell me about the {WhichLock}
+LockStatusIntent to tell me about my {WhichLock}
+LockStatusIntent to tell me about {AllLocks}
+LockStatusIntent is {WhichLock} {LockState}
+LockStatusIntent is my {WhichLock} {LockState}
+LockStatusIntent is the {WhichLock} {LockState}
 
 LockSupportedIntent what {DoorsOrLocks}
 LockSupportedIntent what {DoorsOrLocks} do you know

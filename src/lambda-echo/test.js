@@ -97,8 +97,8 @@ var customSkillEvent = {
           "name": "LockOperation",
           "value": "lock"
         },
-        "Whichlock": {
-            "name": "Whichlock",
+        "WhichLock": {
+            "name": "WhichLock",
             "value": "front door"
         }
       },
