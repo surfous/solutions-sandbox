@@ -5,12 +5,19 @@
 * Alexa, launch smart things
 
 ## LockSupportedIntent (no story)
-* Alexa, ask smart things which locks it knows about
-* Alexa, ask smart things what locks do you know
+* Alexa, ask smart things which locks it knows about (one lock)
+* Alexa, ask smart things what doors do you know (multiple locks)
+* Alexa, ask smart things what locks do you know (no locks)
 
 ## LockLockIntent (4b. Single Door Lock and 4c. Multiple Door Lock)
-* Alexa, ask smart things to lock the entry lock
-* Alexa, ask Smart things to lock all locks
+* Alexa, ask smart things to lock the entry door (no door exists)
+* Alexa, ask smart things to lock the entry door (locked)
+* Alexa, ask smart things to lock the unknown door (only one door but wrong name)
+* Alexa, ask smart things to lock the door (only one door but unspecified name)
+* Alexa, ask smart things lock entry door (unlocked)
+* Alexa, ask Smart things to lock all doors (all doors unlocked)
+* Alexa, ask Smart things lock my doors (some doors unlocked)
+* Alexa, ask Smart things lock the door (multiple locks), clarification "Which door do you mean?"
 
 ### special cases
 * Door lock issue (4d.)
@@ -24,29 +31,46 @@
  * Alexa, ask Smart things to lock the mumblefoo lock
 
 ## LockUnlockIntent (4e. Unlock Fail)
-* Alexa, ask smart things to unlock the entry door
+* Alexa, ask smart things to unlock the entry door (locked)
+* Alexa, ask smart things unlock entry door (unlocked)
+* Alexa, ask smart things to unlock the entry door (jammed)
+* Alexa, ask Smart things to unlock all doors (all doors unlocked)
+* Alexa, ask Smart things unlock my doors (some doors unlocked)
+* Alexa, ask smart things to unlock the door (no doors exists)
 
 ## LockStatusIntent (4f. Lock Status)
 for all locks
-* ALexa, ask smart things are my doors locked
-* Alexa, tell smart things to check my locks
-* Alexa, ask smart things about the status of my locks
+* Alexa, ask smart things are my doors locked (all unlocked)
+* Alexa, tell smart things to check my doors (some locked)
+* Alexa, ask smart things about the status of my doors (all locked)
+* Alexa, ask smart things are my doors locked (no doors)
 
 ## LockQueryIntent (4f. Lock Status)
 for a single, named lock
-* Alexa, ask smart things if my front lock is locked (lock is locked)
-* Alexa, ask smart things if my front lock is locked (lock is unlocked)
-* Alexa, ask smart things if my front lock is unlocked (lock is unlocked)
-* Alexa, ask smart things if my front lock is unlocked (lock is locked)
-* Alexa, ask smart things if my front lock is locked (lock is jammed)
-* Alexa, ask smart things if my front lock is unlocked (lock is jammed)
+* Alexa, ask smartthings if my front door is locked (locked)
+* Alexa, ask smartthings if my front door is locked (unlocked), clarification "Should I lock it?"
+* Alexa, ask smartthings if my front door is locked (jammed)
+* Alexa, ask smartthings if my front door is unlocked (locked)
+* Alexa, ask smartthings if my front door is unlocked (unlocked)
+* Alexa, ask smartthings if my front door is unlocked (jamed)
+* Alexa, ask smartthings to tell me about front door (locked)
+* Alexa, ask smartthings to tell me about front door (unlocked), clarification "Should I lock it?"
+* Alexa, ask smartthings to tell me about front door (jammed)
+* Alexa, ask smartthings to tell me about the door (only one door)
+* Alexa, ask smartthings if my door is unlocked (multiple locks), clarification "Which door do you mean?"
+for a single, unnamed lock
+* Alexa, ask smartthings if my door is locked (no doors)
+* Alexa, ask smartthings if my door is locked (only one door)
+* Alexa, ask smartthings if my unknown door is locked (only one door but wrong name)
+
 
 ## DoorStatusIntent (4g. Door Status)
 for all locks
-* Alexa, ask smart things are my doors closed
-* Alexa, ask smart things are my doors open
-* Alexa, tell smart things to check my doors
-* Alexa, ask smart things about the status of my doors
+* Alexa, ask smart things are my doors closed (all closed)
+* Alexa, ask smart things are my doors open (some closed)
+* Alexa, tell smart things to check my doors (some closed)
+* Alexa, ask smart things about the status of my doors (all open)
+* Alexa, ask smart things about the status of my doors (no doors)
 
 ## DoorQueryIntent (4g. Door Status)
 for a single, named door
@@ -54,6 +78,9 @@ for a single, named door
 * Alexa, ask smart things if my front door is open (door is closed)
 * Alexa, ask smart things if my front door is closed (door is open)
 * Alexa, ask smart things if my front door is closed (door is closed)
+* Alexa, ask smartthings if my door is open (no doors)
+* Alexa, ask smartthings if my door is closed (only one door)
+* Alexa, ask smartthings if my unknown door is closed (only one door but wrong name)
 
 
 ## BatteryStatusIntent (4h. Battery Status)
