@@ -1,13 +1,13 @@
 # Test Utterances to try in the service simulator
 
 ## LaunchIntent (4a. Alexa Start)
-* Alexa, ask smart things
-* Alexa, launch smart things
+* [x] Alexa, ask smart things
+* [x] Alexa, launch smart things
 
 ## LockSupportedIntent (no story)
-* Alexa, ask smart things which locks it knows about (one lock)
-* Alexa, ask smart things what doors do you know (multiple locks)
-* Alexa, ask smart things what locks do you know (no locks)
+* [x] Alexa, ask smart things which locks it knows about (one lock)
+* [x] Alexa, ask smart things what doors do you know (multiple locks)
+* [x] Alexa, ask smart things what locks do you know (no locks)
 
 ## LockLockIntent (4b. Single Door Lock and 4c. Multiple Door Lock)
 * Alexa, ask smart things to lock the entry door (no door exists)
@@ -28,44 +28,51 @@
  * Alexa, ask smart things to lock all locks (_Setup: multiple locks, all jammed_)
 
 * With only one lock configured (4bi.)
- * Alexa, ask Smart things to lock the mumblefoo lock
+ * [x] Alexa, ask Smart things to lock the mumblefoo lock
 
 ## LockUnlockIntent (4e. Unlock Fail)
-* Alexa, ask smart things to unlock the entry door (locked)
-* Alexa, ask smart things unlock entry door (unlocked)
-* Alexa, ask smart things to unlock the entry door (jammed)
-* Alexa, ask Smart things to unlock all doors (all doors unlocked)
-* Alexa, ask Smart things unlock my doors (some doors unlocked)
-* Alexa, ask smart things to unlock the door (no doors exists)
+* [x] Alexa, ask smart things to unlock the entry door (locked)
+* [x] Alexa, ask smart things unlock entry door (unlocked)
+* [x] Alexa, ask smart things to unlock the entry door (jammed)
+* [x] Alexa, ask Smart things to unlock all doors (all doors unlocked)
+* [x] Alexa, ask Smart things unlock my doors (some doors unlocked)
+* [x] Alexa, ask smart things to unlock the door (no doors exists)
 
 ## LockStatusIntent (4f. Lock Status)
-for all locks
-* Alexa, ask smart things are my doors locked (all unlocked)
-* Alexa, tell smart things to check my doors (some locked)
-* Alexa, ask smart things about the status of my doors (all locked)
-* Alexa, ask smart things are my doors locked (no doors)
+### for all locks
+* [x] Alexa, ask smart things are my doors locked (all unlocked)
+* [x] Alexa, tell smart things to check my doors (some locked)
+* [x] Alexa, ask smart things about the status of my doors (all locked)
+* [x] Alexa, ask smart things are my doors locked (no doors)
 
-## LockQueryIntent (4f. Lock Status)
-for a single, named lock
-* Alexa, ask smartthings if my front door is locked (locked)
-* Alexa, ask smartthings if my front door is locked (unlocked), clarification "Should I lock it?"
-* Alexa, ask smartthings if my front door is locked (jammed)
-* Alexa, ask smartthings if my front door is unlocked (locked)
-* Alexa, ask smartthings if my front door is unlocked (unlocked)
-* Alexa, ask smartthings if my front door is unlocked (jamed)
-* Alexa, ask smartthings to tell me about front door (locked)
-* Alexa, ask smartthings to tell me about front door (unlocked), clarification "Should I lock it?"
-* Alexa, ask smartthings to tell me about front door (jammed)
-* Alexa, ask smartthings to tell me about the door (only one door)
-* Alexa, ask smartthings if my door is unlocked (multiple locks), clarification "Which door do you mean?"
-for a single, unnamed lock
-* Alexa, ask smartthings if my door is locked (no doors)
-* Alexa, ask smartthings if my door is locked (only one door)
-* Alexa, ask smartthings if my unknown door is locked (only one door but wrong name)
+###for a single, named lock
+* [x] Alexa, ask smartthings if my front door is locked (locked)
+* [x] Alexa, ask smartthings if my front door is locked (unlocked), clarification "Should I lock it?"
+* [x] Alexa, ask smartthings if my front door is locked (jammed)
+ * java.lang.NullPointerException: Cannot invoke method toLowerCase() on null object
+	at org.kohsuke.groovy.sandbox.impl.Checker$1.call(Checker.java:66)
+ * line 767 of smartapp
+
+* [x] Alexa, ask smartthings if my front door is unlocked (locked)
+ * [ ]Clarification, "Should I lock it?"
+* [x] Alexa, ask smartthings if my front door is unlocked (unlocked)
+* [x] Alexa, ask smartthings if my front door is unlocked (jammed)
+* [x] Alexa, ask smartthings to tell me about front door (locked)
+* [x] Alexa, ask smartthings to tell me about front door (unlocked),
+ * [ ] clarification "Should I lock it?"
+* [x] Alexa, ask smartthings to tell me about front door (jammed)
+* [x] Alexa, ask smartthings to tell me about the door (only one door)
+* [ ] Alexa, ask smartthings if my door is unlocked (multiple locks),
+ * [ ] more than one lock - clarification "Which door do you mean?"
+ * [x] for a single lock, unnamed lock - give status with name
+* [x] Alexa, ask smartthings if my door is locked (no doors)
+* [x] Alexa, ask smartthings if my door is locked (only one door)
+* [x] Alexa, ask smartthings if my unknown door is locked (only one door but wrong name)
 
 
 ## DoorStatusIntent (4g. Door Status)
-for all locks
+**NOT YET IMPLEMENTED**
+for all doors
 * Alexa, ask smart things are my doors closed (all closed)
 * Alexa, ask smart things are my doors open (some closed)
 * Alexa, tell smart things to check my doors (some closed)
@@ -73,6 +80,7 @@ for all locks
 * Alexa, ask smart things about the status of my doors (no doors)
 
 ## DoorQueryIntent (4g. Door Status)
+**NOT YET IMPLEMENTED**
 for a single, named door
 * Alexa, ask smart things if my front door is open (door is open)
 * Alexa, ask smart things if my front door is open (door is closed)
@@ -84,10 +92,11 @@ for a single, named door
 
 
 ## BatteryStatusIntent (4h. Battery Status)
+**NOT YET IMPLEMENTED**
 *  Alexa ask SmartThings for the battery status of the entry lock
 *  Alexa ask SmartThings for the battery status of the entry door
 
 
 ## HelpIntent (4i. Help intent)
-* Alexa, ask smart things for help
-* Alexa, tell smart things to help me
+* [x] Alexa, ask smart things for help - **FAIL - no reprompt, should end session**
+* [x] Alexa, tell smart things to help me

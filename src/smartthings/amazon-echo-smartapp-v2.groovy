@@ -347,8 +347,7 @@ def customPost() {
     if (intentName.startsWith('Lock')) {
         transactionDeviceKind = 'lock'
         transactionDeviceKindPlural = 'locks'
-        if (locks)
-        	transactionCandidateDevices.addAll(locks)
+        transactionCandidateDevices.addAll(locks?:[])
 
         if (transactionCandidateDevices.size() == 0) {
             // User has no matching devices
@@ -375,13 +374,15 @@ def customPost() {
                 }
                 deviceNameCompLog << debugLine
             }
-            log.debug deviceNameCompLog.join('   \n')
+            if (deviceNameCompLog) {
+                log.debug deviceNameCompLog.join('   \n')
+            }
             if (transactionDevices == null || transactionDevices.size() == 0) {
                 if (transactionCandidateDevices.size() == 1) {
                     // If we have an ambiguous WhichLock slot and ony have one lock, then assume we mean that one
                     transactionDevices = transactionCandidateDevices
                 } else {
-                    return buildSimpleDeviceResponse("some command", interpretedSlots.WhichLock, "I don't know which ${transactionDeviceKind} you mean by ${interpretedSlots.WhichLock}.")
+                    return buildSimpleCustomResponse("some command", interpretedSlots.WhichLock, "I don't know which ${transactionDeviceKind} you mean by ${interpretedSlots.WhichLock}.")
                 }
             }
             // devices should be guaranteed not null and to have length past here
@@ -399,8 +400,11 @@ def customPost() {
         case 'LockStatusIntent':
         if (transactionDevices.size() == 1 && interpretedSlots?.LockState != null) {
             responseToLambda = lockQueryCommand(transactionDevices[0], interpretedSlots.LockState)
-        } else {
+        } else if (transactionDevices.size() > 0) {
+            // user wanted status of one device
             responseToLambda = lockStatusCommand(transactionDevices)
+        } else {
+            responseToLambda = lockStatusCommand(transactionCandidateDevices)
         }
         break
         case 'LockSupportedIntent':
@@ -625,13 +629,13 @@ def launchCommand() {
     String cardText = 'This text is for a more in-depth description of the skill. More usage examples can be shown here.\n' +
             '  - "Ask SmartThings to lock my front door lock"\n' +
             '  - "Ask SmartThings which locks you know about"\n' +
-            '  - FOr more information, you can, "Ask SmartThings for help"\n' +
+            '  - For more information, you can, "Ask SmartThings for help"\n' +
             '  - But remember, no hyperlinks\n' +
             '  - And the card must have less than 8000 characters\n' +
             'We can also make this card have an image. '
     String repromptText = 'What would you like to do?'
     Map repromptObj = buildOutputSpeechObj(repromptText)
-    return buildSimpleCustomResponseWithReprompt(titleText, sayText, cardText, repromptObj)
+    return buildSimpleCustomResponse(titleText, sayText, cardText)
 }
 
 def stopCommand() {
@@ -651,7 +655,7 @@ def helpCommand() {
             'Epilogue, but keep this whole thing to less than 8000 char'
     String repromptText = 'What would you like to do?'
     Map repromptObj = buildOutputSpeechObj(repromptText)
-    return buildSimpleCustomResponseWithReprompt(titleText, sayText, cardText, repromptObj)
+    return buildSimpleCustomResponse(titleText, sayText, cardText)
 }
 
 /**
@@ -661,44 +665,48 @@ def helpCommand() {
  */
 def lockUnlockFailCommand(def singleDevice) {
     log.warn "Unlock ${singleDevice.displayName} *** NOT PERMITTED"
-    // if (singleDevice?.displayName?.toLowerCase().startsWith('pod bay door')) {
-    //     return buildSimpleDeviceResponse("open", singleDevice.displayName, "I'm sorry, Dave. I'm afraid I can't do that.")
-    // }
+    String targetDeviceName = singleDevice.displayName
+    if (transactionUsedAllDevicesSlot) {
+        targetDeviceName = 'all locks'
+    }
     // TODO Needs copy
     sendNotificationEvent("For security reasons, you are not allowed to unlock doors via Alexa")
-    return buildSimpleDeviceResponse("unlock", singleDevice.displayName, "For security reasons, that feature has been disabled. For more information, please refer to the notifications page in your SmartThings mobile app")
+    return buildSimpleDeviceResponse("unlock", targetDeviceName, "For security reasons, that feature has been disabled. For more information, please refer to the notifications page in your SmartThings mobile app")
 }
 
 @Field final List KNOWN_LOCK_STATES = ['locked', 'unlocked']
 def lockLockCommand(List deviceList) {
+    log.trace "lockLockCommand($deviceList)"
     String titleObject = "the ${deviceList[0]}"
     if (transactionUsedAllDevicesSlot == true) {
         titleObject = 'all locks'
     }
-    log.trace "lockLockCommand($deviceList)"
 
     List lockingDeviceDisplayNames = []
     List badStateDeviceDisplayNames = []
-    List lockingLoopLog = []
+    List loopLogs = []
     deviceList.each {
         device ->
         String currentState = device?.currentValue('lock')
-        String logLine = ""
         if (KNOWN_LOCK_STATES.contains(currentState)) {
             // lock is in a known state
-            logLine += "Issuing lock command to ${device.displayName} state: $currentState"
+
+            String logLine = "Issuing lock command to ${device.displayName}"
             device.lock()
+            if (currentState == 'locked') {
+                logLine += " (we see ${device.displayName} as already in a locked state, but we issued another lock command anyway)"
+            }
             lockingDeviceDisplayNames << device.displayName
-            lockingLoopLog << logLine
+            loopLogs << logLine
         } else {
             // lock is in an unknonwn state
-            String unknownStateMsg = "$device.displayName is in an unknown state: $currentState"
-            lockingLoopLog << "WARN: $unknownStateMsg"
-            log.warn unknownStateMsg
+            String warnMsg = "$device.displayName is in an unknown state: $currentState"
+            loopLogs << "WARN: $warnMsg"
+            log.warn warnMsg
             badStateDeviceDisplayNames << device.displayName
         }
     }
-    log.info lockingLoopLog.join('   \n')
+    log.info loopLogs.join('   \n')
 
     List responseSpeeches = []
     // prepare the response
@@ -709,7 +717,7 @@ def lockLockCommand(List deviceList) {
             badStateVerb = 'is'
             badStateNoun = 'this lock'
         }
-        String badStateSpeech = "The ${convoList(badStateDeviceDisplayNames)} $badStateVerb in an unknown state,  Please check the $badStateNoun and then try again."
+        String badStateSpeech = "The ${convoList(badStateDeviceDisplayNames)} $badStateVerb in an unknown state.\nPlease check $badStateNoun and then try again."
         responseSpeeches << badStateSpeech
     }
     if (lockingDeviceDisplayNames.size() > 0) {
@@ -717,9 +725,25 @@ def lockLockCommand(List deviceList) {
         responseSpeeches << lockingSpeech
     }
 
-    String responseSpeech = responseSpeeches.join(' ')
+    String responseSpeech = responseSpeeches.join('\n')
 
     return buildSuccessDeviceResponse("lock", titleObject, responseSpeech)
+}
+
+String pluralizer(Integer howMany, String singularWord, String pluralWord) {
+    String useWord = pluralWord
+    if (howMany == 1) {
+        useWord = singularWord
+    }
+    return useWord
+}
+
+String deviceVerb(Integer howMany, String singularVerb='is', String pluralVerb='are') {
+    return pluralizer(howMany, singularVerb, pluralVerb)
+}
+
+String deviceIndicator(Integer howMany, String singularInd="this $transactionDeviceKind", String pluralInd="these $transactionDeviceKindPlural") {
+    return pluralizer(howMany, singularInd, pluralInd)
 }
 
 String convoList(List listOfStrings, String conjunction="and") {
@@ -747,14 +771,39 @@ def lockStatusCommand(List deviceList) {
     if (deviceList.size() == 1) {
         statusTarget = deviceList[0].displayName
     }
-    String outputText = ""
+    List outputSpeeches = []
+    // initialize the device state map for each state we care about
+    Map devicesByState = [unknown:[]]
+    KNOWN_LOCK_STATES.each {
+        devicesByState[it] = []
+    }
     deviceList.each {
         // FIXME - use unknown state code from lockLockCommand here as well
         device ->
-        outputText += "Your ${device.displayName} is ${device.currentValue('lock')}. \n"
+        String deviceCurrentState = device?.currentValue('lock')?:'unknown'
+        if (KNOWN_LOCK_STATES.contains(deviceCurrentState)) {
+            devicesByState[deviceCurrentState] << device.displayName
+        } else {
+            devicesByState.unknown << device.displayName
+        }
+        //outputText += "Your ${device.displayName} is ${device.currentValue('lock')}. \n"
     }
-
-    return buildSimpleDeviceResponse("status", statusTarget, outputText)
+    if (devicesByState.unknown) {
+        String devicesInThisState = convoList(devicesByState.unknown)
+        String theVerb = deviceVerb(devicesByState.unknown.size())
+        String theIndicator = deviceIndicator(devicesByState.unknown.size())
+        outputSpeeches << "The $devicesInThisState $theVerb in an unknown state,  Please check $theIndicator and then try again."
+    }
+    KNOWN_LOCK_STATES.each {
+        knownState ->
+        if (devicesByState[knownState]) {
+            String devicesInThisState = convoList(devicesByState[knownState])
+            String theVerb = deviceVerb(devicesByState[knownState].size())
+            String theIndicator = deviceIndicator(devicesByState[knownState].size())
+            outputSpeeches << "The $devicesInThisState $theVerb $knownState."
+        }
+    }
+    return buildSimpleDeviceResponse("what is the status of", statusTarget, outputSpeeches.join('\n'))
 }
 
 /**
@@ -778,9 +827,10 @@ def lockQueryCommand(def singleDevice, String queryState) {
         log.warn "We don't know about the lock state queried: $queryState. Assuming it means 'locked'"
     }
 
-    def deviceCurrentState = singleDevice.currentValue('lock')
+    def deviceCurrentState = singleDevice?.currentValue('lock')?.toLowerCase()?:'unknown'
+
     String outputText
-    if (normalQueryState == singleDevice.currentLock.toLowerCase()) {
+    if (normalQueryState == deviceCurrentState.toLowerCase()) {
         // Yes!
         outputText = "Yes, your ${singleDevice.displayName} is $normalQueryState."
     } else if (!KNOWN_LOCK_STATES.contains(deviceCurrentState.toLowerCase())) {
