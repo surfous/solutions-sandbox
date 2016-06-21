@@ -401,8 +401,8 @@ in the same utrterance,
         case 'LockSupportedIntent':
         responseToLambda = whichDevicesCommand(transactionDeviceKind, transactionDeviceKindPlural, transactionCandidateDevices)
         break
-        case 'LaunchIntetnt':
-        case 'LockDialogIntetnt':
+        case 'LaunchIntent':
+        case 'LockDialogIntent':
         responseToLambda = launchCommand()
         break
         case 'AMAZON.HelpIntent':
@@ -766,7 +766,7 @@ def lockQueryCommand(def singleDevice, String queryState) {
         log.warn "We don't know about the lock state queried: $queryState. Assuming it means 'locked'"
     }
 
-    deviceCurrentState = singleDevice.currentValue('lock')
+    def deviceCurrentState = singleDevice.currentValue('lock')
     String outputText
     if (normalQueryState == singleDevice.currentLock.toLowerCase()) {
         // Yes!
