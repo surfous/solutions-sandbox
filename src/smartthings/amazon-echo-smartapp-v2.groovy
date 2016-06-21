@@ -325,8 +325,7 @@ def customPost() {
     // simplify the slot map
     Map interpretedSlots = [:]
     def intentSlots = customSkillReq?.request?.intent?.slots
-    log.debug intentSlots
-    log.debug "Slots from the intent"
+    log.debug "Slots from the intent $intentSlots"
     customSkillReq?.request?.intent?.slots?.each {
         key, valmap ->
         // log.debug "slot key is $key, valmap is $valmap"
@@ -335,8 +334,7 @@ def customPost() {
         }
     }
 
-    log.debug interpretedSlots
-    log.debug "Interpreted Slots"
+    log.debug "Interpreted Slots $interpretedSlots"
 
 
     /*
@@ -418,8 +416,7 @@ in the same utrterance,
         break
     }
 
-    log.debug responseToLambda
-    log.debug "Returning this to the Lambda function"
+    log.debug "Returning this to the Lambda function $responseToLambda"
     return responseToLambda
 }
 
