@@ -1,0 +1,36 @@
+{
+    "version": "1.0",
+    "session": {
+        "new": true,
+        "sessionId": "amzn1.echo-api.session.cff7dacd-7180-4bd5-a8bb-71fdd782c14e",
+        "application": {
+            "applicationId": "amzn1.echo-sdk-ams.app.563420d2-8402-41c3-b9a8-f55daca14adb"
+        },
+        "user": {
+            "userId": "amzn1.ask.account.AFP3ZWPOS2BGJR7OWJZ3DHPKMOMNWY4AY66FUR7ILBWANIHQN73QHG57HATAWHIAQJBXDCXQOEHADJZ3XY2BXAWZGKQ7JYZBHRBYGF77SJBUXQ6XNKNRRPDGONOR2VB6RDCHSOFJQPZY3LUU6POGAESTV2AUKTYRPSEGSWBZDEX4AMINXYX35IYAPXUH5HR3ZQXNPFVXA4VKAHY",
+            "accessToken": "78cb818c-f751-4860-b0bd-4c966de3ba4d"
+        }
+    },
+    "request": {
+        "type": "IntentRequest",
+        "requestId": "amzn1.echo-api.request.fd3629bd-35b2-4a04-9c2c-5f4ff1c27a6d",
+        "timestamp": "2016-06-16T10:46:05Z",
+        "locale": "en-US",
+        "intent": {
+            "name": "OneshotLockIntent",
+            "slots": {
+                "LockOperation": {
+                    "name": "LockOperation",
+                    "value": "lock"
+                },
+                "WhichLock": {
+                    "name": "WhichLock",
+                    "value": "my door"
+                },
+                "AllLocks": {
+                    "name": "AllLocks"
+                }
+            }
+        }
+    }
+}

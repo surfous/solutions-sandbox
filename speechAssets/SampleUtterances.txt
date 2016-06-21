@@ -1,0 +1,94 @@
+LockDialogIntent {WhichLock}
+LockDialogIntent {LockOperation}
+LockDialogIntent {UnlockOperation}
+LockDialogIntent to {LockOperation}
+LockDialogIntent to {UnlockOperation}
+
+LockLockIntent to {LockOperation} {WhichLock}
+LockLockIntent to {LockOperation} the {WhichLock}
+LockLockIntent to {LockOperation} my {WhichLock}
+LockLockIntent to {LockOperation} {AllLocks}
+LockLockIntent {LockOperation} the {WhichLock}
+LockLockIntent {LockOperation} my {WhichLock}
+LockLockIntent {LockOperation} {WhichLock}
+LockLockIntent {LockOperation} {AllLocks}
+
+LockUnlockIntent to {UnlockOperation} {WhichLock}
+LockUnlockIntent to {UnlockOperation} the {WhichLock}
+LockUnlockIntent to {UnlockOperation} my {WhichLock}
+
+LockStatusIntent what is the status of {WhichLock}
+LockStatusIntent what is the status of the {WhichLock}
+LockStatusIntent what is the status of my {WhichLock}
+LockStatusIntent what is the status of {AllLocks}
+LockStatusIntent what's the status of {WhichLock}
+LockStatusIntent what's the status of the {WhichLock}
+LockStatusIntent what's the status of my {WhichLock}
+LockStatusIntent what's the status of {AllLocks}
+LockStatusIntent status of {WhichLock}
+LockStatusIntent status of the {WhichLock}
+LockStatusIntent status of my {WhichLock}
+LockStatusIntent status of {AllLocks}
+LockStatusIntent status {WhichLock}
+LockStatusIntent status {AllLocks}
+LockStatusIntent lock status
+LockStatusIntent lock statuses
+LockStatusIntent door status
+LockStatusIntent door statuses
+LockStatusIntent tell me about {WhichLock}
+LockStatusIntent tell me about the {WhichLock}
+LockStatusIntent tell me about my {WhichLock}
+LockStatusIntent tell me about {AllLocks}
+LockStatusIntent to tell me about {WhichLock}
+LockStatusIntent to tell me about the {WhichLock}
+LockStatusIntent to tell me about my {WhichLock}
+LockStatusIntent to tell me about {AllLocks}
+LockStatusIntent is {WhichLock} {LockState}
+LockStatusIntent is my {WhichLock} {LockState}
+LockStatusIntent is the {WhichLock} {LockState}
+
+LockSupportedIntent what {DoorsOrLocks}
+LockSupportedIntent what {DoorsOrLocks} do you know
+LockSupportedIntent what {DoorsOrLocks} do you have
+LockSupportedIntent what {DoorsOrLocks} do you control
+LockSupportedIntent what {DoorsOrLocks} do you work with
+LockSupportedIntent what {DoorsOrLocks} can you control
+LockSupportedIntent what {DoorsOrLocks} can you work with
+LockSupportedIntent what {DoorsOrLocks} can you use
+LockSupportedIntent what {DoorsOrLocks} you can control
+LockSupportedIntent what {DoorsOrLocks} you can work with
+LockSupportedIntent what {DoorsOrLocks} you can use
+LockSupportedIntent what {DoorsOrLocks} do you know about
+LockSupportedIntent what {DoorsOrLocks} do you know of
+LockSupportedIntent tell me what {DoorsOrLocks}
+LockSupportedIntent tell me what {DoorsOrLocks} do you know
+LockSupportedIntent tell me what {DoorsOrLocks} do you have
+LockSupportedIntent tell me what {DoorsOrLocks} do you control
+LockSupportedIntent tell me what {DoorsOrLocks} do you work with
+LockSupportedIntent tell me what {DoorsOrLocks} can you control
+LockSupportedIntent tell me what {DoorsOrLocks} can you work with
+LockSupportedIntent tell me what {DoorsOrLocks} can you use
+LockSupportedIntent tell me what {DoorsOrLocks} you can control
+LockSupportedIntent tell me what {DoorsOrLocks} you can work with
+LockSupportedIntent tell me what {DoorsOrLocks} you can use
+LockSupportedIntent tell me what {DoorsOrLocks} do you know about
+LockSupportedIntent tell me what {DoorsOrLocks} do you know of
+LockSupportedIntent tell me which {DoorsOrLocks}
+LockSupportedIntent tell me which {DoorsOrLocks} do you know
+LockSupportedIntent tell me which {DoorsOrLocks} do you have
+LockSupportedIntent tell me which {DoorsOrLocks} do you control
+LockSupportedIntent tell me which {DoorsOrLocks} do you work with
+LockSupportedIntent tell me which {DoorsOrLocks} can you control
+LockSupportedIntent tell me which {DoorsOrLocks} can you work with
+LockSupportedIntent tell me which {DoorsOrLocks} can you use
+LockSupportedIntent tell me which {DoorsOrLocks} you can control
+LockSupportedIntent tell me which {DoorsOrLocks} you can work with
+LockSupportedIntent tell me which {DoorsOrLocks} you can use
+LockSupportedIntent tell me which {DoorsOrLocks} do you know about
+LockSupportedIntent tell me which {DoorsOrLocks} do you know of
+LockSupportedIntent tell me the {DoorsOrLocks} you know
+LockSupportedIntent tell me the {DoorsOrLocks} you know about
+LockSupportedIntent tell me the {DoorsOrLocks} you know of
+LockSupportedIntent tell me about the {DoorsOrLocks} you know
+LockSupportedIntent tell me about the {DoorsOrLocks} you know of
+LockSupportedIntent tell me about your {DoorsOrLocks}
