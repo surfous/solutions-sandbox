@@ -323,6 +323,42 @@ Map buildCommandDeviceResponse(command, device, String outputText) {
     return buildCustomSkillResponse(titleText:titleText, sayText:outputText)
 }
 
+Map buildUnexpectedResponse(Boolean newSession=true) {
+	String title = "I'm confused..."
+	String say = "I'm not sure what to do based on what you've said. "
+	if (!newSession) {
+		say = "I'm not sure what to do based on what you just told me. "
+	}
+	say += "Maybe I'm just having trouble understanding you right now. Let's start over if you'd like to try again."
+	return buildCustomSkillResponse(titleText:title, sayText:say)
+}
+
+Boolean compareDeviceNames(String left='', String right='') {
+    if (left.toLowerCase().replaceAll(' ','') == right.toLowerCase().replaceAll(' ','')) {
+        return true
+    }
+    return false
+}
+
+def findDeviceByName(String spokenDeviceName) {
+	log.debug "Evaluating each authorized device name to see if it matches $spokenDeviceName"
+	List deviceNameCompLog = []
+	List foundDevices = []
+	transactionCandidateDevices.each {
+		device ->
+		String debugLine = "device display name '${device.displayName}' == spoken device name '$spokenDeviceName' ? "
+		if (compareDeviceNames(device.displayName, spokenDeviceName)) {
+			foundDevices.add(device)
+			debugLine += 'YES'
+		} else {
+			debugLine += 'NO'
+		}
+		deviceNameCompLog << debugLine
+	}
+	log.debug deviceNameCompLog.join('   \n')
+	return foundDevices
+}
+
 /**
  * handles custom skill GET requests
  * http request contains entire JSON message from AVS
@@ -356,13 +392,12 @@ def customPost() {
     // Extract session data
     transactionIsNewSession = customSkillReq?.session?.new?:false
     transactionSessionAttributes = customSkillReq?.session?.attributes?:[:] // get the session attrs
-
     def requestObj = customSkillReq?.request
 
     // what was the intended command?
     transactionIntentName = customSkillReq?.request?.intent?.name
 
-    // early short circuit if we ask to unlock.
+    // short circuit early if we ask to unlock.
     if (transactionIntentName == 'LockUnlockIntent' && transactionIsNewSession ) {
         responseToLambda = unlockFailCommandHandler()
         return responseToLambda
@@ -382,15 +417,14 @@ def customPost() {
 
     log.debug "intentName: $transactionIntentName; Interpreted Slots $interpretedSlots; isNewSession: $transactionIsNewSession"
 
-
     /*
     set if user said an utterance a slot which references all devices of a type:
     - AllLocks
     - AllLocks
     NOTE: Utterances whould never include both the inidivual device slot and all devices slot
     in the same utrterance,
-*/
 
+	*/
 
     if (transactionIsNewSession) {
         // specific to locks
@@ -411,22 +445,24 @@ def customPost() {
                 transactionDevices = transactionCandidateDevices
             } else if (interpretedSlots?.WhichLock != null) {
                 // User has specified a specific lock
-                log.debug "Evaluating each known device to see if it matches ${interpretedSlots?.WhichLock}"
-                List deviceNameCompLog = []
-                transactionCandidateDevices.each {
-                    device ->
-                    String debugLine = "device display name '${device.displayName.toLowerCase()}' == WhichLock slot value '${interpretedSlots.WhichLock.toLowerCase()}' ? "
-                    if (device.displayName.toLowerCase().replaceAll(' ','') == interpretedSlots.WhichLock.toLowerCase().replaceAll(' ','')) {
-                        transactionDevices.add(device)
-                        debugLine += 'YES'
-                    } else {
-                        debugLine += 'NO'
-                    }
-                    deviceNameCompLog << debugLine
-                }
-                if (deviceNameCompLog) {
-                    log.debug deviceNameCompLog.join('   \n')
-                }
+                // log.debug "Evaluating each known device to see if it matches ${interpretedSlots?.WhichLock}"
+                // List deviceNameCompLog = []
+                // transactionCandidateDevices.each {
+                //     device ->
+                //     String debugLine = "device display name '${device.displayName.toLowerCase()}' == WhichLock slot value '${interpretedSlots.WhichLock.toLowerCase()}' ? "
+                //     //if (device.displayName.toLowerCase().replaceAll(' ','') == interpretedSlots.WhichLock.toLowerCase().replaceAll(' ','')) {
+                //     if (compareDeviceNames(device.displayName, interpretedSlots.WhichLock)) {
+                //         transactionDevices.add(device)
+                //         debugLine += 'YES'
+                //     } else {
+                //         debugLine += 'NO'
+                //     }
+                //     deviceNameCompLog << debugLine
+                // }
+                // if (deviceNameCompLog) {
+                //     log.debug deviceNameCompLog.join('   \n')
+                // }
+				transactionDevices = findDeviceByName(interpretedSlots.WhichLock)
                 if (transactionDevices == null || transactionDevices.size() == 0) {
                     if (transactionCandidateDevices.size() == 1) {
                         // If we have an ambiguous WhichLock slot and ony have one lock, then assume we mean that one
@@ -439,6 +475,12 @@ def customPost() {
             }
         }
     } else {
+		// was the user response one that we expected?
+		if (!transactionSessionAttributes?.validResponseIntents?.contains(transactionIntentName)) {
+			// we got a user response outside what we expected, end
+			return buildUnexpectedResponse(transactionIsNewSession)
+		}
+
         transactionStartIntent = transactionSessionAttributes?.initialIntent
         transactionUsedAllDevicesSlot = transactionSessionAttributes?.usedAllDevicesSlot?:false
         if (transactionStartIntent.startsWith('Lock')) {
@@ -447,15 +489,19 @@ def customPost() {
             transactionCandidateDevices.addAll(locks?:[])
         }
 
-        log.debug "Evaluating each known device to see if it matches an ID in ${transactionSessionAttributes.deviceIds}"
-        transactionDevices = []
-        transactionCandidateDevices.each {
-            device ->
-            if (transactionSessionAttributes.deviceIds.contains(device.id)) {
-                transactionDevices << device
-            }
-        }
-        transactionSessionAttributes.deviceIds = null
+		if (transactionSessionAttributes?.deviceIds) {
+	        log.debug "Evaluating each known device to see if it matches an ID in ${transactionSessionAttributes.deviceIds}"
+	        transactionDevices = []
+	        transactionCandidateDevices.each {
+	            device ->
+	            if (transactionSessionAttributes.deviceIds.contains(device.id)) {
+	                transactionDevices << device
+	            }
+	        }
+	        transactionSessionAttributes.deviceIds = null
+		} else if (interpretedSlots?.WhichLock != null) {
+			transactionDevices = findDeviceByName(interpretedSlots.WhichLock)
+		}
     }
 
     // Dispatch the intent to its handler command
@@ -463,12 +509,13 @@ def customPost() {
         case { it == 'LockUnlockIntent' && transactionIsNewSession }:
             responseToLambda = unlockFailCommandHandler(transactionDevices[0]) // Only one lock may be passed to unlock
             break
-        case {it == 'LockDialogIntent' && transactionUsedAllDevicesSlot && transactionIsNewSession}:
+        //case {it == 'LockDialogIntent' && transactionUsedAllDevicesSlot && transactionIsNewSession}:
         case { it == 'LockLockIntent' && transactionIsNewSession }:
             responseToLambda = lockCommandHandler(transactionDevices)
             break
         case { it == 'LockStatusIntent' && transactionIsNewSession }:
             if (transactionDevices.size() == 1 && interpretedSlots?.LockState != null) {
+                // user asked if one lock was locked/unlocked
                 responseToLambda = lockQueryHandler(transactionDevices[0], interpretedSlots.LockState)
             } else if (transactionDevices.size() > 0) {
                 // user wanted status of one device
@@ -495,9 +542,12 @@ def customPost() {
             break
         case 'LockQueryBatteryIntent':
             responseToLambda = batteryStatusCommand(transactionDevices)
+			break
+		case { it == 'WhichLockIntent' && !transactionIsNewSession }:
+            responseToLambda = chooseDeviceHandler(transactionDevices)
             break
-        case 'AMAZON.stopIntent':
-        case 'AMAZON.cancelIntent':
+		case 'AMAZON.StopIntent':
+        case 'AMAZON.CancelIntent':
             responseToLambda = stopCommandHandler()
             break
         default:
@@ -766,6 +816,34 @@ def lockCommandHandler(List deviceList) {
         titleObject = 'all locks'
     }
 
+
+    if (transactionDevicesNoMatch && transactionCandidateDevices.size() >= 1) {
+        transactionSessionAttributes.initialIntent = transactionIntentName
+        String outputText = ""
+        String repromptText = ""
+        String titleText = ""
+        if (transactionCandidateDevices.size() == 1) {
+            // no certain match, but one candidate - confirm
+            def thisDevice = transactionCandidateDevices[0]
+            // build up session
+            transactionSessionAttributes.validResponseIntents = ['AMAZON.YesIntent', 'AMAZON.NoIntent']
+            transactionSessionAttributes.nextHandler = 'yesNoDialogHandler'
+			transactionSessionAttributes.deviceIds = [thisDevice.id]
+            outputText = "I couldn't find a lock by that name, but you have one named ${thisDevice.displayName}. Is this the one you meant?"
+            repromptText = "Is ${thisDevice.displayName} the lock you meant?"
+            titleText = "Lock the ${thisDevice.displayName}?"
+        } else {
+            // no certain match, and multiple candidates - ask again
+            transactionSessionAttributes.validResponseIntents = ['WhichLockIntent']
+            transactionSessionAttributes.nextHandler = 'lockChosenDeviceHandler'
+            outputText = "I couldn't find a lock matching that name. Which one did you mean? You can say ${convoList(transactionCandidateDevices, 'or')}, or you can say 'Cancel'"
+            repromptText = "Which lock did you mean?"
+            titleText = "Should I lock one of these?"
+        }
+        return buildCustomSkillResponse(titleText:titleText, sayText:outputText, repromptText:repromptText)
+    }
+
+
     List lockingDeviceDisplayNames = []
     List badStateDeviceDisplayNames = []
     List loopLogs = []
@@ -812,6 +890,8 @@ def lockCommandHandler(List deviceList) {
 
 def lockStatusHandler(List deviceList) {
     log.trace "lockStatusHandler($deviceList)"
+
+
     String statusTarget = "your locks"
     if (deviceList.size() == 1) {
         statusTarget = deviceList[0].displayName
@@ -1024,6 +1104,21 @@ Map doLockDialogHandler(Boolean isResponseYes) {
         responseObject = buildNoCardResponse("OK");
     }
     return responseObject
+}
+
+Map chooseDeviceHandler(def deviceList) {
+	if (!transactionSessionAttributes?.nextHandler) {
+        return buildErrorResponse("Session is missing nextHandler for $transactionIntentName")
+    } else if (!transactionDevices || transactionDevices.size() == 0) {
+		// FIXME - better error
+		return buildErrorResponse("Device was not chosen")
+	}
+    // now handle the  response
+    return "${transactionSessionAttributes?.nextHandler}"()
+}
+
+Map doLockSpecifiedDeviceHandler() {
+	return lockCommandHandler(transactionDevices)
 }
 
 Boolean isIntentValid() {

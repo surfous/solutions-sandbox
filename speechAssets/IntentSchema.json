@@ -27,6 +27,15 @@
                 }
             ]
         },
+		{
+			"intent": "WhichLockIntent",
+			"slots": [
+				{
+					"name": "WhichLock",
+					"type": "LOCKS"
+				}
+			]
+		}
         {
             "intent": "LockLockIntent",
             "slots": [
