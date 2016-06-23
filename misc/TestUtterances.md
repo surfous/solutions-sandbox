@@ -128,10 +128,15 @@ for a single, named door
 
 
 ## BatteryStatusIntent (4h. Battery Status)
-**NOT YET IMPLEMENTED**
-
 * [ ] Alexa ask {INVOCATION} for the battery status of the {DEVICE-DOOR}
 * [ ] Alexa ask {INVOCATION} for the battery status of the {DEVICE-LOCK}
+* [ ] Alexa {INVOCATION} for the battery status of the {DEVICE-LOCK} (battery ok)
+* [ ] Alexa {INVOCATION} for the battery status of the {DEVICE-LOCK} (battery low)
+* [ ] Alexa {INVOCATION} about the battery state of all doors (multiple locks, all ok battery)
+* [ ] Alexa {INVOCATION} about the battery state of all doors (multiple locks, 2 or more with low battery)
+* [ ] Run 10 different commands in a row (no locks with low battery, battery level should never be mentioned)
+* [ ] Run 10 different commands in a row (one or more locks with low battery - locks with low battery should be reported after two of the ten commands, i.e. every fifth)
+
 
 
 ## HelpIntent (4i. Help intent)
