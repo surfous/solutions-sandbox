@@ -54,6 +54,8 @@ LockStatusIntent if my {WhichLock} is {LockState}
 LockStatusIntent if the {WhichLock} is {LockState}
 LockStatusIntent if {WhichLock} is {LockState}
 
+WhichLockIntent {WhichLock}
+
 LockSupportedIntent what {DoorsOrLocks}
 LockSupportedIntent what {DoorsOrLocks} do you know
 LockSupportedIntent what {DoorsOrLocks} do you have

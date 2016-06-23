@@ -45,18 +45,19 @@ metadata {
 			state "battery", label:'${currentValue}% battery', unit:"%"
 		}
 		controlTile("batterySliderControl", "device.battery", "slider",
-		            height: 1, width: 3, range:"(1..100)") {
+		            height: 1, width: 2, range:"(1..100)") {
 		    state "battery", action:"setBatteryLevel"
 		}
 
 		main "toggle"
-		details(["toggle", "lock", "unlock", "jam", "null", "battery", "batterySliderControl"])
+		details(["toggle", "lock", "unlock", "battery", "batterySliderControl", "jam", "null"])
 	}
 }
 
 def updated() {
     log.trace "updated()"
     unlock()
+    setBatteryLevel(94)
 }
 
 def parse(String description) {
@@ -87,5 +88,5 @@ def nullState() {
 
 def setBatteryLevel(Integer lvl) {
 	log.trace "setBatteryLevel(level)"
-	sendEvent(name: "battery", value: lvl, unit: "%")
+	sendEvent(name: "battery", value: lvl)
 }
