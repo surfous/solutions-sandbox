@@ -463,14 +463,14 @@ def customPost() {
                 //     log.debug deviceNameCompLog.join('   \n')
                 // }
 				transactionDevices = findDeviceByName(interpretedSlots.WhichLock)
-                if (transactionDevices == null || transactionDevices.size() == 0) {
-                    if (transactionCandidateDevices.size() == 1) {
-                        // If we have an ambiguous WhichLock slot and ony have one lock, then assume we mean that one
-                        transactionDevices = transactionCandidateDevices
-                    } else {
-                        return buildCustomSkillResponse(titleText:"Ambiguous ${transactionDeviceKind} ${interpretedSlots.WhichLock}", sayText:"I don't know which ${transactionDeviceKind} you mean by ${interpretedSlots.WhichLock}.")
-                    }
-                }
+                // if (transactionDevices == null || transactionDevices.size() == 0) {
+                //     if (transactionCandidateDevices.size() == 1) {
+                //         // If we have an ambiguous WhichLock slot and ony have one lock, then assume we mean that one
+                //         transactionDevices = transactionCandidateDevices
+                //     } else {
+                //         return buildCustomSkillResponse(titleText:"Ambiguous ${transactionDeviceKind} ${interpretedSlots.WhichLock}", sayText:"I don't know which ${transactionDeviceKind} you mean by ${interpretedSlots.WhichLock}.")
+                //     }
+                // }
                 // devices should be guaranteed not null and to have length past here
             }
         }
@@ -809,15 +809,10 @@ def unlockFailCommandHandler() {
 }
 
 @Field final List KNOWN_LOCK_STATES = ['locked', 'unlocked']
-def lockCommandHandler(List deviceList) {
+def lockCommandHandler(List deviceList=[]) {
     log.trace "lockCommandHandler($deviceList)"
-    String titleObject = "the ${deviceList[0]}"
-    if (transactionUsedAllDevicesSlot == true) {
-        titleObject = 'all locks'
-    }
 
-
-    if (transactionDevicesNoMatch && transactionCandidateDevices.size() >= 1) {
+    if (!deviceList && transactionCandidateDevices.size() >= 1) {
         transactionSessionAttributes.initialIntent = transactionIntentName
         String outputText = ""
         String repromptText = ""
@@ -843,6 +838,10 @@ def lockCommandHandler(List deviceList) {
         return buildCustomSkillResponse(titleText:titleText, sayText:outputText, repromptText:repromptText)
     }
 
+    String titleObject = "the ${deviceList[0]}"
+    if (transactionUsedAllDevicesSlot == true) {
+        titleObject = 'all locks'
+    }
 
     List lockingDeviceDisplayNames = []
     List badStateDeviceDisplayNames = []
@@ -888,8 +887,9 @@ def lockCommandHandler(List deviceList) {
     return buildCustomSkillResponse(titleText: "Lock $titleObject", sayText:responseSpeech)
 }
 
-def lockStatusHandler(List deviceList) {
+def lockStatusHandler(List deviceList=[]) {
     log.trace "lockStatusHandler($deviceList)"
+
 
 
     String statusTarget = "your locks"
@@ -957,18 +957,17 @@ def String batteryStatusReminder(List devices = null) {
 
         devicesToCheck.each {
             device ->
-                if (device.currentBattery != null && Integer.parseInt(device.currentBattery) < 102) {
+                if (device.currentBattery != null && Integer.parseInt("$device.currentBattery") < 12) {
                     locksWithLowBattery << device.displayName
                 }
         }
         if (!locksWithLowBattery.isEmpty()) {
-            outputText = "Battery is low for${convoList(locksWithLowBattery)}."
+            outputText = "Battery is low for ${convoList(locksWithLowBattery)}."
         }
     }
     state.checkBattery = (state.checkBattery + 1) % 5
     return outputText
 }
-
 
 def batteryStatusCommand(List deviceList) {
     log.trace "batteryStatusCommand($deviceList)"
