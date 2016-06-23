@@ -16,7 +16,7 @@ metadata {
 	// Automatically generated. Make future change here.
 	definition (name: "Simulated Jammable Lock", namespace: "smartthings/testing", author: "bob") {
 		capability "Lock"
-
+		capability "battery"
         command "jam"
         command "nullState"
 	}
@@ -41,15 +41,23 @@ metadata {
         standardTile("null", "device.lock", inactiveLabel: false, decoration: "flat") {
             state "default", label:'null state', action:"nullState", icon:"st.unknown.unknown.unknown"
         }
+		valueTile("battery", "device.battery", inactiveLabel: false, decoration: "flat") {
+			state "battery", label:'${currentValue}% battery', unit:"%"
+		}
+		controlTile("batterySliderControl", "device.battery", "slider",
+		            height: 1, width: 2, range:"(1..100)") {
+		    state "battery", action:"setBatteryLevel"
+		}
 
 		main "toggle"
-		details(["toggle", "lock", "unlock", "jam", "null"])
+		details(["toggle", "lock", "unlock", "battery", "batterySliderControl", "jam", "null"])
 	}
 }
 
 def updated() {
     log.trace "updated()"
     unlock()
+    setBatteryLevel(94)
 }
 
 def parse(String description) {
@@ -76,4 +84,9 @@ def jam() {
 def nullState() {
 	log.trace "nullState()"
 	sendEvent(name: "lock", value: null)
+}
+
+def setBatteryLevel(Integer lvl) {
+	log.trace "setBatteryLevel(level)"
+	sendEvent(name: "battery", value: lvl)
 }

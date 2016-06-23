@@ -37,6 +37,8 @@ LockStatusIntent lock status
 LockStatusIntent lock statuses
 LockStatusIntent door status
 LockStatusIntent door statuses
+LockStatusIntent about {WhichLock}
+LockStatusIntent about {AllLocks}
 LockStatusIntent tell me about {WhichLock}
 LockStatusIntent tell me about the {WhichLock}
 LockStatusIntent tell me about my {WhichLock}
@@ -53,6 +55,8 @@ LockStatusIntent is the {WhichLock} {LockState}
 LockStatusIntent if my {WhichLock} is {LockState}
 LockStatusIntent if the {WhichLock} is {LockState}
 LockStatusIntent if {WhichLock} is {LockState}
+
+WhichLockIntent {WhichLock}
 
 LockSupportedIntent what {DoorsOrLocks}
 LockSupportedIntent what {DoorsOrLocks} do you know
