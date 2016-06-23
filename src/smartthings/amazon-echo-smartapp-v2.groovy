@@ -249,7 +249,7 @@ Map buildOutputSpeechObj(String sayText) {
     return outputSpeechObj
 }
 
-Map buildCustomSkillResponse(Map args) {
+Map buildCustomSkillResponse(Map args, boolean checkBattery = true) {
     Boolean shouldEndSessionArg = args?.shouldEndSession
     String sayText = args?.sayText
     String titleText = args?.titleText
@@ -257,6 +257,17 @@ Map buildCustomSkillResponse(Map args) {
     String repromptText = args?.repromptText
 
     Map responseObj = [:]
+
+    if (checkBattery) {
+        def batteryStatus = batteryStatusReminder()
+        if (!batteryStatus.isEmpty()) {
+            batteryStatus = " Please note, $batteryStatus"
+            sayText = sayText + batteryStatus
+            if (cardText) {
+                cardText = cardText + batteryStatus
+            }
+        }
+    }
 
     if (sayText) {
         Map outputSpeechObj = buildOutputSpeechObj(sayText)
@@ -481,6 +492,9 @@ def customPost() {
             break
         case { it == 'AMAZON.NoIntent' && !transactionIsNewSession }:
             responseToLambda = yesNoDialogHandler(false)
+            break
+        case 'LockQueryBatteryIntent':
+            responseToLambda = batteryStatusCommand(transactionDevices)
             break
         case 'AMAZON.stopIntent':
         case 'AMAZON.cancelIntent':
@@ -781,10 +795,10 @@ def lockCommandHandler(List deviceList) {
     List responseSpeeches = []
     // prepare the response
     if (badStateDeviceDisplayNames.size() > 0) {
-        String devicesInThisState = convoList(devicesByState.unknown)
+        String devicesInThisState = convoList(badStateDeviceDisplayNames)
         String theVerb = deviceVerb(badStateDeviceDisplayNames.size())
         String theIndicator = deviceIndicator(badStateDeviceDisplayNames.size())
-        badStateSpeech = "The ${convoList(badStateDeviceDisplayNames)} $theVerb in an unknown state.\nPlease check $theIndicator and then try again."
+        def badStateSpeech = "The ${convoList(badStateDeviceDisplayNames)} $theVerb in an unknown state.\nPlease check $theIndicator and then try again."
         responseSpeeches << badStateSpeech
     }
     if (lockingDeviceDisplayNames.size() > 0) {
@@ -836,6 +850,71 @@ def lockStatusHandler(List deviceList) {
     }
     return buildCustomSkillResponse(titleText:"What is the status of the $statusTarget", sayText:outputSpeeches.join('\n'))
 }
+
+/**
+ * Create a response text with a list of all locks with low battery.
+ *
+ * Note, check will only be done every fifth call to this method unless a list of specific devices is provided.
+ *
+ * @param devices Only check these specific devices, immediately (i.e. do not apply to every fifth request).
+ *                  If null, all devices will be checked but only every fifth call to the method.
+ * @return empty string if no locks have low battery, or a sentence including all locks with low battery
+ */
+def String batteryStatusReminder(List devices = null) {
+    // Default to checking all devices
+    def devicesToCheck = locks
+    if (devices) {
+        devicesToCheck = devices
+    }
+    def outputText = ""
+    def locksWithLowBattery = []
+
+    // Check battery for all devices every fifth command
+    if (state.checkBattery == null || state.checkBattery == 0 || devices) {
+        if (state.checkBattery == null) {
+            state.checkBattery = 0
+        }
+
+        devicesToCheck.each {
+            device ->
+                if (device.currentBattery != null && Integer.parseInt(device.currentBattery) < 102) {
+                    locksWithLowBattery << device.displayName
+                }
+        }
+        if (!locksWithLowBattery.isEmpty()) {
+            outputText = "Battery is low for${convoList(locksWithLowBattery)}."
+        }
+    }
+    state.checkBattery = (state.checkBattery + 1) % 5
+    return outputText
+}
+
+
+def batteryStatusCommand(List deviceList) {
+    log.trace "batteryStatusCommand($deviceList)"
+    String statusTarget = "my devices"
+    String title = "What is the battery status "
+    def outputText = ""
+
+    // Get standard phrase with all devices with low battery, or empty if all are ok
+    outputText = batteryStatusReminder(deviceList)
+    if (deviceList.size() == 1) {
+        // Handle specific device
+        statusTarget = deviceList[0].displayName
+        if (outputText.isEmpty())
+            outputText = "${statusTarget} battery is OK"
+        else
+            outputText = "${statusTarget} has low battery"
+
+    } else {
+        // Handle multiple devices, use default reminder text if any device has low battery
+        if (outputText.isEmpty())
+            outputText = "No devices have low battery"
+    }
+
+    return buildCustomSkillResponse([titleText:"What is the battery status for $statusTarget?", sayText:outputText], false)
+}
+
 
 /**
  * status of a single lock asked about by name and state
