@@ -237,12 +237,6 @@ Map buildBaseCustomSkillReponse() {
     return customSkillResponseBase
 }
 
-Map buildSilentResponse() {
-    Map customSkillResponse = buildBaseCustomSkillReponse()
-    customSkillResponse.shouldEndSession = true
-    return customSkillResponse
-}
-
 Map buildOutputSpeechObj(String sayText) {
     Map outputSpeechObj = [:]
     if (sayText.startsWith("<speak>") && sayText.endsWith("</speak>")) {
@@ -297,29 +291,10 @@ Map buildCustomSkillResponse(Map args) {
     return customSkillResponse
 }
 
-// Map buildCustomSkillResponse(String titleText, String sayText, String cardText=null, Boolean doesResponseEndSession=true) {
-//     Map customSkillResponse = buildBaseCustomSkillReponse()
-//     if (transactionSessionAttributes) {
-//         customSkillResponse.transactionSessionAttributes = transactionSessionAttributes
-//     }
-//     Map outputSpeechObj = buildOutputSpeechObj(sayText)
-//     Map cardObj = [type: 'Simple', title: titleText, content: cardText?:sayText]
-//     Map responseObj = [outputSpeech: outputSpeechObj, card: cardObj, shouldEndSession: doesResponseEndSession]
-//
-//     customSkillResponse.response = responseObj
-//     return customSkillResponse
-// }
-//
-// Map buildCustomSkillResponse(String titleText, String sayText, String cardText=null, Map repromptOutputSpeech=[:]) {
-//     Map customSkillResponse
-//     if (repromptOutputSpeech) {
-//         customSkillResponse = buildCustomSkillResponse(titleText, sayText, cardText, false)
-//         customSkillResponse.reprompt = [outputSpeech: repromptOutputSpeech]
-//     } else {
-//         customSkillResponse = buildCustomSkillResponse(titleText, sayText, cardText)
-//     }
-//     return customSkillResponse
-// }
+Map buildSilentResponse() {
+    Map customSkillResponse = buildCustomSkillResponse(shouldEndSession:true)
+    return customSkillResponse
+}
 
 Map buildErrorResponse(String errorMessage) {
     String title = "Skill Error"
@@ -329,38 +304,13 @@ Map buildErrorResponse(String errorMessage) {
 }
 
 Map buildNoCardResponse(String sayText) {
-    Map customSkillResponse = buildBaseCustomSkillReponse()
-    customSkillResponse.outputSpeech = buildOutputSpeechObj(sayText)
-    return customSkillResponse
-}
-
-String buildCommandCardTitle(String command, String device, String article='the') {
-    String title = "$command $article $device"
-    return title
+    return buildCustomSkillResponse(sayText:sayText)
 }
 
 Map buildCommandDeviceResponse(command, device, String outputText) {
     def titleText = "SmartThings, $command $device"
-    return buildCustomSkillResponse(titleText:titleText, outputText:outputText)
+    return buildCustomSkillResponse(titleText:titleText, sayText:outputText)
 }
-
-Map buildResponseToQuestion(String questionText, String outputText) {
-    def titleText = "SmartThings, $questionText"
-    return buildCustomSkillResponse(titleText:titleText, outputText:outputText)
-}
-
-Map buildSuccessDeviceResponse(command, device, confirmationText='OK') {
-    return buildCommandDeviceResponse(command, device, confirmationText)
-}
-
-def findDeviceById(String deviceId) {
-    def device = transactionCandidateDevices?.find {
-        log.debug device
-        it.id == deviceId
-    }
-    return device
-}
-
 
 /**
  * handles custom skill GET requests
@@ -393,14 +343,19 @@ def customPost() {
     def customSkillReq = request?.JSON // preserve the request
 
     // Extract session data
-    transactionIsNewSession = customSkillReq?.session?.new
+    transactionIsNewSession = customSkillReq?.session?.new?:false
     transactionSessionAttributes = customSkillReq?.session?.attributes?:[:] // get the session attrs
-
 
     def requestObj = customSkillReq?.request
 
     // what was the intended command?
     transactionIntentName = customSkillReq?.request?.intent?.name
+
+    // early short circuit if we ask to unlock.
+    if (transactionIntentName == 'LockUnlockIntent' && transactionIsNewSession ) {
+        responseToLambda = unlockFailCommandHandler()
+        return responseToLambda
+    }
 
     // simplify the slot map
     Map interpretedSlots = [:]
@@ -474,6 +429,7 @@ def customPost() {
         }
     } else {
         transactionStartIntent = transactionSessionAttributes?.initialIntent
+        transactionUsedAllDevicesSlot = transactionSessionAttributes?.usedAllDevicesSlot?:false
         if (transactionStartIntent.startsWith('Lock')) {
             transactionDeviceKind = 'lock'
             transactionDeviceKindPlural = 'locks'
@@ -511,7 +467,7 @@ def customPost() {
             }
             break
         case { it == 'LockSupportedIntent' && transactionIsNewSession }:
-            responseToLambda = whichDevicesCommand(transactionDeviceKind, transactionDeviceKindPlural, transactionCandidateDevices)
+            responseToLambda = whichDevicesHandler(transactionDeviceKind, transactionDeviceKindPlural, transactionCandidateDevices)
             break
         case { it == 'LaunchIntent' && transactionIsNewSession }:
         case { it == 'LockDialogIntent' && transactionIsNewSession }:
@@ -778,14 +734,14 @@ def contextHelpHandler() {
  * @return AVS response indicating that unlocking is not supported.
  */
 def unlockFailCommandHandler(def singleDevice) {
-    log.warn "Unlock ${singleDevice.displayName} *** NOT PERMITTED"
-    String targetDeviceName = singleDevice.displayName
-    if (transactionUsedAllDevicesSlot) {
-        targetDeviceName = 'all locks'
-    }
-    // TODO Needs copy
+    return unlockFailCommandHandler()
+}
+
+def unlockFailCommandHandler() {
+    log.warn "Unlock operation *** NOT PERMITTED"
     sendNotificationEvent("For security reasons, you are not allowed to unlock doors via Alexa")
-    return buildCommandDeviceResponse("unlock", targetDeviceName, "For security reasons, that feature has been disabled. For more information, please refer to the notifications page in your SmartThings mobile app")
+    return buildCustomSkillResponse(titleText: "Unlock is currently not permitted",
+        sayText:"For security reasons, that feature has been disabled. For more information, please refer to the notifications page in your SmartThings mobile app")
 }
 
 @Field final List KNOWN_LOCK_STATES = ['locked', 'unlocked']
@@ -837,8 +793,7 @@ def lockCommandHandler(List deviceList) {
     }
 
     String responseSpeech = responseSpeeches.join('\n')
-
-    return buildSuccessDeviceResponse("lock", titleObject, responseSpeech)
+    return buildCustomSkillResponse(titleText: "Lock $titleObject", sayText:responseSpeech)
 }
 
 def lockStatusHandler(List deviceList) {
@@ -868,7 +823,7 @@ def lockStatusHandler(List deviceList) {
         String devicesInThisState = convoList(devicesByState.unknown)
         String theVerb = deviceVerb(devicesByState.unknown.size())
         String theIndicator = deviceIndicator(devicesByState.unknown.size())
-        outputSpeeches << "The $devicesInThisState $theVerb in an unknown state,  Please check $theIndicator and then try again."
+        outputSpeeches << "The $devicesInThisState $theVerb in an unknown state."
     }
     KNOWN_LOCK_STATES.each {
         knownState ->
@@ -879,7 +834,7 @@ def lockStatusHandler(List deviceList) {
             outputSpeeches << "The $devicesInThisState $theVerb $knownState."
         }
     }
-    return buildCommandDeviceResponse("what is the status of the", statusTarget, outputSpeeches.join('\n'))
+    return buildCustomSkillResponse(titleText:"What is the status of the $statusTarget", sayText:outputSpeeches.join('\n'))
 }
 
 /**
@@ -911,7 +866,7 @@ def lockQueryHandler(def singleDevice, String queryState) {
         outputText = "Yes, your ${singleDevice.displayName} is $normalQueryState."
     } else if (!KNOWN_LOCK_STATES.contains(deviceCurrentState.toLowerCase())) {
         // Uh oh
-        outputText = "Your ${singleDevice.displayName} is in an unknown state. Please check the lock and then try again."
+        outputText = "Your ${singleDevice.displayName} is in an unknown state."
     } else {
         // No
         outputText = "No, your ${singleDevice.displayName} is ${deviceCurrentState}."
@@ -924,6 +879,7 @@ def lockQueryHandler(def singleDevice, String queryState) {
         transactionSessionAttributes.deviceIds = [singleDevice.id]
         transactionSessionAttributes.deviceId  = singleDevice.id
         transactionSessionAttributes.initialIntent = transactionIntentName
+        transactionSessionAttributes.usedAllDevicesSlot = transactionUsedAllDevicesSlot
         transactionSessionAttributes.validResponseIntents = ['AMAZON.YesIntent', 'AMAZON.NoIntent']
         transactionSessionAttributes.nextHandler = 'doLockDialogHandler'
         repromptText = "Would you like me to lock the ${singleDevice.displayName} for you?"
@@ -941,7 +897,7 @@ def lockQueryHandler(def singleDevice, String queryState) {
  * @param   [description]
  * @return  [description]
  */
-def whichDevicesCommand(String transactionDeviceKind=device, String transactionDeviceKindPlural, List deviceList) {
+def whichDevicesHandler(String transactionDeviceKind=device, String transactionDeviceKindPlural, List deviceList) {
     if (!transactionDeviceKind) transactionDeviceKind = 'device'
     if (!transactionDeviceKindPlural) transactionDeviceKindPlural = 'devices'
     String devicesOutput = ""
