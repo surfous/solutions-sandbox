@@ -64,7 +64,8 @@ var logsEnabled = true;
 var networkLogsEnabled = true;
  // ====== Internal QA End ========
 */
-// Version 2.0.0
+
+// Version 2.1
 
 // TODO:
 // Add support for SmartApp reporting success or fail on control command
@@ -140,8 +141,8 @@ function buildSmartappRequestOptions(httpMethod, smartappInstallId, oauth2Access
         port: 443,
         method: httpMethod,
         headers: {
-                accept: '*/*',
-                Authorization: 'Bearer ' + oauth2AccessToken,
+            accept: '*/*',
+            Authorization: 'Bearer ' + oauth2AccessToken,
         }
     };
     return reqOpts;
@@ -254,7 +255,7 @@ exports.handler = function (event, context) {
 };
 
 /**
-    Handles any custom skill request and brokers it based on intent
+ Handles any custom skill request and brokers it based on intent
  */
 function handleCustomSkill(event, context, smartappInstallId, baseUrl) {
     log("handleCustomSkill", "");
@@ -462,9 +463,9 @@ function handleSystem(event, context) {
 }
 
 /**
-* If request event has top level header, and payload elements, it's a smart home skill rewqest
-* @param  Map  event unmarshaled JSON event into javascript map stucture
-* @return Boolean     true if event is a Smart Home event, false otherwise
+ * If request event has top level header, and payload elements, it's a smart home skill rewqest
+ * @param  Map  event unmarshaled JSON event into javascript map stucture
+ * @return Boolean     true if event is a Smart Home event, false otherwise
  */
 function isEventSmartHome(event) {
     if (event.header == null || event.payload == null) {
@@ -524,7 +525,11 @@ function getSmartAppPath(event, context, resultCallback) {
         });
         response.on('error', function (e) {
             log("getSmartAppPath", e.message);
-            sendErrorResponseV1(context, event, INTERNAL_ERROR, "Unknown error when identifying the SmartApp: " + e.message);
+            if (resultCallback == handleCustomSkill) {
+                sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Unable to find your SmartThings Amazon Echo SmartApp, please disable and renable the SmartThings skill from the Alexa Skills Marketplace.");
+            } else {
+                sendErrorResponseV1(context, event, INTERNAL_ERROR, "Unknown error when identifying the SmartApp: " + e.message);
+            }
         });
         response.on('end', function () {
             log("getSmartAppPath", "response statusCode: " + response.statusCode);
@@ -545,10 +550,18 @@ function getSmartAppPath(event, context, resultCallback) {
                     // No endpoints found but token was valid, this most likely means that the SmartApp has been uninstalled
                     // Would it make more sense to send INTERNAL_ERROR?
                     log("getSmartAppPath", "SmartApp might have been uninstalled");
-                    sendErrorResponseV1(context, event, INVALID_ACCESS_TOKEN, "SmartApp has been uninstalled, user should relink with SmartThings");
+                    if (resultCallback == handleCustomSkill) {
+                        sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Unable to find your SmartThings Amazon Echo SmartApp, please disable and renable the SmartThings skill from the Alexa Skills Marketplace.");
+                    } else {
+                        sendErrorResponseV1(context, event, INVALID_ACCESS_TOKEN, "SmartApp has been uninstalled, user should relink with SmartThings");
+                    }
                 } else {
                     log("getSmartAppPath", "Unexpected response");
-                    sendErrorResponseV1(context, event, INTERNAL_ERROR, "Unexpected response received while identifying SmartApp");
+                    if (resultCallback == handleCustomSkill) {
+                        sendCustomSkillErrorResponse(context, event, INTERNAL_ERROR, "Unable to find your SmartThings Amazon Echo SmartApp, please disable and renable the SmartThings skill from the Alexa Skills Marketplace.");
+                    } else {
+                        sendErrorResponseV1(context, event, INTERNAL_ERROR, "Unexpected response received while identifying SmartApp");
+                    }
                 }
             } else {
                 log("getSmartAppPath", "response (expected JSON but did not get it): " + str);
@@ -647,7 +660,7 @@ function sendErrorResponseV2(context, event, error, payload, namespace, name) {
 }
 
 
-function sendCustomSkillErrorResponse(context, event, errorCode, errorDescription, namespace, name) {
+function sendCustomSkillErrorResponse(context, event, errorCode, errorDescription) {
     var cardTitle = "SmartThings Error: " + errorCode;
     // Setting this to true ends the session and exits the skill.
     var shouldEndSession = true;
