@@ -934,12 +934,18 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
         knownState ->
         if (devicesByState[knownState]) {
             if (devicesByState[knownState].size() == transactionCandidateDevices.size() &&
-                transactionCandidateDevices.size() > 1) {
+                transactionCandidateDevices.size() > 1 ) {
+                String lockSpeech = ""
+                if (queriedStatus) {
                     String confirmDeny = "No"
                     if (knownState == queriedStatus) {
                         confirmDeny = "Yes"
                     }
-                outputSpeeches << "$confirmDeny, all ${transactionCandidateDevices.size()} $transactionDeviceKindPlural are $knownState"
+                    lockSpeech = "$confirmDeny, "
+                }
+                lockSpeech += "all ${transactionCandidateDevices.size()} $transactionDeviceKindPlural are $knownState."
+                lockSpeech = lockSpeech.capitalize() // for the card
+                outputSpeeches << lockSpeech
             } else {
                 String devicesInThisState = convoList(devicesByState[knownState])
                 String theVerb = deviceVerb(devicesByState[knownState].size())
@@ -948,7 +954,7 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
             }
         }
     }
-    return buildCustomSkillResponse(titleText:"What is the status of the $statusTarget", sayText:outputSpeeches.join('\n'))
+    return buildCustomSkillResponse(titleText:"Lock status for $statusTarget", sayText:outputSpeeches.join('\n'))
 }
 
 /**
