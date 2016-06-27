@@ -23,7 +23,7 @@ definition(
         oauth: [displayName: "Amazon Echo Dev (V2)", displayLink: ""]
 )
 
-// Version 1.2.0b build 20160617-00
+// Version 1.2.0b1 build 20160625-00
 
 // Changelist:
 // 1.1.7
@@ -249,12 +249,13 @@ Map buildOutputSpeechObj(String sayText) {
     return outputSpeechObj
 }
 
-Map buildCustomSkillResponse(Map args, boolean checkBattery = true) {
+Map buildCustomSkillResponse(Map args) {
     Boolean shouldEndSessionArg = args?.shouldEndSession
     String sayText = args?.sayText
     String titleText = args?.titleText
     String cardText = args?.cardText
     String repromptText = args?.repromptText
+    Boolean checkBattery = args?.checkBattery?:true
 
     Map responseObj = [:]
 
@@ -483,8 +484,7 @@ def customPost() {
             responseToLambda = lockCommandHandler(transactionDevices)
             break
         case { it == 'LockStatusIntent' && transactionIsNewSession }:
-            if (!transactionDevices) {
-                // for now, if we matched no devices, get the status of all devices
+            if (transactionUsedAllDevicesSlot) {
                 transactionDevices = transactionCandidateDevices
             }
             if (transactionDevices.size() == 1 && interpretedSlots?.LockState != null) {
@@ -492,9 +492,9 @@ def customPost() {
                 responseToLambda = lockQueryHandler(transactionDevices[0], interpretedSlots.LockState)
             } else if (transactionDevices.size() > 0) {
                 // user wanted status of one device
-                responseToLambda = lockStatusHandler(transactionDevices)
+                responseToLambda = lockStatusHandler(transactionDevices, interpretedSlots?.LockState)
             } else {
-                responseToLambda = lockStatusHandler(transactionCandidateDevices)
+                responseToLambda = lockStatusHandler(transactionDevices)
             }
             break
         case { it == 'LockSupportedIntent' && transactionIsNewSession }:
@@ -518,7 +518,7 @@ def customPost() {
             responseToLambda = yesNoDialogDispatcher(false)
             break
         case { it == 'WhichLockIntent' && !transactionIsNewSession }:
-            responseToLambda = chooseDeviceHandler(transactionDevices)
+            responseToLambda = chooseDeviceDispatcher(transactionDevices)
             break
 //// These intents are for new and existing sessions (though don't make a lot of sense for new)
         case 'AMAZON.StopIntent':
@@ -810,7 +810,7 @@ def lockCommandHandler(List deviceList=[]) {
             repromptText = "Which lock did you mean?"
             titleText = "Should I lock one of these?"
         }
-        return buildCustomSkillResponse(titleText:titleText, sayText:outputText, repromptText:repromptText)
+        return buildCustomSkillResponse(titleText:titleText, sayText:outputText, repromptText:repromptText, checkBattery:false)
     }
 
     String titleObject = "the ${deviceList[0]}"
@@ -862,16 +862,41 @@ def lockCommandHandler(List deviceList=[]) {
     return buildCustomSkillResponse(titleText: "Lock $titleObject", sayText:responseSpeech)
 }
 
-def lockStatusHandler(List deviceList=[]) {
+def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
     log.trace "lockStatusHandler($deviceList)"
 
-
+    if (!deviceList && transactionCandidateDevices.size() >= 1) {
+        transactionSessionAttributes.initialIntent = transactionIntentName
+        String outputText = ""
+        String repromptText = ""
+        String titleText = ""
+        if (transactionCandidateDevices.size() == 1) {
+            // no certain match, but one candidate - confirm
+            def thisDevice = transactionCandidateDevices[0]
+            // build up session
+            transactionSessionAttributes.validResponseIntents = ['AMAZON.YesIntent', 'AMAZON.NoIntent']
+            transactionSessionAttributes.nextHandler = 'doLockDialogHandler'
+            transactionSessionAttributes.deviceIds = [thisDevice.id]
+            outputText = "I couldn't find a lock by that name, but you have one named ${thisDevice.displayName}. Is this the one you meant?"
+            repromptText = "Is ${thisDevice.displayName} the lock you meant?"
+            titleText = "Lock the ${thisDevice.displayName}?"
+        } else {
+            // no certain match, and multiple candidates - ask again
+            transactionSessionAttributes.validResponseIntents = ['WhichLockIntent']
+            transactionSessionAttributes.nextHandler = 'doStatusSpecifiedDeviceHandler'
+            outputText = "I couldn't find a lock matching that name. Which one did you mean? You can choose from ${convoList(transactionCandidateDevices, 'or')}, or you can say 'Cancel'"
+            repromptText = "Which lock did you mean?"
+            titleText = "Would you like the status of one of these?"
+        }
+        return buildCustomSkillResponse(titleText:titleText, sayText:outputText, repromptText:repromptText, checkBattery:false)
+    }
 
     String statusTarget = "your locks"
     if (deviceList.size() == 1) {
         statusTarget = deviceList[0].displayName
     }
     List outputSpeeches = []
+
     // initialize the device state map for each state we care about
     Map devicesByState = [unknown:[]]
     KNOWN_LOCK_STATES.each {
@@ -897,10 +922,19 @@ def lockStatusHandler(List deviceList=[]) {
     KNOWN_LOCK_STATES.each {
         knownState ->
         if (devicesByState[knownState]) {
-            String devicesInThisState = convoList(devicesByState[knownState])
-            String theVerb = deviceVerb(devicesByState[knownState].size())
-            String theIndicator = deviceIndicator(devicesByState[knownState].size())
-            outputSpeeches << "The $devicesInThisState $theVerb $knownState."
+            if (devicesByState[knownState].size() == transactionCandidateDevices.size() &&
+                transactionCandidateDevices.size() > 1) {
+                    String confirmDeny = "No"
+                    if (knownState == queriedStatus) {
+                        confirmDeny = "Yes"
+                    }
+                outputSpeeches << "$confirmDeny, all ${transactionCandidateDevices.size()} $transactionDeviceKindPlural are $knownState"
+            } else {
+                String devicesInThisState = convoList(devicesByState[knownState])
+                String theVerb = deviceVerb(devicesByState[knownState].size())
+                String theIndicator = deviceIndicator(devicesByState[knownState].size())
+                outputSpeeches << "The $devicesInThisState $theVerb $knownState."
+            }
         }
     }
     return buildCustomSkillResponse(titleText:"What is the status of the $statusTarget", sayText:outputSpeeches.join('\n'))
@@ -948,7 +982,32 @@ def batteryStatusCommand(List deviceList) {
     log.trace "batteryStatusCommand($deviceList)"
     String statusTarget = "my devices"
     String title = "What is the battery status "
-    def outputText = ""
+    String outputText = ""
+    String titleText = ""
+
+    if (!deviceList && transactionCandidateDevices.size() >= 1) {
+        transactionSessionAttributes.initialIntent = transactionIntentName
+        String repromptText = ""
+        if (transactionCandidateDevices.size() == 1) {
+            // no certain match, but one candidate - confirm
+            def thisDevice = transactionCandidateDevices[0]
+            // build up session
+            transactionSessionAttributes.validResponseIntents = ['AMAZON.YesIntent', 'AMAZON.NoIntent']
+            transactionSessionAttributes.nextHandler = 'doLockDialogHandler'
+            transactionSessionAttributes.deviceIds = [thisDevice.id]
+            outputText = "I couldn't find a lock by that name, but you have one named ${thisDevice.displayName}. Is this the one you meant?"
+            repromptText = "Is ${thisDevice.displayName} the lock you meant?"
+            titleText = "Shall I check the battery status for ${thisDevice.displayName}?"
+        } else {
+            // no certain match, and multiple candidates - ask again
+            transactionSessionAttributes.validResponseIntents = ['WhichLockIntent']
+            transactionSessionAttributes.nextHandler = 'doBatterySpecifiedDeviceHandler'
+            outputText = "I couldn't find a lock matching that name. Which one did you mean? You can choose from ${convoList(transactionCandidateDevices, 'or')}, or you can say 'Cancel'"
+            repromptText = "Which lock did you mean?"
+            titleText = "Would you like the battery status of one of these?"
+        }
+        return buildCustomSkillResponse(titleText:titleText, sayText:outputText, repromptText:repromptText, checkBattery:false)
+    }
 
     // Get standard phrase with all devices with low battery, or empty if all are ok
     outputText = batteryStatusReminder(deviceList)
@@ -965,8 +1024,8 @@ def batteryStatusCommand(List deviceList) {
         if (outputText.isEmpty())
             outputText = "No devices have low battery"
     }
-
-    return buildCustomSkillResponse([titleText:"What is the battery status for $statusTarget?", sayText:outputText], false)
+    titleText = "What is the battery status for $statusTarget?"
+    return buildCustomSkillResponse(titleText:titleText, sayText:outputText, checkBattery:false)
 }
 
 
@@ -994,10 +1053,10 @@ def lockQueryHandler(def singleDevice, String queryState) {
     def deviceCurrentState = singleDevice?.currentValue('lock')?.toLowerCase()?:'unknown'
 
     String outputText = ""
-    if (normalQueryState == deviceCurrentState.toLowerCase()) {
+    if (normalQueryState == deviceCurrentState?.toLowerCase()) {
         // Yes!
         outputText = "Yes, your ${singleDevice.displayName} is $normalQueryState."
-    } else if (!KNOWN_LOCK_STATES.contains(deviceCurrentState.toLowerCase())) {
+    } else if (!KNOWN_LOCK_STATES.contains(deviceCurrentState?.toLowerCase())) {
         // Uh oh
         outputText = "Your ${singleDevice.displayName} is in an unknown state."
     } else {
@@ -1010,7 +1069,7 @@ def lockQueryHandler(def singleDevice, String queryState) {
     if (deviceCurrentState == 'unlocked') {
         // build up a session for the next stage of the dialog
         transactionSessionAttributes.deviceIds = [singleDevice.id]
-        transactionSessionAttributes.deviceId  = singleDevice.id
+        // transactionSessionAttributes.deviceId  = singleDevice.id
         transactionSessionAttributes.initialIntent = transactionIntentName
         transactionSessionAttributes.usedAllDevicesSlot = transactionUsedAllDevicesSlot
         transactionSessionAttributes.validResponseIntents = ['AMAZON.YesIntent', 'AMAZON.NoIntent']
@@ -1020,7 +1079,7 @@ def lockQueryHandler(def singleDevice, String queryState) {
         outputText += " Would you like me to lock it for you?"
     }
 
-    return buildCustomSkillResponse(titleText:"Is my ${singleDevice.displayName} $queryState?", sayText:outputText, repromptText:repromptText)
+    return buildCustomSkillResponse(titleText:"Is my ${singleDevice.displayName} $queryState?", sayText:outputText, repromptText:repromptText, checkBattery:false)
 }
 
 /**
@@ -1045,7 +1104,7 @@ def whichDevicesHandler(String transactionDeviceKind=device, String transactionD
             deviceNames << device.displayName
         }
         devicesOutput += convoList(deviceNames)
-		devicesOutput += '.'
+        devicesOutput += '.'
     } else {
         devicesOutput = "I don't know about any $transactionDeviceKindPlural."
     }
@@ -1084,7 +1143,7 @@ Map doLockDialogHandler(Boolean isResponseYes) {
     return responseObject
 }
 
-Map chooseDeviceHandler(def deviceList) {
+Map chooseDeviceDispatcher(def deviceList) {
     if (!transactionSessionAttributes?.nextHandler) {
         return buildErrorResponse("Session is missing nextHandler for $transactionIntentName")
     } else if (!transactionDevices || transactionDevices.size() == 0) {
@@ -1099,6 +1158,13 @@ Map doLockSpecifiedDeviceHandler() {
     return lockCommandHandler(transactionDevices)
 }
 
+Map doStatusSpecifiedDeviceHandler() {
+    return lockStatusHandler(transactionDevices)
+}
+
+Map doBatterySpecifiedDeviceHandler() {
+    return batteryStatusCommand(transactionDevices)
+}
 Boolean isIntentValid() {
     if (transactionIntentName == null || transactionSessionAttributes?.validResponseIntents == null)
         return true
