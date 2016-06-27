@@ -935,7 +935,7 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
         if (devicesByState[knownState]) {
             if (devicesByState[knownState].size() == transactionCandidateDevices.size() &&
                 transactionCandidateDevices.size() > 1 ) {
-                String lockSpeech
+                String lockSpeech = ""
                 if (queriedStatus) {
                     String confirmDeny = "No"
                     if (knownState == queriedStatus) {
