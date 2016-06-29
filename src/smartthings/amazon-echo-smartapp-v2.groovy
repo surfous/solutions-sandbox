@@ -308,7 +308,7 @@ Map buildSilentResponse() {
     return customSkillResponse
 }
 
-Map buildErrorResponse(String errorMessage) {
+Map buildFatalErrorResponse(String errorMessage) {
     String title = "Skill Error"
     String say = "A skill error has occurred. Please look at the card in your Alexa app in order to report this error."
     String card = "To report this error, send an email to support@smartthings.com with the following information:\n$errorMessage"
@@ -335,7 +335,8 @@ Map buildUnexpectedResponse(Boolean newSession=true) {
 }
 
 Boolean compareDeviceNames(String left='', String right='') {
-    if (left.toLowerCase().replaceAll(' ','') == right.toLowerCase().replaceAll(' ','')) {
+    String reInvalidChars = "[^\\p{Alnum}]"
+    if (left.toLowerCase().replaceAll(reInvalidChars,'') == right.toLowerCase().replaceAll(reInvalidChars,'')) {
         return true
     }
     return false
@@ -393,10 +394,24 @@ def customPost() {
     // Extract session data
     transactionIsNewSession = customSkillReq?.session?.new?:false
     transactionSessionAttributes = customSkillReq?.session?.attributes?:[:] // get the session attrs
-    def requestObj = customSkillReq?.request
 
     // what was the intended command?
     transactionIntentName = customSkillReq?.request?.intent?.name
+    // record an intent breadcrumb
+    if (transactionIsNewSession) {
+        transactionSessionAttributes.intentChain = [transactionIntentName]
+    } else {
+        transactionSessionAttributes.intentChain << transactionIntentName
+    }
+
+    if (!isIntentValid(transactionIntentName)) {
+        // Yes an No are only valid responses if the session indicates that it was an appropriate response
+        badUtteranceResponse = "That doesn't make sense to me right now."
+        if (transactionSessionAttributes?.posedQuestion) {
+            badUtteranceResponse += posedQuestion
+        }
+        return buildNoCardResponse(badUtteranceResponse)
+    }
 
     // short circuit early if we ask to unlock.
     if (transactionIntentName == 'LockUnlockIntent' && transactionIsNewSession ) {
@@ -445,12 +460,6 @@ def customPost() {
             }
         }
     } else {
-        // was the user response one that we expected?
-        if (!transactionSessionAttributes?.validResponseIntents?.contains(transactionIntentName)) {
-            // we got a user response outside what we expected, end
-            return buildUnexpectedResponse(transactionIsNewSession)
-        }
-
         transactionStartIntent = transactionSessionAttributes?.initialIntent
         transactionUsedAllDevicesSlot = transactionSessionAttributes?.usedAllDevicesSlot?:false
         if (transactionStartIntent.startsWith('Lock')) {
@@ -476,6 +485,11 @@ def customPost() {
 
     // Dispatch the intent to its handler command
     switch (transactionIntentName) {
+//// These intents are for new or existing sessions
+        case 'AMAZON.HelpIntent':
+            responseToLambda = helpCommandHandler()
+            break
+//// These intents are for new sessions only
         case { it == 'LockUnlockIntent' && transactionIsNewSession }:
             responseToLambda = unlockFailCommandHandler(transactionDevices[0]) // Only one lock may be passed to unlock
             break
@@ -504,9 +518,6 @@ def customPost() {
         case { it == 'LockDialogIntent' && transactionIsNewSession }:
             responseToLambda = launchCommandHandler()
             break
-        case { it == 'AMAZON.HelpIntent' && transactionIsNewSession }:
-            responseToLambda = helpCommandHandler()
-            break
         case { it == 'LockQueryBatteryIntent' && transactionIsNewSession }:
             responseToLambda = batteryStatusCommand(transactionDevices)
             break
@@ -520,14 +531,13 @@ def customPost() {
         case { it == 'WhichLockIntent' && !transactionIsNewSession }:
             responseToLambda = chooseDeviceDispatcher(transactionDevices)
             break
-//// These intents are for new and existing sessions (though don't make a lot of sense for new)
-        case 'AMAZON.StopIntent':
-        case 'AMAZON.CancelIntent':
+        case {it == 'AMAZON.StopIntent' && !transactionIsNewSession }:
+        case {it == 'AMAZON.CancelIntent' && !transactionIsNewSession }:
             responseToLambda = stopCommandHandler()
             break
         default:
             log.warn 'could not determine which kind of device this command is for'
-            responseToLambda = buildCustomSkillResponse(titleText:'SmartThings', sayText:"I'm not sure what you wanted me to do.")
+            responseToLambda = buildCustomSkillResponse(sayText:"I'm not sure what you wanted me to do.")
             break
     }
 
@@ -913,10 +923,12 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
     KNOWN_LOCK_STATES.each {
         devicesByState[it] = []
     }
+    Set statesWithDevices = []
     deviceList.each {
         // FIXME - use unknown state code from lockCommandHandler here as well
         device ->
         String deviceCurrentState = device?.currentValue('lock')?:'unknown'
+        statesWithDevices << deviceCurrentState.toLowerCase()
         if (KNOWN_LOCK_STATES.contains(deviceCurrentState)) {
             devicesByState[deviceCurrentState] << device.displayName
         } else {
@@ -924,6 +936,16 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
         }
         //outputText += "Your ${device.displayName} is ${device.currentValue('lock')}. \n"
     }
+
+    String confirmDeny = ""
+    if (queriedStatus) {
+        confirmDeny = "No. "
+        log.debug "queriedStatus: $queriedStatus; statesWithDevices: $statesWithDevices}"
+        if (statesWithDevices.size() == 1 && queriedStatus == statesWithDevices[0]) {
+            confirmDeny = "Yes. "
+        }
+    }
+
     if (devicesByState.unknown) {
         String devicesInThisState = convoList(devicesByState.unknown)
         String theVerb = deviceVerb(devicesByState.unknown.size())
@@ -932,20 +954,10 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
     }
     KNOWN_LOCK_STATES.each {
         knownState ->
-        if (devicesByState[knownState]) {
+        if (devicesByState[knownState] && !devicesByState[knownState].isEmpty()) {
             if (devicesByState[knownState].size() == transactionCandidateDevices.size() &&
                 transactionCandidateDevices.size() > 1 ) {
-                String lockSpeech = ""
-                if (queriedStatus) {
-                    String confirmDeny = "No"
-                    if (knownState == queriedStatus) {
-                        confirmDeny = "Yes"
-                    }
-                    lockSpeech = "$confirmDeny, "
-                }
-                lockSpeech += "all ${transactionCandidateDevices.size()} $transactionDeviceKindPlural are $knownState."
-                lockSpeech = lockSpeech.capitalize() // for the card
-                outputSpeeches << lockSpeech
+                outputSpeeches << "All ${transactionCandidateDevices.size()} $transactionDeviceKindPlural are $knownState."
             } else {
                 String devicesInThisState = convoList(devicesByState[knownState])
                 String theVerb = deviceVerb(devicesByState[knownState].size())
@@ -954,7 +966,8 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
             }
         }
     }
-    return buildCustomSkillResponse(titleText:"Lock status for $statusTarget", sayText:outputSpeeches.join('\n'))
+    String sayText = "${confirmDeny}${outputSpeeches.join('\n')}"
+    return buildCustomSkillResponse(titleText:"Lock status for $statusTarget", sayText:sayText)
 }
 
 /**
@@ -1135,15 +1148,8 @@ Map yesNoDialogDispatcher(Boolean isResponseYes) {
     if (transactionIsNewSession) {
         // Yes or No aren't valid for a new session
         return buildNoCardResponse('I\'m not sure what you mean by that right now')
-    } else if (!isIntentValid()) {
-        // Yes an No are only valid responses if the session indicates that it was an appropriate response
-        badUtteranceResponse = "That doesn't make sense to me right now."
-        if (transactionSessionAttributes?.posedQuestion) {
-            badUtteranceResponse += posedQuestion
-        }
-        return buildNoCardResponse(badUtteranceResponse)
     } else if (!transactionSessionAttributes?.nextHandler) {
-        return buildErrorResponse("Session is missing nextHandler for $transactionIntentName")
+        return buildFatalErrorResponse("Session is missing nextHandler for $transactionIntentName")
     }
     // now handle the yes/no response
     return "${transactionSessionAttributes?.nextHandler}"(isResponseYes)
@@ -1162,10 +1168,25 @@ Map doLockDialogHandler(Boolean isResponseYes) {
 
 Map chooseDeviceDispatcher(def deviceList) {
     if (!transactionSessionAttributes?.nextHandler) {
-        return buildErrorResponse("Session is missing nextHandler for $transactionIntentName")
+        return buildFatalErrorResponse("Session is missing nextHandler for $transactionIntentName")
     } else if (!transactionDevices || transactionDevices.size() == 0) {
-        // FIXME - better error
-        return buildErrorResponse("Device was not chosen")
+        // FIXME - Continue here - count WhichLockintent breadcrumbs
+        String repromptText = "Which $transactionDeviceKind did you mean?"
+        String outputText = ""
+        Integer retries = transactionSessionAttributes?.intentChain?.findAll { it == "WhichLockIntent" }?.size()?:0
+        switch (retries) {
+            case { it < 2 }:
+                outputText = "I didn't hear the name of a $transactionDeviceKind that I know. Would you say that again please?"
+                break
+            case { it < 3 }:
+                outputText = "I still couldn't catch which $transactionDeviceKind you meant. One more time?"
+                break
+            default:
+                outputText = "I'm really sorry, but I'm having trouble understanding which $transactionDeviceKind you're talking about. Please try again in a little while."
+                return buildCustomSkillResponse(titleText:'Please try again later', sayText:outputText)
+                break
+        }
+        return buildCustomSkillResponse(sayText:outputText, repromptText:repromptText, checkBattery:false)
     }
     // now handle the  response
     return "${transactionSessionAttributes?.nextHandler}"()
@@ -1182,11 +1203,16 @@ Map doStatusSpecifiedDeviceHandler() {
 Map doBatterySpecifiedDeviceHandler() {
     return batteryStatusCommand(transactionDevices)
 }
-Boolean isIntentValid() {
-    if (transactionIntentName == null || transactionSessionAttributes?.validResponseIntents == null)
+
+Boolean isIntentValid(String intentName=null) {
+    List alwaysValidIntents = ['AMAZON.StopIntent', 'AMAZON.CancelIntent', 'AMAZON.HelpIntent']
+    if (!intentName  || !transactionSessionAttributes?.validResponseIntents) {
+        // No need to check
         return true
-    else if (transactionIntentName && transactionSessionAttributes?.validResponseIntents &&
-        transactionSessionAttributes.validResponseIntents.contains(transactionIntentName)) {
+    }
+    List validIntents = alwaysValidIntents
+    validIntents.addAll(transactionSessionAttributes?.validResponseIntents)
+    if (intentName && validIntents && validIntents.contains(intentName)) {
         return true
     }
     return false
