@@ -137,8 +137,12 @@ for a single, named door
 * [ ] Run 10 different commands in a row (no locks with low battery, battery level should never be mentioned)
 * [ ] Run 10 different commands in a row (one or more locks with low battery - locks with low battery should be reported after two of the ten commands, i.e. every fifth)
 
-
-
 ## HelpIntent (4i. Help intent)
 * [x] Alexa, ask {INVOCATION} for help
 * [x] Alexa, tell {INVOCATION} to help me
+
+## SHM
+* [ ] Alexa ask {INVOCATION} to arm my Smart Home Monitor
+* [ ] Alexa ask {INVOCATION} to disarm my alarm
+* [ ] Alexa ask {INVOCATION} is my alarm {ALARM_STATE}
+* [ ] Alexa ask {INVOCATION} what is the state of Smart Home Monitor

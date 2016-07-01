@@ -520,6 +520,15 @@ def customPost() {
             break
         case { it == 'LockQueryBatteryIntent' && transactionIsNewSession }:
             responseToLambda = batteryStatusCommand(transactionDevices)
+			break
+		case { it == 'AlarmQueryIntent' && transactionIsNewSession }:
+			responseToLambda = alarmStatusCommand(interpretedSlots?.AlarmState)
+			break
+		case { it == 'AlarmArmIntent' && transactionIsNewSession }:
+			responseToLambda = alarmArmCommandHandler()
+			break
+		case { it == 'AlarmDisarmIntent' && transactionIsNewSession }:
+			responseToLambda = alarmDisarmCommandHandler()
             break
 //// These next intents are for followup utterances on an existing session
         case { it == 'AMAZON.YesIntent' && !transactionIsNewSession }:
@@ -544,7 +553,6 @@ def customPost() {
     log.debug "Returning this to the Lambda function:\n${prettyPrint(toJson(responseToLambda))}"
     return responseToLambda
 }
-
 
 /**
  * Sends a command to a device
@@ -1008,6 +1016,46 @@ def String batteryStatusReminder(List devices = null) {
     return outputText
 }
 
+
+def alarmArmCommandHandler() {
+	log.trace "alarmArmCommandHandler()"
+	def outputText = "Smart Home Monitor is arming (stay mode)"
+	sendLocationEvent(name: "alarmSystemStatus", value: "stay")
+	return buildCustomSkillResponse(titleText: "Arm Smart Home Monitor", sayText: outputText, checkBattery: true)
+}
+
+def alarmDisarmCommandHandler() {
+	log.trace "alarmDisarmCommandHandler()"
+
+	log.warn "Disarm operation *** NOT PERMITTED"
+	sendNotificationEvent("For security reasons, you are not allowed to disarm Smart Home Monitor via Alexa")
+	return buildCustomSkillResponse(titleText: "Disarm is currently not permitted",
+			sayText: "For security reasons, that feature has been disabled. For more information, please refer to the notifications page in your SmartThings mobile app", checkBattery: true)
+}
+
+@Field final List KNOWN_ALARM_STATES = ['armed', 'disarmed']
+
+def alarmStatusCommand(alarmStateQuery) {
+	log.trace "alarmStatusCommand($alarmStateQuery)"
+	def currentAlarmState = location.currentState("alarmSystemStatus")?.value
+	def alarmState = "unknown"
+
+	switch (currentAlarmState) {
+		case "away":
+			alarmState = "armed away"
+			break
+		case "stay":
+			alarmState = "armed stay"
+			break
+		case "off":
+			alarmState = "disarmed"
+			break
+	}
+
+	def outputText = "Smart Home Monitor is in $alarmState state"
+	return buildCustomSkillResponse(titleText: "What is the state of Smart Home Monitor?", sayText: outputText, checkBattery:true)
+}
+
 def batteryStatusCommand(List deviceList) {
     log.trace "batteryStatusCommand($deviceList)"
     String statusTarget = "my devices"
@@ -1057,7 +1105,6 @@ def batteryStatusCommand(List deviceList) {
     titleText = "What is the battery status for $statusTarget?"
     return buildCustomSkillResponse(titleText:titleText, sayText:outputText, checkBattery:false)
 }
-
 
 /**
  * status of a single lock asked about by name and state
@@ -1140,7 +1187,6 @@ def whichDevicesHandler(String transactionDeviceKind=device, String transactionD
     }
     return buildCustomSkillResponse(titleText:"Which $transactionDeviceKindPlural can I control?", sayText:devicesOutput)
 }
-
 
 //// Dialog handlers for subsequent stage requests
 //
@@ -1259,7 +1305,6 @@ String convoList(List listOfStrings, String conjunction="and") {
     }
     return conversationalList
 }
-
 
 /**
  * Turn on or off a device

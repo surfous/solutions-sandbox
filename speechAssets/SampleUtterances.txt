@@ -122,3 +122,8 @@ LockQueryBatteryIntent battery of {WhichLock}
 LockQueryBatteryIntent battery of {AllLocks}
 LockQueryBatteryIntent for the battery status of my {WhichLock}
 LockQueryBatteryIntent for the battery status of {AllLocks}
+
+AlarmArmIntent to {AlarmArmOperation} my {Alarm}
+AlarmDisarmIntent to {AlarmDisarmOperation} my {Alarm}
+AlarmQueryIntent is my {Alarm} {AlarmState}
+AlarmQueryIntent what is the state of {Alarm}
