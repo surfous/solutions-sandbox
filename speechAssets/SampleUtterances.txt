@@ -1,4 +1,3 @@
-
 LockLockIntent to {LockOperation} {WhichLock}
 LockLockIntent to {LockOperation} the {WhichLock}
 LockLockIntent to {LockOperation} my {WhichLock}
@@ -7,6 +6,7 @@ LockLockIntent {LockOperation} the {WhichLock}
 LockLockIntent {LockOperation} my {WhichLock}
 LockLockIntent {LockOperation} {WhichLock}
 LockLockIntent {LockOperation} {AllLocks}
+LockLockIntent {LockOperation} {MyHome}
 
 LockUnlockIntent to {UnlockOperation} {WhichLock}
 LockUnlockIntent to {UnlockOperation} {AllLocks}
@@ -38,6 +38,8 @@ LockStatusIntent lock statuses
 LockStatusIntent door status
 LockStatusIntent door statuses
 LockStatusIntent about {WhichLock}
+LockStatusIntent about my {WhichLock}
+LockStatusIntent about the {WhichLock}
 LockStatusIntent about {AllLocks}
 LockStatusIntent tell me about {WhichLock}
 LockStatusIntent tell me about the {WhichLock}
@@ -123,7 +125,19 @@ LockQueryBatteryIntent battery of {AllLocks}
 LockQueryBatteryIntent for the battery status of my {WhichLock}
 LockQueryBatteryIntent for the battery status of {AllLocks}
 
-AlarmArmIntent to {AlarmArmOperation} my {Alarm}
-AlarmDisarmIntent to {AlarmDisarmOperation} my {Alarm}
-AlarmQueryIntent is my {Alarm} {AlarmState}
-AlarmQueryIntent what is the state of {Alarm}
+SHMArmMyHomeIntent to {SHMArmOperation} {MyHome}
+SHMArmMyHomeIntent to {LockOperation} and {SHMArmOperation} {MyHome}
+SHMArmMyHomeIntent to {SHMArmOperation} and {LockOperation} {MyHome}
+SHMArmMyHomeIntent to {LockOperation} and {SHMArmOperation}
+SHMArmMyHomeIntent to {SHMArmOperation} and {LockOperation}
+
+SHMArmIntent to {SHMArmOperation} {SHM}
+SHMDisarmIntent to {SHMDisarmOperation} {SHM}
+
+SHMStatusIntent is {SHM} {SHMOnState}
+SHMStatusIntent is {SHM} {SHMOffState}
+SHMStatusIntent if {SHM} is {SHMOnState}
+SHMStatusIntent if {SHM} is {SHMOffState}
+SHMStatusIntent what is the state of {SHM}
+SHMStatusIntent what is the status of {SHM}
+SHMStatusIntent what state is {SHM} in

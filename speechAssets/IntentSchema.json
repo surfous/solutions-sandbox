@@ -1,104 +1,168 @@
 {
-    "intents": [
-        {
-            "intent": "LaunchIntent"
-        },
-        {
-            "intent": "AMAZON.HelpIntent"
-        },
-        {
-            "intent": "AMAZON.StopIntent"
-        },
-        {
-            "intent": "AMAZON.CancelIntent"
-        },
-        {
-            "intent": "AMAZON.YesIntent"
-        },
-        {
-            "intent": "AMAZON.NoIntent"
-        },
-        {
-            "intent": "LockSupportedIntent",
-            "slots": [
-                {
-                    "name": "DoorsOrLocks",
-                    "type": "DOORS_OR_LOCKS"
-                }
-            ]
-        },
-        {
-            "intent": "WhichLockIntent",
-            "slots": [
-                {
-                    "name": "WhichLock",
-                    "type": "LOCKS"
-                }
-            ]
-        },
-        {
-            "intent": "LockLockIntent",
-            "slots": [
-                {
-                    "name": "LockOperation",
-                    "type": "LOCK_OPS"
-                },
-                {
-                    "name": "WhichLock",
-                    "type": "LOCKS"
-                },
-                {
-                    "name": "AllLocks",
-                    "type": "ALL_LOCKS"
-                }
-            ]
-        },
-        {
-            "intent": "LockUnlockIntent",
-            "slots": [
-                {
-                    "name": "UnlockOperation",
-                    "type": "UNLOCK_OPS"
-                },
-                {
-                    "name": "WhichLock",
-                    "type": "LOCKS"
-                },
-                {
-                    "name": "AllLocks",
-                    "type": "ALL_LOCKS"
-                }
-            ]
-        },
-        {
-            "intent": "LockStatusIntent",
-            "slots": [
-                {
-                    "name": "WhichLock",
-                    "type": "LOCKS"
-                },
-                {
-                    "name": "AllLocks",
-                    "type": "ALL_LOCKS"
-                },
-                {
-                    "name": "LockState",
-                    "type": "LOCK_STATES"
-                }
-            ]
-        },
-        {
-            "intent": "LockQueryBatteryIntent",
-            "slots": [
-                {
-                    "name": "WhichLock",
-                    "type": "LOCKS"
-                },
-                {
-                    "name": "AllLocks",
-                    "type": "ALL_LOCKS"
-                }
-            ]
-        }
-    ]
+   "intents": [
+       {
+           "intent": "LaunchIntent"
+       },
+       {
+           "intent": "AMAZON.HelpIntent"
+       },
+       {
+           "intent": "AMAZON.StopIntent"
+       },
+       {
+           "intent": "AMAZON.CancelIntent"
+       },
+       {
+           "intent": "AMAZON.YesIntent"
+       },
+       {
+           "intent": "AMAZON.NoIntent"
+       },
+       {
+           "intent": "LockSupportedIntent",
+           "slots": [
+               {
+                   "name": "DoorsOrLocks",
+                   "type": "DOORS_OR_LOCKS"
+               }
+           ]
+       },
+       {
+           "intent": "WhichLockIntent",
+           "slots": [
+               {
+                   "name": "WhichLock",
+                   "type": "LOCKS"
+               }
+           ]
+       },
+       {
+           "intent": "LockLockIntent",
+           "slots": [
+               {
+                   "name": "LockOperation",
+                   "type": "LOCK_OPS"
+               },
+               {
+                   "name": "WhichLock",
+                   "type": "LOCKS"
+               },
+               {
+                   "name": "AllLocks",
+                   "type": "ALL_LOCKS"
+               },
+			   {
+				   "name": "MyHome",
+				   "type": "HOME_NAME"
+			   }
+           ]
+       },
+       {
+           "intent": "LockUnlockIntent",
+           "slots": [
+               {
+                   "name": "UnlockOperation",
+                   "type": "UNLOCK_OPS"
+               },
+               {
+                   "name": "WhichLock",
+                   "type": "LOCKS"
+               },
+               {
+                   "name": "AllLocks",
+                   "type": "ALL_LOCKS"
+               }
+           ]
+       },
+       {
+           "intent": "LockStatusIntent",
+           "slots": [
+               {
+                   "name": "WhichLock",
+                   "type": "LOCKS"
+               },
+               {
+                   "name": "AllLocks",
+                   "type": "ALL_LOCKS"
+               },
+               {
+                   "name": "LockState",
+                   "type": "LOCK_STATES"
+               }
+           ]
+       },
+       {
+           "intent": "LockQueryBatteryIntent",
+           "slots": [
+               {
+                   "name": "WhichLock",
+                   "type": "LOCKS"
+               },
+               {
+                   "name": "AllLocks",
+                   "type": "ALL_LOCKS"
+               }
+           ]
+       },
+       {
+           "intent": "SHMStatusIntent",
+           "slots": [
+               {
+                   "name": "SHMOnState",
+                   "type": "SHM_ARMED_STATES"
+               },
+               {
+                   "name": "SHMOffState",
+                   "type": "SHM_DISARMED_STATES"
+               },
+               {
+                   "name": "SHM",
+                   "type": "SHM_NAME"
+               }
+           ]
+       },
+       {
+           "intent": "SHMArmIntent",
+           "slots": [
+               {
+                   "name": "SHMArmOperation",
+                   "type": "SHM_ARM_OPS"
+               },
+               {
+                   "name": "SHM",
+                   "type": "SHM_NAME"
+               }
+           ]
+       },
+       {
+           "intent": "SHMDisarmIntent",
+           "slots": [
+               {
+                   "name": "SHMDisarmOperation",
+                   "type": "SHM_DISARM_OPS"
+               },
+               {
+                   "name": "SHM",
+                   "type": "SHM_NAME"
+               }
+           ]
+       },
+       {
+           "intent": "SHMArmMyHomeIntent",
+           "slots": [
+               {
+                   "name": "SHMArmOperation",
+                   "type": "SHM_ARM_OPS"
+               },
+               {
+                   "name": "LockOperation",
+                   "type": "LOCK_OPS"
+               },
+               {
+                   "name": "MyHome",
+                   "type": "HOME_NAME"
+               }
+           ]
+       }
+   ]
 }
