@@ -23,7 +23,7 @@ definition(
         oauth: [displayName: "Amazon Echo Dev (V2)", displayLink: ""]
 )
 
-// Version 1.2.0b1 build 20160625-00
+// Version 1.1.8b2 build 20160627-00
 
 // Changelist:
 // 1.1.7
@@ -334,6 +334,15 @@ Map buildUnexpectedResponse(Boolean newSession=true) {
     return buildCustomSkillResponse(titleText:title, sayText:say)
 }
 
+def buildSecurityDisallowResponse(String titleText="Operation not permitted") {
+    sendNotificationEvent("For security reasons, unlocking doors and disarming Smart Home Monitor have been disabled. For more information, please visit the SmartThings Support website at support.smartthings.com and search for SmartThings Extras.")
+    return buildCustomSkillResponse(titleText: titleText,
+        sayText: "For security reasons, this feature has been disabled. For more information, please refer to the notifications page in your SmartThings mobile app.",
+        cardText: "For security reasons, unlocking doors and disarming Smart Home Monitor have been disabled. For additional information, please visit the SmartThings Support website at support.smartthings.com and search for SmartThings Extras.")
+}
+
+/////////////////////////////////////////////////////////////////
+////  Helper methods for finding devices by name or by id
 Boolean compareDeviceNames(String left='', String right='') {
     String reInvalidChars = "[^\\p{Alnum}]"
     if (left.toLowerCase().replaceAll(reInvalidChars,'') == right.toLowerCase().replaceAll(reInvalidChars,'')) {
@@ -370,6 +379,8 @@ def customGet() {
     return launchCommandHandler()
 }
 
+// This is the transaction state. It exists for one request and response
+// Contrast with session which may exist across multiple transactions, until the skill is exited
 @Field Boolean transactionIsNewSession = null
 @Field String transactionIntentName = null
 @Field String transactionStartIntent = null
@@ -406,10 +417,8 @@ def customPost() {
 
     if (!isIntentValid(transactionIntentName)) {
         // Yes an No are only valid responses if the session indicates that it was an appropriate response
-        badUtteranceResponse = "That doesn't make sense to me right now."
-        if (transactionSessionAttributes?.posedQuestion) {
-            badUtteranceResponse += posedQuestion
-        }
+        log.error "intent $transactionIntentName is invalid at this point in the session"
+        String badUtteranceResponse = "I'm sorry, I don't understand how that relates to what I'd asked. Let's start over if you'd like to try again."
         return buildNoCardResponse(badUtteranceResponse)
     }
 
@@ -435,7 +444,7 @@ def customPost() {
 
     if (transactionIsNewSession) {
         // specific to locks
-        if (transactionIntentName.startsWith('Lock')) {
+        if (transactionIntentName.startsWith('Lock') || transactionIntentName.startsWith('SHM')) {
             transactionDeviceKind = 'lock'
             transactionDeviceKindPlural = 'locks'
             transactionCandidateDevices.addAll(locks?:[])
@@ -444,8 +453,8 @@ def customPost() {
                 // User has no matching devices
                 log.debug "No devices having the $transactionDeviceKind capability are among the user's SmartThings devices"
                 return buildCustomSkillResponse(titleText:"No $transactionDeviceKindPlural devices found", sayText:"Sorry, I couldn't find any $transactionDeviceKindPlural connected to your SmartThings setup.")
-            } else if (interpretedSlots?.AllLocks != null || transactionCandidateDevices.size() == 1) {
-                if (interpretedSlots?.AllLocks != null) {
+            } else if (interpretedSlots?.AllLocks != null || interpretedSlots?.MyHome != null || transactionCandidateDevices.size() == 1) {
+                if (interpretedSlots?.AllLocks != null || interpretedSlots?.MyHome != null) {
                     /*
                      * set if user said an utterance a slot which references all devices of a type:
                      * - AllLocks
@@ -520,15 +529,27 @@ def customPost() {
             break
         case { it == 'LockQueryBatteryIntent' && transactionIsNewSession }:
             responseToLambda = batteryStatusCommand(transactionDevices)
-			break
-		case { it == 'AlarmQueryIntent' && transactionIsNewSession }:
-			responseToLambda = alarmStatusCommand(interpretedSlots?.AlarmState)
-			break
-		case { it == 'AlarmArmIntent' && transactionIsNewSession }:
-			responseToLambda = alarmArmCommandHandler()
-			break
-		case { it == 'AlarmDisarmIntent' && transactionIsNewSession }:
-			responseToLambda = alarmDisarmCommandHandler()
+            break
+        case { it == 'SHMStatusIntent' && transactionIsNewSession }:
+            if (interpretedSlots?.SHMOnState) {
+                responseToLambda = shmStatusCommandHandler(SHMStateDef.ARMED)
+            } else if (interpretedSlots?.SHMOffState) {
+                responseToLambda = shmStatusCommandHandler(SHMStateDef.DISARMED)
+            } else {
+                // what state is SHM in?
+                responseToLambda = shmStatusCommandHandler()
+            }
+            break
+        case { it == 'LockLocksAndArmSHMIntent' && transactionIsNewSession }:
+        case { it == 'SHMArmMyHomeIntent' && transactionIsNewSession }:
+            responseToLambda = armHomeCommandHandler()
+            // responseToLambda = buildCustomSkillResponse(sayText:"This operation is not yet implemented.")
+            break
+        case { it == 'SHMArmIntent' && transactionIsNewSession }:
+            responseToLambda = armSHMCommandHandler()
+            break
+        case { it == 'SHMDisarmIntent' && transactionIsNewSession }:
+            responseToLambda = disarmSHMCommandHandler()
             break
 //// These next intents are for followup utterances on an existing session
         case { it == 'AMAZON.YesIntent' && !transactionIsNewSession }:
@@ -743,17 +764,16 @@ def toFahrenheit(temp) {
  * @return AVS response message
  */
 def launchCommandHandler() {
-    String titleText = 'SmartThings Advanced Skill'
-    String sayText = 'Welcome to SmartThings Locks. SmartThings Locks is a custom skill for locking your SmartThings connected locks using Alexa. '+
-                'This skill will work with Yale, Schlage, and Kwikset locks, among others. To use it, you will need a'+
-                'SmartThings hub, a SmartThings account, and a lock. For additional information please visit our blog post at (placeholder URL) or '+
-                'our SmartThings knowledge base and search for Alexa custom skill.'
+    String titleText = 'SmartThings Extras'
+    String sayText = '''\
+Welcome to SmartThings Extras. SmartThings Extras is a custom skill for locking your SmartThings connected locks and arming Smart Home Monitor using Alexa.
 
-    String cardText = 'Welcome to SmartThings Locks.\nSmartThings Locks is a custom skill for locking your SmartThings connected locks using Alexa.'+
-            'This skill will work with Yale, Schlage, and Kwikset locks, among others. To use it, you will need a'+
-            'SmartThings hub, a SmartThings account, and a lock.\n For additional information please visit our blog post at (placeholder URL) or'+
-            'our SmartThings knowledge base and search for Alexa custom skill.'
-    return buildCustomSkillResponse(titleText:titleText, sayText:sayText, cardText:cardText)
+This skill will work with Yale, Schlage, and Kwikset locks, among others.
+
+To use it, you will need a SmartThings hub, a SmartThings account, and a lock.
+
+For additional information, please visit the SmartThings Support website at support.smartthings.com, and search for SmartThings Extras.'''
+    return buildCustomSkillResponse(titleText:titleText, sayText:sayText)
 }
 
 def stopCommandHandler() {
@@ -761,28 +781,20 @@ def stopCommandHandler() {
 }
 
 def helpCommandHandler() {
-    String titleText = 'SmartThings Advanced Skill Help'
+    String titleText = 'SmartThings Extras Help'
 
+    String sayText = '''\
+SmartThings Extras is a custom skill for locking your SmartThings connected locks and arming Smart Home Monitor using Alexa. Since this is a custom skill you will have to add SmartThings to your voice command.
 
-    String sayText = 'SmartThings Locks is a custom skill for locking your SmartThings connected locks using Alexa. Since this is a custom skill you will '+
-                        'have to add SmartThings to your voice command. Here are just a few of the things you can do with SmartThings Locks: '+
-                        'Alexa, tell SmartThings to lock the door. ' +
-                        'Alexa, ask SmartThings which doors I have?' +
-                        'Alexa, ask SmartThings if all my doors are locked?' +
-                        'Alexa, ask SmartThings for the battery status of the back door?' +
-                        'For a full list of commands and supported features, please visit our blog post at (placeholder URL).'
+Here are just a few of the things you can do with SmartThings Extras:
 
-    String cardText = 'SmartThings Locks is a custom skill for locking your SmartThings connected locks using Alexa.\n' +
-                        'Since this is a custom skill you will have to add SmartThings to your voice command. Here are just a few of the things you can do with SmartThings Locks: \n' +
-            '\n' +
-                        'Alexa, tell SmartThings to lock the door.\n' +
-                        'Alexa, ask SmartThings which doors I have?\n' +
-                        'Alexa, ask SmartThings if all my doors are locked?\n' +
-                        'Alexa, ask SmartThings for the battery status of the back door?\n' +
-                        '\n' +
-                        'For a full list of commands and supported features, please visit our blog post at (placeholder URL).'
-    String repromptText = 'What would you like to do?'
-    Map repromptObj = buildOutputSpeechObj(repromptText)
+    Alexa, tell SmartThings to lock the door.
+    Alexa, ask SmartThings which doors are locked?
+    Alexa, ask SmartThings to arm my home.
+    Alexa, ask SmartThings for the battery status of the back door.
+
+For a full list of commands and supported features, please visit the SmartThings Support website at support.smartthings.com and search for SmartThings Extras.'''
+    String cardText = 'For additional information, please visit the SmartThings Support website at support.smartthings.com and search for SmartThings Extras.'
     return buildCustomSkillResponse(titleText:titleText, sayText:sayText, cardText:cardText)
 }
 
@@ -807,14 +819,19 @@ def unlockFailCommandHandler(def singleDevice) {
 
 def unlockFailCommandHandler() {
     log.warn "Unlock operation *** NOT PERMITTED"
-    sendNotificationEvent("For security reasons, you are not allowed to unlock doors via Alexa")
-    return buildCustomSkillResponse(titleText: "Unlock is currently not permitted",
-        sayText:"For security reasons, that feature has been disabled. For more information, please refer to the notifications page in your SmartThings mobile app")
+    return buildSecurityDisallowResponse("Unlock is currently not permitted")
 }
 
 @Field final List KNOWN_LOCK_STATES = ['locked', 'unlocked']
+
 def lockCommandHandler(List deviceList=[]) {
     log.trace "lockCommandHandler($deviceList)"
+    Map responseDataMap = lockAction(deviceList)
+    return buildCustomSkillResponse(responseDataMap)
+}
+
+Map lockAction(List deviceList=[]) {
+    log.trace "lockAction($deviceList)"
 
     if (!deviceList && transactionCandidateDevices.size() >= 1) {
         transactionSessionAttributes.initialIntent = transactionIntentName
@@ -839,7 +856,7 @@ def lockCommandHandler(List deviceList=[]) {
             repromptText = "Which lock did you mean?"
             titleText = "Should I lock one of these?"
         }
-        return buildCustomSkillResponse(titleText:titleText, sayText:outputText, repromptText:repromptText, checkBattery:false)
+        return [titleText:titleText, sayText:outputText, repromptText:repromptText, checkBattery:false]
     }
 
     String titleObject = "the ${deviceList[0]}"
@@ -888,7 +905,7 @@ def lockCommandHandler(List deviceList=[]) {
     }
 
     String responseSpeech = responseSpeeches.join('\n')
-    return buildCustomSkillResponse(titleText: "Lock $titleObject", sayText:responseSpeech)
+    return [titleText: "Lock $titleObject", sayText:responseSpeech]
 }
 
 def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
@@ -920,10 +937,6 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
         return buildCustomSkillResponse(titleText:titleText, sayText:outputText, repromptText:repromptText, checkBattery:false)
     }
 
-    String statusTarget = "your locks"
-    if (deviceList.size() == 1) {
-        statusTarget = deviceList[0].displayName
-    }
     List outputSpeeches = []
 
     // initialize the device state map for each state we care about
@@ -933,7 +946,6 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
     }
     Set statesWithDevices = []
     deviceList.each {
-        // FIXME - use unknown state code from lockCommandHandler here as well
         device ->
         String deviceCurrentState = device?.currentValue('lock')?:'unknown'
         statesWithDevices << deviceCurrentState.toLowerCase()
@@ -942,7 +954,6 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
         } else {
             devicesByState.unknown << device.displayName
         }
-        //outputText += "Your ${device.displayName} is ${device.currentValue('lock')}. \n"
     }
 
     String confirmDeny = ""
@@ -974,8 +985,90 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
             }
         }
     }
+
     String sayText = "${confirmDeny}${outputSpeeches.join('\n')}"
-    return buildCustomSkillResponse(titleText:"Lock status for $statusTarget", sayText:sayText)
+    Map responseData = [titleText: "What is the status of my locks?", sayText: sayText]
+    if (deviceList.size() == 1) {
+        def theLockDevice = deviceList[0]
+        responseData.titleText = "What is the status of ${theLockDevice.displayName}?"
+        if (devicesByState?.unlocked?.size() == 1) {
+            // We have the status of a single unlocked lock
+            return buildSingleLockFollowupDialogResponse(responseData, theLockDevice)
+        }
+    }
+    return buildCustomSkillResponse(responseData)
+}
+
+/**
+ * status of a single lock asked about by name and state
+ * Ask smart things if ny front door lock is locked
+ * @param   device  the lock being queried
+ * @param   queryState  the state the user asked if the lock was in
+ * @return  AVS Custom Skill response formatted map (will be converted to JSON)
+ */
+def lockQueryHandler(def singleDevice, String queryState) {
+    log.trace "lockQueryHandler(${singleDevice.displayName}, $queryState)"
+    Set lockCapabilityStates = ['locked', 'unlocked']
+    Set lockedSynonyms = ['locked', 'closed', 'shut']
+    Set unlockedSynonyms = ['unlocked', 'opened', 'open']
+
+    String normalQueryState = 'locked'
+    if (unlockedSynonyms.contains(queryState.toLowerCase())) {
+        normalQueryState = 'unlocked'
+    } else if (!lockedSynonyms.contains(queryState.toLowerCase())) {
+        // canonicalLockState is still locked
+        log.warn "We don't know about the lock state queried: $queryState. Assuming it means 'locked'"
+    }
+
+    def deviceCurrentState = singleDevice?.currentValue('lock')?.toLowerCase()?:'unknown'
+
+    String outputText = ""
+    if (normalQueryState == deviceCurrentState?.toLowerCase()) {
+        // Yes!
+        outputText = "Yes, your ${singleDevice.displayName} is $normalQueryState."
+    } else if (!KNOWN_LOCK_STATES.contains(deviceCurrentState?.toLowerCase())) {
+        // Uh oh
+        outputText = "Your ${singleDevice.displayName} is in an unknown state."
+    } else {
+        // No
+        outputText = "No, your ${singleDevice.displayName} is ${deviceCurrentState}."
+    }
+
+    Map responseData = [titleText:"Is my ${singleDevice.displayName} $queryState?", sayText:outputText]
+
+    // If unlocked, follow up and ask if they'd like to lock it
+    if (deviceCurrentState == 'unlocked') {
+        return buildSingleLockFollowupDialogResponse(responseData, singleDevice)
+    }
+
+    // Otherwise, just present the response and end.
+    return buildCustomSkillResponse(responseData)
+}
+
+Map buildSingleLockFollowupDialogResponse(Map responseData=[:], def singleDevice) {
+    log.trace "buildSingleLockFollowupDialogResponse($responseData, $singleDevice)"
+    if (responseData?.titleText?.isEmpty()) {
+        responseData.titleText = "Is my door locked/unlocked?"
+    }
+
+    // build session for the next stage of the dialog
+    transactionSessionAttributes.deviceIds = [singleDevice.id]
+    transactionSessionAttributes.initialIntent = transactionIntentName
+    transactionSessionAttributes.usedAllDevicesSlot = transactionUsedAllDevicesSlot
+    transactionSessionAttributes.validResponseIntents = ['AMAZON.YesIntent', 'AMAZON.NoIntent']
+    transactionSessionAttributes.nextHandler = 'doLockDialogHandler'
+
+    responseData.repromptText = "Would you like me to lock the ${singleDevice.displayName} for you?"
+    transactionSessionAttributes.posedQuestion = responseData.repromptText
+    String followupText = "Would you like me to lock it for you?"
+    if (responseData?.sayText?.isEmpty()) {
+        responseData.sayText = followupText
+    } else {
+        responseData.sayText = "${responseData.sayText} $followupText"
+    }
+    responseData.checkBattery = false
+
+    return buildCustomSkillResponse(responseData)
 }
 
 /**
@@ -1016,44 +1109,141 @@ def String batteryStatusReminder(List devices = null) {
     return outputText
 }
 
+def armHomeCommandHandler() {
+    // Arms SHM and Locks All Locks
+    try {
+        transactionUsedAllDevicesSlot = true
+        Map lockResponseDataMap = lockAction(locks?:[])
+        Map armShmResponseDataMap = armSHMAction()
 
-def alarmArmCommandHandler() {
-	log.trace "alarmArmCommandHandler()"
-	def outputText = "Smart Home Monitor is arming (stay mode)"
-	sendLocationEvent(name: "alarmSystemStatus", value: "stay")
-	return buildCustomSkillResponse(titleText: "Arm Smart Home Monitor", sayText: outputText, checkBattery: true)
-}
-
-def alarmDisarmCommandHandler() {
-	log.trace "alarmDisarmCommandHandler()"
-
-	log.warn "Disarm operation *** NOT PERMITTED"
-	sendNotificationEvent("For security reasons, you are not allowed to disarm Smart Home Monitor via Alexa")
-	return buildCustomSkillResponse(titleText: "Disarm is currently not permitted",
-			sayText: "For security reasons, that feature has been disabled. For more information, please refer to the notifications page in your SmartThings mobile app", checkBattery: true)
-}
-
-@Field final List KNOWN_ALARM_STATES = ['armed', 'disarmed']
-
-def alarmStatusCommand(alarmStateQuery) {
-	log.trace "alarmStatusCommand($alarmStateQuery)"
-	def currentAlarmState = location.currentState("alarmSystemStatus")?.value
-	def alarmState = "unknown"
-
-	switch (currentAlarmState) {
-		case "away":
-			alarmState = "armed away"
-			break
-		case "stay":
-			alarmState = "armed stay"
-			break
-		case "off":
-			alarmState = "disarmed"
-			break
+        // build a combined response
+        String sayText = "${lockResponseDataMap?.sayText}\n\n${armShmResponseDataMap?.sayText}"
+        Map armHomeResponse = buildCustomSkillResponse(titleText: "Arm My Home", sayText: sayText)
+        return armHomeResponse
+	} catch (Exception e) {
+		log.error e
+		throw e
 	}
+}
 
-	def outputText = "Smart Home Monitor is in $alarmState state"
-	return buildCustomSkillResponse(titleText: "What is the state of Smart Home Monitor?", sayText: outputText, checkBattery:true)
+def armSHMCommandHandler() {
+    log.trace "armSHMCommandHandler()"
+    Map responseDataMap = armSHMAction()
+    return buildCustomSkillResponse(responseDataMap)
+}
+
+Map armSHMAction() {
+    log.trace "armSHMAction()"
+    Map targetSHMStatus = newSHMStatus(AlarmStatusDef.STAY) // desired state
+    Map beforeSHMStatus = querySHMStatus() // current state
+
+    String outputText = "${beforeSHMStatus?.getStatusSpeech()}"
+
+    if (beforeSHMStatus.getSystemStatus() == AlarmStatusDef.AWAY) {
+        // Don't permit away->stay from Alexa
+        outputText = outputText[0..-2] // remove trailing period to build the sentence further
+        outputText += " and cannot be changed to '${targetSHMStatus.getStatusString()}' through SmartThings Extras. Please use Smart Home Monitor within your SmartThings mobile app to change the state"
+    } else if (beforeSHMStatus.getSystemStatus() != targetSHMStatus.getSystemStatus()) {
+        // Changing SHM to Armed (stay)
+        sendLocationEvent(name: "alarmSystemStatus", value: targetSHMStatus.getSystemStatus())
+        Map afterSHMStatus = querySHMStatus()
+        outputText = "${afterSHMStatus.getStatusSpeech(true)}"
+    } else {
+        // we are already in arm (stay). nothing to do!
+    }
+
+    return [titleText: "Arm Smart Home Monitor", sayText: outputText]
+}
+
+def disarmSHMCommandHandler() {
+    log.trace "disarmSHMCommandHandler()"
+    log.warn "Disarm operation *** NOT PERMITTED"
+    return buildSecurityDisallowResponse("Disarming Secure Home Monitor is currently not permitted")
+}
+
+@Field final Map SHMStateDef = [ ARMED:'arm', DISARMED:'disarm', UNKNOWN:'unknown']
+@Field final Map SHMModeDef = [ STAY: 'stay', AWAY: 'away']
+@Field final Map AlarmStatusDef = [ STAY: 'stay', AWAY: 'away', DISARMED: 'off', OFF: 'off']
+
+def shmStatusCommandHandler(String shmStateValue) {
+    log.trace "shmStatusCommandHandler($shmStateValue)"
+    Map shmStatus = querySHMStatus()
+
+    def outputText = "No, "
+    if (shmStateValue == shmStatus.state) {
+        outputText = "Yes, "
+    }
+    outputText += shmStatus.getStatusSpeech()
+
+    return buildCustomSkillResponse(titleText: "What is the status of Smart Home Monitor?", sayText: outputText, checkBattery:true)
+}
+
+def shmStatusCommandHandler() {
+    log.trace "shmStatusCommandHandler()"
+    Map shmStatus = querySHMStatus()
+    return buildCustomSkillResponse(titleText: "What is the status of Smart Home Monitor?", sayText: shmStatus.getStatusSpeech(), checkBattery:true)
+}
+
+Map newSHMStatus(String alarmSystemStatus) {
+    Map shmStat = [_alarmSystemStatus: alarmSystemStatus]
+    switch (alarmSystemStatus) {
+        case AlarmStatusDef.AWAY:
+            shmStat.state = "$SHMStateDef.ARMED"
+            shmStat.substate = "$SHMModeDef.AWAY"
+            break
+        case AlarmStatusDef.STAY:
+            shmStat.state = "$SHMStateDef.ARMED"
+            shmStat.substate = "$SHMModeDef.STAY"
+            break
+        case AlarmStatusDef.DISARMED:
+            shmStat.state = "$SHMStateDef.DISARMED"
+            shmStat.substate = null
+            break
+        default:
+            log.warn "SHM alarmSystemStatus of '$alarmSystemStatus' is invalid"
+            shmStat.state = "$SHMStateDef.UNKNOWN"
+            shmStat.substate = null
+            break
+    }
+    // log.trace "newSHMStatus($alarmSystemStatus) initialized to $shmStat"
+
+    shmStat.getSystemStatus = { return "$shmStat._alarmSystemStatus" }
+
+    shmStat.getStatusString = {
+        String statusString = "$shmStat.state"
+        if (shmStat.substate) {
+            statusString += " ($shmStat.substate)"
+        }
+        return statusString
+    }
+
+    shmStat.getStatusSpeech = {
+        usePpcTense = false ->
+        String spokenStatus = "Smart Home Monitor"
+        if (shmStat?.state == SHMStateDef.UNKNOWN) {
+            // always 'is' for this state
+            spokenStatus += " is in an unknown state"
+        } else {
+            String tense = usePpcTense?'has been':'is currently'
+            spokenStatus += " $tense set to ${shmStat?.getStatusString()}"
+        }
+        spokenStatus += "."
+        return spokenStatus
+    }
+    return shmStat
+}
+
+/**
+ * Queries the location for the status of the SHM
+ * @return Map with the state (armed, disarmed), mode (stay, away)
+ *         and getStatusSpeech which is a closure returning a string
+ *         suitable to finish the sentence "Smart Home Monitor is..."
+ */
+Map querySHMStatus() {
+    String alarmSystemStatus = "${location?.currentState("alarmSystemStatus").stringValue}"
+    // log.trace "querySHMStatus() - current SHM state is $alarmSystemStatus"
+    Map shmStatus = newSHMStatus(alarmSystemStatus)
+    return shmStatus
 }
 
 def batteryStatusCommand(List deviceList) {
@@ -1107,64 +1297,11 @@ def batteryStatusCommand(List deviceList) {
 }
 
 /**
- * status of a single lock asked about by name and state
- * Ask smart things if ny front door lock is locked
- * @param   device  the lock being queried
- * @param   queryState  the state the user asked if the lock was in
- * @return  AVS Custom Skill response formatted map (will be converted to JSON)
- */
-def lockQueryHandler(def singleDevice, String queryState) {
-    log.trace "lockQueryHandler(${singleDevice.displayName}, $queryState)"
-    Set lockCapabilityStates = ['locked', 'unlocked']
-    Set lockedSynonyms = ['locked', 'closed', 'shut']
-    Set unlockedSynonyms = ['unlocked', 'opened', 'open']
-
-    String normalQueryState = 'locked'
-    if (unlockedSynonyms.contains(queryState.toLowerCase())) {
-        normalQueryState = 'unlocked'
-    } else if (!lockedSynonyms.contains(queryState.toLowerCase())) {
-        // canonicalLockState is still locked
-        log.warn "We don't know about the lock state queried: $queryState. Assuming it means 'locked'"
-    }
-
-    def deviceCurrentState = singleDevice?.currentValue('lock')?.toLowerCase()?:'unknown'
-
-    String outputText = ""
-    if (normalQueryState == deviceCurrentState?.toLowerCase()) {
-        // Yes!
-        outputText = "Yes, your ${singleDevice.displayName} is $normalQueryState."
-    } else if (!KNOWN_LOCK_STATES.contains(deviceCurrentState?.toLowerCase())) {
-        // Uh oh
-        outputText = "Your ${singleDevice.displayName} is in an unknown state."
-    } else {
-        // No
-        outputText = "No, your ${singleDevice.displayName} is ${deviceCurrentState}."
-    }
-
-    // If unlocked, follow up and ask if they'd like to lock it
-    String repromptText = ""
-    if (deviceCurrentState == 'unlocked') {
-        // build up a session for the next stage of the dialog
-        transactionSessionAttributes.deviceIds = [singleDevice.id]
-        // transactionSessionAttributes.deviceId  = singleDevice.id
-        transactionSessionAttributes.initialIntent = transactionIntentName
-        transactionSessionAttributes.usedAllDevicesSlot = transactionUsedAllDevicesSlot
-        transactionSessionAttributes.validResponseIntents = ['AMAZON.YesIntent', 'AMAZON.NoIntent']
-        transactionSessionAttributes.nextHandler = 'doLockDialogHandler'
-        repromptText = "Would you like me to lock the ${singleDevice.displayName} for you?"
-        transactionSessionAttributes.posedQuestion = repromptText
-        outputText += " Would you like me to lock it for you?"
-    }
-
-    return buildCustomSkillResponse(titleText:"Is my ${singleDevice.displayName} $queryState?", sayText:outputText, repromptText:repromptText, checkBattery:false)
-}
-
-/**
  * The user asked which devices Alexa knows about. Which class of devices depends on the intent the user issued
- * @param   transactionDeviceKind The type of device, singular
- * @param   transactionDeviceKindPlural The type of device, plural
- * @param   [description]
- * @return  [description]
+ * @param   String; The name of the type of device, singular
+ * @param   String; The name of the type of device, plural
+ * @param   List; list of Device objects
+ * @return  Map; custom skill response format Map to be marshalled into JSON automatically
  */
 def whichDevicesHandler(String transactionDeviceKind=device, String transactionDeviceKindPlural, List deviceList) {
     if (!transactionDeviceKind) transactionDeviceKind = 'device'
@@ -1193,7 +1330,7 @@ def whichDevicesHandler(String transactionDeviceKind=device, String transactionD
 Map yesNoDialogDispatcher(Boolean isResponseYes) {
     if (transactionIsNewSession) {
         // Yes or No aren't valid for a new session
-        return buildNoCardResponse('I\'m not sure what you mean by that right now')
+        return buildNoCardResponse("I'm not sure what you mean by that right now")
     } else if (!transactionSessionAttributes?.nextHandler) {
         return buildFatalErrorResponse("Session is missing nextHandler for $transactionIntentName")
     }
@@ -1261,6 +1398,7 @@ Boolean isIntentValid(String intentName=null) {
     if (intentName && validIntents && validIntents.contains(intentName)) {
         return true
     }
+    log.warn "Intent $intentName is not among the list of valid intenets at this point: $validIntents"
     return false
 }
 
@@ -1384,6 +1522,7 @@ def setPercentageCommand(device, value, changeValue, changeSign, response) {
         device.setLevel(newLevel)
     }
 }
+
 /**
  * Check if a temperature is within a thermostats allowed range
  *
@@ -1740,7 +1879,6 @@ private checkDeviceOnLine(device) {
             }
         }
     }
-
     return result
 }
 

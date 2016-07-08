@@ -142,7 +142,11 @@ for a single, named door
 * [x] Alexa, tell {INVOCATION} to help me
 
 ## SHM
-* [ ] Alexa ask {INVOCATION} to arm my Smart Home Monitor
+* [ ] Alexa ask {INVOCATION} to arm Smart Home Monitor
+ * [ ] when SHM is disarmed
+ * [ ] when SHM is armed - stay
+ * [ ] when SHM is armed - away
 * [ ] Alexa ask {INVOCATION} to disarm my alarm
 * [ ] Alexa ask {INVOCATION} is my alarm {ALARM_STATE}
 * [ ] Alexa ask {INVOCATION} what is the state of Smart Home Monitor
+* [ ] Alexa ask {INVOCATION} to arm my home
