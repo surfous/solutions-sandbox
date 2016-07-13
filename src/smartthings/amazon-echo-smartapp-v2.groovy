@@ -10,6 +10,7 @@ import static groovy.json.JsonOutput.*
 
 
 @Field String CUSTOM_SKILL_RESPONSE_FORMAT_VERSION = "1.0"
+@Field final Integer LOW_BATTERY_PCT = 25
 
 definition(
         name: "Amazon Alexa Kshuk (CoHo+Custom)",
@@ -1097,7 +1098,7 @@ def String batteryStatusReminder(List devices = null) {
 
         devicesToCheck.each {
             device ->
-                if (device.currentBattery != null && Integer.parseInt("$device.currentBattery") < 12) {
+                if (device.currentBattery != null && Integer.parseInt("$device.currentBattery") < LOW_BATTERY_PCT) {
                     locksWithLowBattery << device.displayName
                 }
         }
