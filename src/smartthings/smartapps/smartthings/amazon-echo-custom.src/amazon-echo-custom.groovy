@@ -24,9 +24,17 @@ definition(
         oauth: [displayName: "Amazon Echo Dev (V2)", displayLink: ""]
 )
 
-// Version 1.1.8b2 build 20160627-00
-
+// Version 1.1.9b build 20160719-00
+// Merge blanket permissions to Custom Skill
+// Dynamic preferences
+// Dynamic landing page
+//
 // Changelist:
+// // 1.1.8
+// // (not merged to this fork yet)
+// // Add support for routines
+// // Add support for blanket permissions
+//
 // 1.1.7
 // Handle lastActivity == null for devices that actually support heart beat
 // Reformatted code to tabs instead of spaces according to SmartThings standard
@@ -100,30 +108,21 @@ definition(
 // Add support for appliance version
 // Add support for capabilities in createFriendlyText()
 
-preferences(oauthPage: "deviceAuthorization") {
-    // Initial page where user can pick which switches should be available to the Echo
-    // Assumption is that level switches all support regular switch as well. This is to avoid
-    // having two inputs that might confuse the user
-    page(name: "deviceAuthorization", title: "", nextPage: "instructionPage", uninstall: false) {
-        section("Basic Skills") {
-            paragraph "Alexa can control these devices directly:\n\n" +
-                    "    \"Alexa, turn on my cat lamp\"\n" +
-                    "    \"Alexa, set the temperature to 68 degrees\"\n\n"
-            input "switches", "capability.switch", multiple: true, required: false, title: "My Switches"
-            input "thermostats", "capability.thermostat", title: "My Thermostats", multiple: true, required: false
-        }
-        section("Advanced skills") {
-            paragraph "You'll control the devices below little differently:\n\n" +
-                    "You do not need to ask Alexa to discover these devices.\n" +
-                    "They won't appear in the Smart Home section of your Alexa app.\n" +
-                    "You have to ask SmartThings to control these devices. For example:\n" +
-                    "   \"Alexa, tell SmartThings to lock my door\"\n" +
-                    "   \"Alexa, ask SmartThings if my back door lock is locked\"\n\n" +
-                    "Also, Alexa currently isn't allowed to unlock your door locks for you.\n"
+preferences(oauthPage: "oauthPage") {
+    page(name: "firstPage", content: "chooseFirstPage")
+    page(name: "deviceAuthorization", content: "buildDeviceAuthorizationPage")
 
-            input "locks", "capability.lock", title: "My Door Locks", multiple: true, required: false
-        }
+    // This is a static page for generating the OAUTH page - this is not shown in the SmartApp
+    page(name: "oauthPage", title: "", nextPage: "instructionPage") {
+        log.trace "oauthPage pref page"
         section("") {
+            input "allEnabled", options: [[(true): "All devices shown below"]], title: "Grant access to all devices?", defaultValue: false, multiple: false, required: false
+            paragraph title: "Or choose individual devices below", ""
+            input "switches", "capability.switch", title: "Select Switches", multiple: true, required: false
+            input "thermostats", "capability.thermostat", title: "Select Thermostats", multiple: true, required: false
+            input "locks", "capability.lock", title: "Select Locks", multiple: true, required: false
+        }
+        section() {
             href(name: "href",
                     title: "Uninstall",
                     required: false,
@@ -131,23 +130,136 @@ preferences(oauthPage: "deviceAuthorization") {
                     page: "uninstallPage")
         }
     }
+
     // Instructions for the user on how to run appliance discovery on Echo to update its device list
-    page(name: "instructionPage", title: "Device Discovery", install: true) {
+    // install: true is needed here to have a Done button which will return user to SmartApp list.
+	page(name: "instructionPage", title: "Device Discovery", install: true) {
+		log.trace "instructionPage pref page"
+		section("") {
+			paragraph "You have made a change to your device list.\n\n" +
+					"Now complete device discovery by saying the following to your Echo:"
+			paragraph title: "\"Alexa, discover new devices\"", ""
+		}
+	}
+
+    page(name: "installPage", title: "Install", install: true) {
         section("") {
-            paragraph "You have made a change to your device list.\n\n" +
-                    "Now complete device discovery by saying the following to your Echo:"
-            paragraph title: "\"Alexa, discover new devices\"", ""
+			paragraph '''\
+This is the install page:
+
+We would have actually redirected to the provisioning URL here.
+But just tap Done in the upper right to install the app and pretend.'''
+		}
+    }
+
+	// Separate page for uninstalling, we dont want the user to accidentaly uninstall since the app can only be automatically reinstalled
+	page(name: "uninstallPage", title: "Uninstall", uninstall: true, nextPage: "deviceAuthorization") {
+		// log.trace "uninstallPage pref page"
+		section("") {
+			paragraph '''\
+If you uninstall this SmartApp, remember to unlink your SmartThings account from Echo:
+  1. Open the Amazon Echo application
+  2. Goto Settings > Connected Home > Device Links
+  3. Choose "Unlink from SmartThings"'''
+		}
+	}
+}
+
+/**
+ * Decides and returns the first page to display -
+ * Landing page until we install, then deviceAuthorization thereafter,
+ * @method firstPage
+ * @return dynamicPage object
+ */
+ def chooseFirstPage() {
+     if (state?.showLandingPage != false && state?.showLandingPage != true) {
+         state.showLandingPage = true
+     }
+     log.trace "in chooseFirstPage() state.showLandingPage == ${state.showLandingPage}"
+     if (state.showLandingPage) {
+         buildLandingPage()
+     } else {
+         buildDeviceAuthorizationPage()
+     }
+ }
+
+
+def buildLandingPage() {
+    log.trace "buildLandingPage() - preferences"
+    dynamicPage(name: "firstPage", title:"SmartThings + Alexa", nextPage: "installPage") {
+        section("SmartThings optimized for Smart Home &\n\tSmartThings Extras") {
+            image(name: "heroImage",
+            title: "ALEXA LYFE 4EVA.",
+            description: "I am setting long title and descriptions to test the offset",
+            required: false,
+            image: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/AATT_hidpi.jpg")
+
+            paragraph '''\
+This is a paragraph for describing things and stuff
+
+It's a triple-single quoted string, so we don't have to escape anything in it. It's just easier.
+
+Alexa is pretty rad, too. Check this out:'''
+
+            element(   name: "videoElement",
+                element: "video",
+                type:   "video",
+                title: "Watch this",
+                required: false,
+                image: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/echo-beta.jpg",
+                video: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/echo-beta-720p.mp4")
+
+            href(name: "href",
+                title: "Let's Roll!",
+                required: false,
+                description: "So how about it? Tap here to install the skill.",
+                page: "installPage")
         }
     }
-    // Separate page for uninstalling, we dont want the user to accidentaly uninstall since the app can only be automatically reinstalled
-    page(name: "uninstallPage", title: "Uninstall", uninstall: true, nextPage: "deviceAuthorization") {
-        section("") {
-            paragraph "If you uninstall this SmartApp, remember to unlink your SmartThings account from Echo:\n\n" +
-                    "1. Open the Amazon Echo application\n" +
-                    "2. Goto Settings > Connected Home > Device Links\n" +
-                    "3. Choose \"Unlink from SmartThings\""
-        }
-    }
+}
+
+// The other option for firstPage
+def buildDeviceAuthorizationPage() {
+	// Initial page where user can pick which switches should be available to the Echo
+	// Assumption is that level switches all support regular switch as well. This is to avoid
+	// having two inputs that might confuse the user
+	log.debug "settings.allEnabled value is: ${settings?.allEnabled}. as Boolean: ${isBlanketAuthorized()}"
+	return dynamicPage(name: "firstPage", title: "Device Authorization", nextPage: "instructionPage") {
+		// log.trace "deviceAuthorization dynamic prefs page"
+		section("") {
+            String blanketALlEnabled = "Alexa can access\nall devices and routines"
+            String blanketSelectOnly = "Alexa can access\nonly the devices selected below"
+			input "allEnabled", "bool", title: "Allow Alexa to access\nall devices and routines", description: isBlanketAuthorized()?blanketALlEnabled:blanketSelectOnly, required: false, submitOnChange:true
+		}
+
+		if (!isBlanketAuthorized()) {
+			section("SmartThings Optimized for Smart Home") {
+				input "switches", "capability.switch", title: "Selected Switches", multiple: true, required: false
+				input "thermostats", "capability.thermostat", title: "Selected Thermostats", multiple: true, required: false
+				input "routinesEnabled", "bool", title: "Routines", options: ["All routines"], description: "Select routines", required: false
+			}
+            section("SmartThings Extras Devices") {
+				input "locks", "capability.lock", title: "Selected Locks", multiple: true, required: false
+			}
+		}
+
+		section("") {
+			href(name: "href",
+					title: "Uninstall",
+					required: false,
+					description: "",
+					page: "uninstallPage")
+		}
+	}
+}
+
+/**
+ * Returns the value of settings.allEnabled always as a Boolean, no matter how settings stores it.
+ * @method isBlanketAuthorized
+ * @return Value of settings.allEnabled forced to a Boolean
+ */
+Boolean isBlanketAuthorized() {
+    return "${settings?.allEnabled}".toBoolean()
 }
 
 mappings {
@@ -186,18 +298,18 @@ mappings {
 }
 
 def installed() {
-    log.debug settings
+    log.trace "installed()"
     initialize()
 }
 
 def updated() {
-    log.debug settings
+    log.trace "updated()"
     initialize()
 }
 
 def initialize() {
-    log.debug "initialize"
-
+    log.trace "initialize()"
+    state.showLandingPage = false // we have been installed at this point
     unschedule()
     state.heartbeatDevices = [:]
 
@@ -220,8 +332,9 @@ def initialize() {
  * @return a list of available devices and each device's supported information
  */
 def discovery() {
-    def switchList = settings["switches"]?.collect { deviceItem(it) } ?: []
-    def thermostatList = settings["thermostats"]?.collect { deviceItem(it) } ?: []
+    def switchList = getEnabledSwitches()?.collect { deviceItem(it) } ?: []
+	def thermostatList = getEnabledThermostats()?.collect { deviceItem(it) } ?: []
+
     def applianceList = switchList.plus thermostatList
     log.debug "discovery ${applianceList}"
     // Format according to Alexa API
@@ -344,35 +457,6 @@ def buildSecurityDisallowResponse(String titleText="Operation not permitted") {
         cardText: "For security reasons, unlocking doors and disarming Smart Home Monitor have been disabled. For additional information, please visit the SmartThings Support website at support.smartthings.com and search for SmartThings Extras.")
 }
 
-/////////////////////////////////////////////////////////////////
-////  Helper methods for finding devices by name or by id
-Boolean compareDeviceNames(String left='', String right='') {
-    String reInvalidChars = "[^\\p{Alnum}]"
-    if (left.toLowerCase().replaceAll(reInvalidChars,'') == right.toLowerCase().replaceAll(reInvalidChars,'')) {
-        return true
-    }
-    return false
-}
-
-def findDeviceByName(String spokenDeviceName) {
-    log.debug "Evaluating each authorized device name to see if it matches $spokenDeviceName"
-    List deviceNameCompLog = []
-    List foundDevices = []
-    transactionCandidateDevices.each {
-        device ->
-        String debugLine = "device display name '${device.displayName}' == spoken device name '$spokenDeviceName' ? "
-        if (compareDeviceNames(device.displayName, spokenDeviceName)) {
-            foundDevices.add(device)
-            debugLine += 'YES'
-        } else {
-            debugLine += 'NO'
-        }
-        deviceNameCompLog << debugLine
-    }
-    log.debug deviceNameCompLog.join('   \n')
-    return foundDevices
-}
-
 /**
  * handles custom skill GET requests
  * http request contains entire JSON message from AVS
@@ -450,7 +534,7 @@ def customPost() {
         if (transactionIntentName.startsWith('Lock') || transactionIntentName.startsWith('SHM')) {
             transactionDeviceKind = 'lock'
             transactionDeviceKindPlural = 'locks'
-            transactionCandidateDevices.addAll(locks?:[])
+            transactionCandidateDevices.addAll(getEnabledLocks?:[])
 
             if (transactionCandidateDevices.size() == 0) {
                 // User has no matching devices
@@ -468,7 +552,7 @@ def customPost() {
                 transactionDevices = transactionCandidateDevices
             } else if (interpretedSlots?.WhichLock != null) {
                 // User has specified a specific lock
-                transactionDevices = findDeviceByName(interpretedSlots.WhichLock)
+                transactionDevices = getDeviceByName(interpretedSlots.WhichLock)
             }
         }
     } else {
@@ -491,7 +575,7 @@ def customPost() {
             }
             transactionSessionAttributes.deviceIds = null
         } else if (interpretedSlots?.WhichLock != null) {
-            transactionDevices = findDeviceByName(interpretedSlots.WhichLock)
+            transactionDevices = getDeviceByName(interpretedSlots.WhichLock)
         }
     }
 
@@ -595,6 +679,7 @@ def customPost() {
  */
 def control() {
     def data = request.JSON
+    def response = [:]
 
     // Collect all devices
     def devices = []
@@ -604,10 +689,7 @@ def control() {
     }
 
     def command = params.command
-    def device = devices?.find {
-        it.id == params.id
-    }
-    def response = [:]
+    def device = getDeviceById(params.id)
 
     log.debug "control, params: ${params}, request: ${data}, devices: ${devices*.id} params.id: ${params?.id} params.command: ${params?.command} params.value: ${params?.value}"
 
@@ -1178,7 +1260,7 @@ def batteryStatusCommand(List deviceList) {
     // list devices with good battery level last
     if (deviceList.size() == 1 && devicesBatteryStatus.good.size() == 1) {
         // asked for and is reporting one device
-        outputTextList << "${statusTarget} battery is OK."
+        outputTextList << "${statusTarget} battery is good."
     } else if (!devicesBatteryStatus.good.isEmpty()) {
         outputTextList << "Battery level is good for ${convoList(devicesBatteryStatus.good)}."
     }
@@ -1198,10 +1280,10 @@ def armHomeCommandHandler() {
         String sayText = "${lockResponseDataMap?.sayText}\n\n${armShmResponseDataMap?.sayText}"
         Map armHomeResponse = buildCustomSkillResponse(titleText: "Arm My Home", sayText: sayText)
         return armHomeResponse
-	} catch (Exception e) {
-		log.error e
-		throw e
-	}
+    } catch (Exception e) {
+        log.error e
+        throw e
+    }
 }
 
 def armSHMCommandHandler() {
@@ -1938,4 +2020,99 @@ private checkIfV1Hub() {
         }
     }
     return v1Found
+}
+
+/**
+ * Find all switches the user has given Alexa access to, either by selecting specific switches or by selecting
+ * allow all devices.
+ *
+ * @return a list of all switches accessible to Alexa
+ */
+private getEnabledSwitches() {
+	if (isBlanketAuthorized) {
+		return findAllDevicesByCapability("switch")
+	} else {
+		return switches
+	}
+}
+
+/**
+ * Find all thermostats the user has given Alexa access to, either by selecting specific thermostats or by selecting
+ * allow all devices.
+ *
+ * @return a list of all thermostats accessible to Alexa
+ */
+private getEnabledThermostats() {
+	if (isBlanketAuthorized) {
+		return findAllDevicesByCapability("thermostat")
+	} else {
+		return thermostats
+	}
+}
+
+/**
+ * Find all locks the user has given Alexa access to, either by selecting specific locks or by selecting
+ * allow all devices.
+ *
+ * @return a list of all locks accessible to Alexa
+ */
+private getEnabledLocks() {
+    if (isBlanketAuthorized) {
+		return findAllDevicesByCapability("lock")
+	} else {
+		return locks
+	}
+}
+
+/////////////////////////////////////////////////////////////////
+////  Helper methods for finding devices by name or by id
+
+/**
+ * Find a specific device amongst all the devices the user has given access to in the SmartHome skill.
+ *
+ * (devices for custom skill will not be returned)
+ *
+ * @param id device's id
+ * @return a device or null if device not found
+ */
+private getDeviceById(id) {
+	// Start with switches which is the most common device
+	def device = getEnabledSwitches()?.find {
+		it.id == id
+	}
+
+	// If device not found, check next input
+	if (!device) {
+		device = getEnabledThermostats()?.find {
+			it.id == id
+		}
+	}
+	return device
+}
+
+private getDeviceByName(String spokenDeviceName) {
+    log.debug "Evaluating each authorized device name to see if it matches $spokenDeviceName"
+    List deviceNameCompLog = []
+    List foundDevices = []
+    transactionCandidateDevices.each {
+        device ->
+        String debugLine = "device display name '${device.displayName}' == spoken device name '$spokenDeviceName' ? "
+        if (compareDeviceNames(device.displayName, spokenDeviceName)) {
+            foundDevices.add(device)
+            debugLine += 'YES'
+        } else {
+            debugLine += 'NO'
+        }
+        deviceNameCompLog << debugLine
+    }
+    log.debug deviceNameCompLog.join('   \n')
+    return foundDevices
+}
+
+private Boolean compareDeviceNames(String left='', String right='') {
+    String reInvalidChars = "[^\\p{Alnum}]"
+    if (left.toLowerCase().replaceAll(reInvalidChars,'') == right.toLowerCase().replaceAll(reInvalidChars,'')) {
+        return true
+    }
+    return false
 }
