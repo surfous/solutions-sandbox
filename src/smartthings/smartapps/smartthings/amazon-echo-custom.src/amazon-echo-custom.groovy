@@ -486,8 +486,8 @@ def customGet() {
 def customPost() {
     Map responseToLambda = [:]
     // request.JSON
-    log.debug "the JSON body of the request\n${prettyPrint(toJson(request.JSON))}"
     def customSkillReq = request?.JSON // preserve the request
+    log.info "$customSkillReq.request" // for utterance statistics
 
     // Extract session data
     transactionIsNewSession = customSkillReq?.session?.new?:false
