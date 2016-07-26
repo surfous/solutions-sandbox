@@ -820,7 +820,7 @@ def deviceHeartbeatCheck() {
 					}
 				}
 			} else {
-				state.heartbeatDevices[it.id].offline = false
+				state.heartbeatDevices[it.id].online = false
 			}
 			state.heartbeatDevices[it.id].pollCycle = (state.heartbeatDevices[it.id].pollCycle + 1) % 4
 		}
