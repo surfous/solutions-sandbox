@@ -14,12 +14,23 @@ definition(
 		iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
 		iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@2x.png",
 		iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@3x.png",
-		oauth: [displayName: "Amazon Echo (QA)", displayLink: ""]
+		oauth: [displayName: "Amazon Echo (QA)", displayLink: ""],
+		singleInstance: true
 )
 
-// Version 1.1.8
+// Version 1.1.10
 
 // Changelist:
+
+// 1.1.10
+// Dynamic preferences
+// Harmony workaround
+// Heartbeat zwaveinfo fix
+// Setup heartbeat when discovery is called
+// Added singleInstance
+
+// 1.1.9
+// Add MSR data for Jasco devices
 
 // 1.1.8
 // Add support for routines
@@ -103,12 +114,12 @@ preferences(oauthPage: "oauthPage") {
 
 	// This is a static page for generating the OAUTH page - this is not shown in the SmartApp
 	page(name: "oauthPage", title: "", nextPage: "instructionPage", uninstall: false) {
-		log.trace "oauthPage pref page"
 		section("") {
-			input "allEnabled", options: [[(true): "All devices shown below"]], title: "Grant access to all devices?", defaultValue: false, multiple: false, required: false
+			input "allEnabled", type: "enum", title: "Grant access to all devices?", options: [[(true): "All devices shown below"]], defaultValue: false, multiple: false, required: false
 			paragraph title: "Or choose individual devices below", ""
 			input "switches", "capability.switch", title: "My Switches", multiple: true, required: false
 			input "thermostats", "capability.thermostat", title: "My Thermostats", multiple: true, required: false
+			input "routinesEnabled", type: "enum", title: "Enable Routines?", options: [[(true): "Yes"]], defaultValue: false, multiple: false, required: false
 		}
 		section() {
 			href(name: "href",
@@ -119,10 +130,8 @@ preferences(oauthPage: "oauthPage") {
 		}
 	}
 
-
 	// Instructions for the user on how to run appliance discovery on Echo to update its device list
 	page(name: "instructionPage", title: "Device Discovery", install: true) {
-		log.trace "instructionPage pref page"
 		section("") {
 			paragraph "You have made a change to your device list.\n\n" +
 					"Now complete device discovery by saying the following to your Echo:"
@@ -132,7 +141,6 @@ preferences(oauthPage: "oauthPage") {
 
 	// Separate page for uninstalling, we dont want the user to accidentaly uninstall since the app can only be automatically reinstalled
 	page(name: "uninstallPage", title: "Uninstall", uninstall: true, nextPage: "deviceAuthorization") {
-		log.trace "uninstallPage pref page"
 		section("") {
 			paragraph "If you uninstall this SmartApp, remember to unlink your SmartThings account from Echo:\n\n" +
 					"1. Open the Amazon Echo application\n" +
@@ -143,7 +151,21 @@ preferences(oauthPage: "oauthPage") {
 }
 
 Boolean isBlanketAuthorized() {
-	return "${settings?.allEnabled}".toBoolean()
+	return booleanize(settings?.allEnabled)
+}
+
+Boolean areRoutinesEnabled() {
+	return booleanize(settings?.routinesEnabled)
+}
+
+/**
+ * Run allegedly boolean values through this in case it ends up being a string "true" or "false"
+ *  namely to avoid the fact that "false" == true
+ * @method booleanize
+ * @return Boolean coercion of input parameter
+ */
+Boolean booleanize(inValue) {
+	return (inValue != null && inValue[0] == "true") || "$inValue".toBoolean()
 }
 
 def deviceAuthorization() {
@@ -151,7 +173,6 @@ def deviceAuthorization() {
 	// Assumption is that level switches all support regular switch as well. This is to avoid
 	// having two inputs that might confuse the user
 	dynamicPage(name: "deviceAuthorization") {
-		log.trace "deviceAuthorization dynamic prefs page"
 		section("") {
 			String allEnabledDescr = "Alexa can access\nonly the devices selected below"
 			if (isBlanketAuthorized()) {
@@ -217,19 +238,13 @@ def updated() {
 
 def initialize() {
 	log.debug "initialize"
-
-	unschedule()
-	state.heartbeatDevices = [:]
-
+	
 	if (!checkIfV1Hub()) {
-		// Refresh all z-wave devices to make sure we can identify them later
-		refreshHeartbeatDevices()
-
-		// settingUpAttempt handles retries of the heartbeat setup in case it fails for any reason
-		// -1 is done, at attempt 5 it will give up
-		state.settingUpAttempt = 0
-		// Schedule setup of heartbeat monitor in 60 seconds to make sure previous call to refreshHeartbeatDevices() has completed
-		runIn(60 * 1, setupHeartbeat)
+		if (state.heartbeatDevices == null) {
+			state.heartbeatDevices = [:]
+		}
+		runIn(1, deviceHeartbeatCheck)
+		runEvery30Minutes(deviceHeartbeatCheck)
 	}
 }
 
@@ -245,7 +260,7 @@ def discovery() {
 
 	def applianceList = switchList.plus thermostatList
 
-	if (routinesEnabled || isBlanketAuthorized) {
+	if (areRoutinesEnabled() || isBlanketAuthorized()) {
 		def routines = location.helloHome?.getPhrases()
 		if (routines) {
 			// sort them alphabetically
@@ -257,6 +272,8 @@ def discovery() {
 	} else {
 		log.info "Routines disabled"
 	}
+
+	setupHeartbeat()
 
 	log.debug "discovery ${applianceList}"
 	// Format according to Alexa API
@@ -287,7 +304,7 @@ def control() {
 
 	// If device wasn't found, check if it is a routine (if routines are enabled)
 	def routine = null
-	if (device == null && (routinesEnabled || isBlanketAuthorized)) {
+	if (device == null && (areRoutinesEnabled() || isBlanketAuthorized())) {
 		routine = findRoutine(params.id)
 	}
 
@@ -479,19 +496,28 @@ def onOffCommand(device, turnOn, response, routine = null) {
 	if (device) {
 		if (turnOn) {
 			log.debug "Turn on $device"
-
 			if (device.currentSwitch == "on") {
 				// Call on() anyways just in case platform is out of sync and currentLevel is wrong
 				response << [error: "AlreadySetToTargetError", payload: [:]]
 			}
-			device.on()
+			// This is a workaround for long running Harmony activities causing timeouts in lambda
+			if (device.name?.equalsIgnoreCase("Harmony Activity")) {
+				runIn(1, "runHarmony", [data: [id: "$device.id", command: "on"]])
+			} else {
+				device.on()
+			}
 		} else {
 			log.debug "Turn off $device"
 			if (device.currentSwitch == "off") {
 				// Call off() anyways just in case platform is out of sync and currentLevel is wrong
 				response << [error: "AlreadySetToTargetError", payload: [:]]
 			}
-			device.off()
+			// This is a workaround for long running Harmony activities causing timeouts in lambda
+			if (device.name?.equalsIgnoreCase("Harmony Activity")) {
+				runIn(1, "runHarmony", [data: [id: "$device.id", command: "off"]])
+			} else {
+				device.off()
+			}
 		}
 	} else if (routine) {
 		runIn(1, "runRoutine", [data: [routine: "$routine.label"]])
@@ -714,62 +740,35 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
 }
 
 /**
- * Sends a refresh() command to all devices with device type Z-Wave Switch and Dimmer Switch. This will force them
- * to populate the MSR and manufacturer data fields used by this app to identify the brand and model number of each Z-Wave device.
- */
-private refreshHeartbeatDevices() {
-	// Used to wait one second between polls, because issuing Z-wave commands to offline devices can cause trouble if done to fast
-	def delayCounter = 0
-	getEnabledSwitches()?.each {
-		switch (it.getTypeName()) {
-			case "Z-Wave Switch":
-			case "Dimmer Switch":
-				// refresh to populate MSR data as well as verifying online status
-				if (it.hasCapability("Refresh")) {
-					it.refresh([delay: delayCounter++ * 1000])
-				}
-				break
-		}
-	}
-}
-
-/**
  * Setup heartbeat service that will periodically poll heartbeat supported devices that have not been polled or checked in
  * in a timely manner.
  */
 def setupHeartbeat() {
-	if (state.settingUpAttempt == -1) {
-		return
-	} else if (state.settingUpAttempt < 5) {
-		// Schedule a check in 2 min that setupHeartbeat() actually completed ok
-		// There are instances when SmartApp execution takes to long and time outs
-		// and that would prevent the heartbeat loop from ever starting
-		state.settingUpAttempt = state.settingUpAttempt + 1
-		runIn(2 * 60, setupHeartbeat)
-	} else {
-		log.error "setupHeartbeat failed"
-		return
+	// Reset exists flag for all current heartbeat devices, used to see if previously existing devices have been removed
+	state.heartbeatDevices?.each {
+		it.value?.exists = false
 	}
 
+	// Setup device health poll, store a list of device ids and online status for all supported device type handlers
 	// Devices are checked every 30 min, and offline devices are polled every 2h
 	// (4 cycles of 30 min each, offline refresh() is done on cycle 0)
-	state.heartbeatPollCycle = 0
-
-	// Setup device health poll, store a list of device ids and online status for all supported device type handlers
 	getEnabledSwitches()?.each {
 		def timeout = getDeviceHeartbeatTimeout(it)
 		if (timeout > 0) {
-			state.heartbeatDevices[it.id] = [online: true, timeout: timeout]
+			if (state.heartbeatDevices[it.id] != null) {
+				state.heartbeatDevices[it.id].exists = true
+			} else {
+				state.heartbeatDevices[it.id] = [online: checkDeviceOnLine(it), timeout: timeout, exists: true, pollCycle: 0]
 			// , label: it.label ?: it.name (useful for debugging)
+			}
 		}
 	}
 
-	if (state.heartbeatDevices != null && !state.heartbeatDevices.isEmpty()) {
-		// TODO this should ideally happen immediately the first time
-		runEvery30Minutes(deviceHeartbeatCheck)
+	// Remove heartbeat devices that we previously flagged as non existing 
+	def toRemove = state.heartbeatDevices?.find {!it.value?.exists}
+	toRemove?.each {
+	 	state.heartbeatDevices.remove(it.key)
 	}
-	// Setup succeeded
-	state.settingUpAttempt = -1
 }
 
 /**
@@ -782,9 +781,7 @@ def setupHeartbeat() {
  */
 def deviceHeartbeatCheck() {
 	if (state.heartbeatDevices == null || state.heartbeatDevices.isEmpty()) {
-		// This should not be happening unless state was damaged
-		log.warn "No heartbeat devices available, will stop checking"
-		unschedule()
+		// No devices to check
 		return
 	}
 
@@ -794,39 +791,40 @@ def deviceHeartbeatCheck() {
 	Calendar time35 = Calendar.getInstance()
 	time35.add(Calendar.MINUTE, -35)
 
-	// Only poll offline devices every 2h
-	if (state.heartbeatPollCycle == 0) {
-		log.debug "Polling Offline devices"
-	}
-
 	// Used to delay one second between polls, because issuing Z-wave commands to offline devices too fast can cause trouble
 	def delayCounter = 0
-
 	getEnabledSwitches()?.each {
-		int deviceTimeout = getDeviceHeartbeatTimeout(it)
-		if (deviceTimeout > 0 && it.getLastActivity() != null) {
-			Date deviceLastChecking = new Date(it.getLastActivity()?.getTime())
-			if (deviceLastChecking?.after(time25.getTime())) {
-				state.heartbeatDevices[it.id]?.online = true
-			} else if (deviceLastChecking?.after(time35.getTime())) {
-				state.heartbeatDevices[it.id]?.online = true
-				if (it.hasCapability("Refresh")) {
-					it.refresh([delay: delayCounter++ * 1000])
-					log.debug "refreshing $it (regular poll)"
+		if (state.heartbeatDevices[it.id] != null) {
+			// Previously, poll cycle was tracked by device so add it if not existing
+			if (state.heartbeatDevices[it.id].pollCycle == null) {
+				state.heartbeatDevices[it.id].pollCycle = 0
+			}
+
+			if (it.getLastActivity() != null) {
+				Date deviceLastChecking = new Date(it.getLastActivity()?.getTime())
+				if (deviceLastChecking?.after(time25.getTime())) {
+					state.heartbeatDevices[it.id]?.online = true
+				} else if (deviceLastChecking?.after(time35.getTime())) {
+					state.heartbeatDevices[it.id]?.online = true
+					if (it.hasCapability("Refresh")) {
+						it.refresh([delay: delayCounter++ * 1000])
+						log.debug "refreshing $it å(regular poll)"
+					}
+				} else {
+					// Device did not report in, mark as offline and if cycle 0 or it was previously online, then issue a refresh() command
+					def previousStatus = state.heartbeatDevices[it.id]?.online
+					state.heartbeatDevices[it.id]?.online = false
+					if ((previousStatus || state.heartbeatDevices[it.id].pollCycle == 0) && it.hasCapability("Refresh")) {
+						it.refresh([delay: delayCounter++ * 1000])
+						log.debug "refreshing $it (one time or first cycle) ($delayCounter)"
+					}
 				}
 			} else {
-				// Device did not report in, mark as offline and if cycle 0 or it was previously online, then issue a refresh() command
-				def previousStatus = state.heartbeatDevices[it.id]?.online
-				state.heartbeatDevices[it.id]?.online = false
-				if ((previousStatus || state.heartbeatPollCycle == 0) && it.hasCapability("Refresh")) {
-					it.refresh([delay: delayCounter++ * 1000])
-					log.debug "refreshing $it (one time or first cycle) ($delayCounter)"
-				}
+				state.heartbeatDevices[it.id].offline = false
 			}
+			state.heartbeatDevices[it.id].pollCycle = (state.heartbeatDevices[it.id].pollCycle + 1) % 4
 		}
 	}
-	// Update cycle number
-	state.heartbeatPollCycle = (state.heartbeatPollCycle + 1) % 4
 }
 
 /**
@@ -845,14 +843,24 @@ private getDeviceHeartbeatTimeout(device) {
 				break
 			case "Z-Wave Switch":
 			case "Dimmer Switch":
-				def msr = device.device?.getDataValue("MSR")
+				def msr = "${device?.getZwaveInfo()?.mfr}-${device?.getZwaveInfo()?.prod}-${device?.getZwaveInfo()?.model}"
 				if (msr != null) {
 					switch (msr) {
-						case "001D-1B03-0334":  // ZWAVE In-Wall Switch (dimmable) (DZMX1-1LZ)
+						case "001D-1B03-0334":  // ZWAVE Leviton In-Wall Switch (dimmable) (DZMX1-1LZ)
 						case "001D-1C02-0334":  // ZWAVE Leviton In-Wall Switch (non-dimmable) (DZS15-1LZ)
 						case "001D-1D04-0334":  // ZWAVE Leviton Receptacle (DZR15-1LZ)
-						case "001D-1A02-0334":  // ZWAVE Plug in Appliance Module (Non-Dimmable) (DZPA1-1LW)
-						case "001D-1902-0334":  // ZWAVE Plug in Lamp Dimmer Module (DZPD3-1LW)
+						case "001D-1A02-0334":  // ZWAVE Leviton Plug in Appliance Module (Non-Dimmable) (DZPA1-1LW)
+						case "001D-1902-0334":  // ZWAVE Leviton Plug in Lamp Dimmer Module (DZPD3-1LW)
+						case "0063-4952-3031":  // ZWAVE Jasco In-Wall Smart Outlet (12721)
+						case "0063-4952-3033":  // ZWAVE Jasco In-Wall Smart Switch (Toggle Style) (12727)
+						case "0063-4952-3032":  // ZWAVE Jasco In-Wall Smart Switch (Decora) (12722)
+						case "0063-5052-3031":  // ZWAVE Jasco Plug-in Smart Switch (12719)
+						case "0063-4F50-3031":  // ZWAVE Jasco Plug-in Outdoor Smart Switch (12720)
+						case "0063-4944-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Decora) (12724)
+						// TODO Unknown why there are two devices with the same MSR
+						// case "0063-5052-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Toggle Style) (12729)
+						case "0063-5044-3031":  // ZWAVE Jasco Plug-in Smart Dimmer (12718)
+						case "0063-4944-3034":  // ZWAVE Jasco In-Wall Smart Fan Control (12730)
 							timeout = 60
 							break
 					}
@@ -948,13 +956,26 @@ def runRoutine(Map input) {
 }
 
 /**
+ * Run a harmony activity
+ * @param input a map with id of device id and command, e.g. [id: "xx-yy", command: "on"]
+ */
+def runHarmony(Map input) {
+	def device = getDevice(input?.id)
+	if (input?.command == "on") {
+		device?.on()
+	} else {
+		device?.off()
+	}
+}
+
+/**
  * Find all switches the user has given Alexa access to, either by selecting specific switches or by selecting
  * allow all switches.
  *
  * @return a list of all switches accessible to Alexa
  */
 private getEnabledSwitches() {
-	if (isBlanketAuthorized) {
+	if (isBlanketAuthorized()) {
 		return findAllDevicesByCapability("switch")
 	} else {
 		return switches
@@ -968,7 +989,7 @@ private getEnabledSwitches() {
  * @return a list of all thermostats accessible to Alexa
  */
 private getEnabledThermostats() {
-	if (isBlanketAuthorized) {
+	if (isBlanketAuthorized()) {
 		return findAllDevicesByCapability("thermostat")
 	} else {
 		return thermostats
@@ -997,3 +1018,4 @@ private getDevice(id) {
 	}
 	return device
 }
+
