@@ -110,7 +110,7 @@ definition(
 // Add support for capabilities in createFriendlyText()
 
 preferences(oauthPage: "oauthPage") {
-	page(name: "deviceAuthorization", title: "", nextPage: "instructionPage", uninstall: false)
+    page(name: "deviceAuthorization", content: "buildDeviceAuthorizationPage")
 
 	// This is a static page for generating the OAUTH page - this is not shown in the SmartApp
 	page(name: "oauthPage", title: "", nextPage: "instructionPage", uninstall: false) {
@@ -168,11 +168,11 @@ Boolean booleanize(inValue) {
 	return (inValue != null && inValue[0] == "true") || "$inValue".toBoolean()
 }
 
-def deviceAuthorization() {
+def buildDeviceAuthorizationPage() {
 	// Initial page where user can pick which switches should be available to the Echo
 	// Assumption is that level switches all support regular switch as well. This is to avoid
 	// having two inputs that might confuse the user
-	dynamicPage(name: "deviceAuthorization") {
+    return dynamicPage(name: "deviceAuthorization", title: "Device Authorization", nextPage: "instructionPage") {
 		section("") {
 			String allEnabledDescr = "Alexa can access\nonly the devices selected below"
 			if (isBlanketAuthorized()) {
@@ -238,7 +238,7 @@ def updated() {
 
 def initialize() {
 	log.debug "initialize"
-	
+
 	if (!checkIfV1Hub()) {
 		if (state.heartbeatDevices == null) {
 			state.heartbeatDevices = [:]
@@ -764,7 +764,7 @@ def setupHeartbeat() {
 		}
 	}
 
-	// Remove heartbeat devices that we previously flagged as non existing 
+	// Remove heartbeat devices that we previously flagged as non existing
 	def toRemove = state.heartbeatDevices?.find {!it.value?.exists}
 	toRemove?.each {
 	 	state.heartbeatDevices.remove(it.key)
@@ -1018,4 +1018,3 @@ private getDevice(id) {
 	}
 	return device
 }
-

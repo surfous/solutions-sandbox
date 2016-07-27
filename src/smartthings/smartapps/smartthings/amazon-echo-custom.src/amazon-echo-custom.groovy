@@ -13,7 +13,7 @@ import static groovy.json.JsonOutput.*
 @Field final Integer LOW_BATTERY_PCT = 25
 
 definition(
-        name: "Amazon Alexa Kshuk (CoHo+Custom)",
+        name: "Amazon Echo (Home+Custom Skills)",
         namespace: "smartthings",
         author: "SmartThings",
         description: "Used for development of Amazon Alexa - SmartThings integration",
@@ -21,8 +21,12 @@ definition(
         iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
         iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@2x.png",
         iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@3x.png",
-        oauth: [displayName: "Amazon Echo Dev (V2)", displayLink: ""]
+        oauth: [displayName: "Amazon Echo (Home+Custom Skills)", displayLink: ""]
 )
+
+
+// @Field final String avsSkillProvisioningUrl = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.2bdbc74f-ce4d-4e2d-b741-326c7ba358f0%3Bstage%3Dlive'
+@Field final String avsSkillProvisioningUrl = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.5c7bce44-5049-4d92-b9a3-f8b1f3a5a496%3Bstage%3Ddevelopment' // kshuk
 
 // Version 1.1.9b build 20160719-00
 // Merge blanket permissions to Custom Skill
@@ -187,7 +191,7 @@ If you uninstall this SmartApp, remember to unlink your SmartThings account from
 
 def buildLandingPage() {
     // log.trace "buildLandingPage() - preferences"
-    dynamicPage(name: "firstPage", title:"SmartThings + Alexa", nextPage: "installPage") {
+    dynamicPage(name: "firstPage", title:"SmartThings + Alexa") {
         section("SmartThings optimized for Smart Home &\n\tSmartThings Extras") {
             image(name: "heroImage",
             title: "ALEXA LYFE 4EVA.",
@@ -211,10 +215,11 @@ Alexa is pretty rad, too. Check this out:'''
                 video: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/echo-beta-720p.mp4")
 
             href(name: "href",
-                title: "Let's Roll!",
+                title: "Get started!",
                 required: false,
-                description: "So how about it? Tap here to install the skill.",
-                page: "installPage")
+                style: "embedded",
+                description: "Tap here to install the skill in Alexa and link to SmartThings",
+                url: avsSkillProvisioningUrl)
         }
     }
 }
