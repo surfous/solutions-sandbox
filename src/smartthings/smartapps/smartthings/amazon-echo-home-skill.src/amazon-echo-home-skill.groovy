@@ -5,6 +5,8 @@
  *
  * Author: SmartThings
  */
+ import groovy.transform.Field
+
 definition(
 		name: "Amazon Echo (QA)",
 		namespace: "smartthings",
@@ -21,7 +23,6 @@ definition(
 // Version 1.1.10
 
 // Changelist:
-
 // 1.1.10
 // Dynamic preferences
 // Harmony workaround
@@ -109,13 +110,16 @@ definition(
 // Add support for appliance version
 // Add support for capabilities in createFriendlyText()
 
+@Field final List DEVICE_TYPE_NAME_EXCLUSION_LIST = ['Samsung Range']
+@Field final List DEVICE_CAPABILITY_EXCLUSION_LIST = ['Buffered Video Capture', 'Image Capture', 'Video Capture', 'Video Camera']
+
 preferences(oauthPage: "oauthPage") {
 	page(name: "deviceAuthorization", title: "", nextPage: "instructionPage", uninstall: false)
 
 	// This is a static page for generating the OAUTH page - this is not shown in the SmartApp
 	page(name: "oauthPage", title: "", nextPage: "instructionPage", uninstall: false) {
 		section("") {
-			input "allEnabled", type: "enum", title: "Grant access to all devices?", options: [[(true): "All devices shown below"]], defaultValue: false, multiple: false, required: false
+			input "allEnabled", type: "enum", title: "Grant access to all devices and routines?", options: [[(true): "All devices and routines shown below"]], defaultValue: false, multiple: false, required: false
 			paragraph title: "Or choose individual devices below", ""
 			input "switches", "capability.switch", title: "My Switches", multiple: true, required: false
 			input "thermostats", "capability.thermostat", title: "My Thermostats", multiple: true, required: false
@@ -142,8 +146,8 @@ preferences(oauthPage: "oauthPage") {
 	// Separate page for uninstalling, we dont want the user to accidentaly uninstall since the app can only be automatically reinstalled
 	page(name: "uninstallPage", title: "Uninstall", uninstall: true, nextPage: "deviceAuthorization") {
 		section("") {
-			paragraph "If you uninstall this SmartApp, remember to unlink your SmartThings account from Echo:\n\n" +
-					"1. Open the Amazon Echo application\n" +
+			paragraph "If you uninstall this SmartApp, remember to unlink your SmartThings account from Alexa:\n\n" +
+					"1. Open the Amazon Alexa application\n" +
 					"2. Goto Settings > Connected Home > Device Links\n" +
 					"3. Choose \"Unlink from SmartThings\""
 		}
@@ -238,7 +242,7 @@ def updated() {
 
 def initialize() {
 	log.debug "initialize"
-	
+
 	if (!checkIfV1Hub()) {
 		if (state.heartbeatDevices == null) {
 			state.heartbeatDevices = [:]
@@ -255,7 +259,9 @@ def initialize() {
  * @return a list of available devices and each device's supported information
  */
 def discovery() {
-	def switchList = getEnabledSwitches()?.collect { deviceItem(it) } ?: []
+    // removing isDeviceAllowed filtering for now - This is done on the backend for routines only
+    // def switchList = getEnabledSwitches()?.findAll{isDeviceAllowed(it)}.collect {deviceItem(it)} ?: []
+    def switchList = getEnabledSwitches()?.collect { deviceItem(it) } ?: []
 	def thermostatList = getEnabledThermostats()?.collect { deviceItem(it) } ?: []
 
 	def applianceList = switchList.plus thermostatList
@@ -395,7 +401,7 @@ private deviceItem(it) {
 private routineItem(it) {
 	def actions = []
 	actions.add "turnOn"
-	it ? [applianceId: it.id, manufacturerName: "SmartThings", modelName: "Routine", version: "V1.0", friendlyName: it.label, friendlyDescription: "SmartThings: Routine", isReachable: true, actions: actions] : null
+	it ? [applianceId: it.id, manufacturerName: "SmartThings", modelName: "SmartThings", version: "V1.0", friendlyName: it.label, friendlyDescription: "Routine connected via SmartThings", isReachable: true, actions: actions] : null
 }
 
 /**
@@ -764,7 +770,7 @@ def setupHeartbeat() {
 		}
 	}
 
-	// Remove heartbeat devices that we previously flagged as non existing 
+	// Remove heartbeat devices that we previously flagged as non existing
 	def toRemove = state.heartbeatDevices?.find {!it.value?.exists}
 	toRemove?.each {
 	 	state.heartbeatDevices.remove(it.key)
@@ -925,6 +931,21 @@ private checkDeviceOnLine(device) {
 	return result
 }
 
+private boolean isDeviceAllowed(device) {
+    // by device type name
+    string deviceTypeName = device.getTypeName()
+	boolean isDeviceExcludedByTypeName DEVICE_TYPE_NAME_EXCLUSION_LIST.contains(deviceTypeName)
+    Capability forbiddenCap = device.capabilities.find {
+        DEVICE_CAPABILITY_EXCLUSION_LIST.contains(it.name)
+    }
+
+    if (isDeviceExcludedByTypeName || forbiddenCap != null) {
+        String exclusionReason = isDeviceExcludedByTypeName?"type name $deviceTypeName":"capability $forbiddenCap.name"
+        log.info "Device $device.displayName is excluded by $exclusionReason"
+        return false
+    }
+    return true
+}
 /**
  * Checks if the current hub is V1 which we do not support heartbeat for
  * @return true if V1, false if newer model like V2 or TV
@@ -1018,4 +1039,3 @@ private getDevice(id) {
 	}
 	return device
 }
-
