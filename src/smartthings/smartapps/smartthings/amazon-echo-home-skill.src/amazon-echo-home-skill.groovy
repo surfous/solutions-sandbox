@@ -934,8 +934,8 @@ private checkDeviceOnLine(device) {
 private boolean isDeviceAllowed(device) {
     // by device type name
     string deviceTypeName = device.getTypeName()
-	boolean isDeviceExcludedByTypeName DEVICE_TYPE_NAME_EXCLUSION_LIST.contains(deviceTypeName)
-    Capability forbiddenCap = device.capabilities.find {
+	boolean isDeviceExcludedByTypeName = DEVICE_TYPE_NAME_EXCLUSION_LIST.contains(deviceTypeName)
+    def forbiddenCap = device.capabilities.find {
         DEVICE_CAPABILITY_EXCLUSION_LIST.contains(it.name)
     }
 
