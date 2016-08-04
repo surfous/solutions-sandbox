@@ -5,8 +5,6 @@
  *
  * Author: SmartThings
  */
- import groovy.transform.Field
-
 
  definition(
  		name: "Alexa Home Skill RC",
@@ -110,6 +108,8 @@
 // Add support for manufacturerName/modelName
 // Add support for appliance version
 // Add support for capabilities in createFriendlyText()
+
+import groovy.transform.Field
 
 @Field final List DEVICE_TYPE_NAME_EXCLUSION_LIST = ['Samsung Range']
 @Field final List DEVICE_CAPABILITY_EXCLUSION_LIST = ['Buffered Video Capture', 'Image Capture', 'Video Capture', 'Video Camera']
