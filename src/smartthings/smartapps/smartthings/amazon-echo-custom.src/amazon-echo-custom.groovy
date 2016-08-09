@@ -1,40 +1,55 @@
 /**
- * Amazon Alexa
+ * Amazon Alexa Custom Skill RC
  *
- * Supports lights, dimmers and thermostats
+ * Supports lights, dimmers, thermostats, and locks
  *
  * Author: SmartThings
  */
-import groovy.transform.Field
-import static groovy.json.JsonOutput.*
-
-
-@Field String CUSTOM_SKILL_RESPONSE_FORMAT_VERSION = "1.0"
-@Field final Integer LOW_BATTERY_PCT = 25
 
 definition(
-        name: "Amazon Alexa Kshuk (CoHo+Custom)",
+        name: "Alexa Custom Skill RC",
         namespace: "smartthings",
         author: "SmartThings",
-        description: "Used for development of Amazon Alexa - SmartThings integration",
+        description: "Used for certification testing of Amazon Alexa Custom Skill - SmartThings integration",
         category: "Convenience",
         iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
         iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@2x.png",
         iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@3x.png",
-        oauth: [displayName: "Amazon Echo Dev (V2)", displayLink: ""]
+        oauth: [displayName: "Alexa Custom Skill RC", displayLink: ""],
+        singleInstance: true
 )
 
-// Version 1.1.9b build 20160719-00
-// Merge blanket permissions to Custom Skill
-// Dynamic preferences
-// Dynamic landing page
-//
+// // Uncomment the provisioning URL for the instance this SmartApp services
+
+@Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.2bdbc74f-ce4d-4e2d-b741-326c7ba358f0%3Bstage%3Dlive' // certification superuser instance
+// @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.2130fb6c-7e17-41e1-9735-f99602bcddba%3Bstage%3Ddevelopment' // test-prod superuser instance
+// @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.5c7bce44-5049-4d92-b9a3-f8b1f3a5a496%3Bstage%3Ddevelopment' // kshuk - home + custom
+// @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.214e2164-ce6e-42ba-9dc2-88af56c2df80%3Bstage%3Ddevelopment' // kshuk - home only
+// @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.ace36df2-76c7-464d-9449-34b746b12f0c%3Bstage%3Ddevelopment' // Alex - home + custom
+// @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.151c9883-5155-4b8a-90b0-81de29fdaeed%3Bstage%3Ddevelopment' // Alex - home only
+// @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.14f0c291-7aed-4777-8a91-c3bf075ed3b5%3Bstage%3Ddevelopment' // Igor
+
+// Version 1.2.0
+
 // Changelist:
-// // 1.1.8
-// // (not merged to this fork yet)
-// // Add support for routines
-// // Add support for blanket permissions
-//
+// 1.2.0
+// Beta of custom skill
+// Final update before certifcation submission
+
+// 1.1.10
+// Dynamic preferences
+// Harmony workaround
+// Heartbeat zwaveinfo fix
+// Setup heartbeat when discovery is called
+// Added singleInstance
+
+// 1.1.9
+// Add MSR data for Jasco devices
+
+// 1.1.8
+// Add support for routines
+// Add support for blanket permissions
+
 // 1.1.7
 // Handle lastActivity == null for devices that actually support heart beat
 // Reformatted code to tabs instead of spaces according to SmartThings standard
@@ -108,61 +123,62 @@ definition(
 // Add support for appliance version
 // Add support for capabilities in createFriendlyText()
 
+
+import groovy.transform.Field
+import static groovy.json.JsonOutput.*
+
+@Field String CUSTOM_SKILL_RESPONSE_FORMAT_VERSION = "1.0"
+@Field final Integer LOW_BATTERY_PCT = 25
+
+
 preferences(oauthPage: "oauthPage") {
     page(name: "firstPage", content: "chooseFirstPage")
-    page(name: "deviceAuthorization", content: "buildDeviceAuthorizationPage")
+    page(name: "deviceAuthorizationPage", content: "buildDeviceAuthorizationPage")
 
     // This is a static page for generating the OAUTH page - this is not shown in the SmartApp
-    page(name: "oauthPage", title: "", nextPage: "instructionPage") {
-        log.trace "oauthPage pref page"
+    page(name: "oauthPage", title: "", install: true) {
         section("") {
-            input "allEnabled", options: [[(true): "All devices shown below"]], title: "Grant access to all devices?", defaultValue: false, multiple: false, required: false
+            input "allEnabled", type: "enum", options: [[(true): "All devices shown below"]], title: "Grant access to all devices?", defaultValue: false, multiple: false, required: false
             paragraph title: "Or choose individual devices below", ""
             input "switches", "capability.switch", title: "Select Switches", multiple: true, required: false
             input "thermostats", "capability.thermostat", title: "Select Thermostats", multiple: true, required: false
             input "locks", "capability.lock", title: "Select Locks", multiple: true, required: false
-        }
-        section() {
-            href(name: "href",
-                    title: "Uninstall",
-                    required: false,
-                    description: "",
-                    page: "uninstallPage")
+            // TODO: uncomment for routines // input "routinesEnabled", options: [[(true): "Yes"]], type: "enum", title: "Enable Routines?", defaultValue: false, multiple: false, required: false
         }
     }
 
-    // Instructions for the user on how to run appliance discovery on Echo to update its device list
+    // Instructions for the user on how to run appliance discovery from Alexa to update its device list
     // install: true is needed here to have a Done button which will return user to SmartApp list.
-	page(name: "instructionPage", title: "Device Discovery", install: true) {
-		log.trace "instructionPage pref page"
-		section("") {
-			paragraph "You have made a change to your device list.\n\n" +
-					"Now complete device discovery by saying the following to your Echo:"
-			paragraph title: "\"Alexa, discover new devices\"", ""
-		}
-	}
+    page(name: "instructionPage", content: "buildInstructionPage", install: true)
 
-    page(name: "installPage", title: "Install", install: true) {
-        section("") {
-			paragraph '''\
-This is the install page:
-
-We would have actually redirected to the provisioning URL here.
-But just tap Done in the upper right to install the app and pretend.'''
-		}
+    page(name: "helpPage", title: "Help") {
+        section("Knowledgebase Articles") {
+            href(
+                name: "href",
+                title: "Amazon Alexa",
+                url: "https://support.smartthings.com/hc/en-us/articles/205275404",
+                style: "embedded"
+            )
+            href(
+                name: "href",
+                title: "SmartThings + Amazon Alexa FAQ",
+                url: "https://support.smartthings.com/hc/en-us/articles/207808076",
+                style: "embedded"
+            )
+        }
     }
 
-	// Separate page for uninstalling, we dont want the user to accidentaly uninstall since the app can only be automatically reinstalled
-	page(name: "uninstallPage", title: "Uninstall", uninstall: true, nextPage: "deviceAuthorization") {
-		// log.trace "uninstallPage pref page"
-		section("") {
-			paragraph '''\
-If you uninstall this SmartApp, remember to unlink your SmartThings account from Echo:
-  1. Open the Amazon Echo application
-  2. Goto Settings > Connected Home > Device Links
-  3. Choose "Unlink from SmartThings"'''
-		}
-	}
+    // Separate page for uninstalling, we dont want the user to accidentaly uninstall since the app can only be automatically reinstalled
+    page(name: "uninstallPage", title: "Uninstall", uninstall: true, nextPage: "deviceAuthorization") {
+
+        section("") {
+            paragraph '''\
+If you uninstall this SmartApp, remember to unlink your SmartThings account from Alexa:
+  1. Open the Amazon Alexa application
+  2. Go to Menu (three lines, upper left) > Skills, then tap "Your Skills" in the upper right corner
+  3. Tap the skill to open it, then tap "Disable Skill"'''
+        }
+    }
 }
 
 /**
@@ -171,86 +187,138 @@ If you uninstall this SmartApp, remember to unlink your SmartThings account from
  * @method firstPage
  * @return dynamicPage object
  */
- def chooseFirstPage() {
+ private def chooseFirstPage() {
      if (state?.showLandingPage != false && state?.showLandingPage != true) {
          state.showLandingPage = true
      }
      log.trace "in chooseFirstPage() state.showLandingPage == ${state.showLandingPage}"
-     if (state.showLandingPage) {
+     if (state?.recentInstall == true) {
+         state.recentInstall = false
+         buildInstructionPageFP()
+     } else if (state.showLandingPage) {
          buildLandingPage()
      } else {
-         buildDeviceAuthorizationPage()
+         buildDeviceAuthorizationPageFP()
      }
  }
 
 
-def buildLandingPage() {
-    log.trace "buildLandingPage() - preferences"
-    dynamicPage(name: "firstPage", title:"SmartThings + Alexa", nextPage: "installPage") {
-        section("SmartThings optimized for Smart Home &\n\tSmartThings Extras") {
-            image(name: "heroImage",
-            title: "ALEXA LYFE 4EVA.",
-            description: "I am setting long title and descriptions to test the offset",
+private def buildLandingPage() {
+
+    dynamicPage(name: "firstPage", title: "Use your Amazon Echo with SmartThings", install: true) {
+        section("What's an Amazon Echo?") {
+              image(name: "heroImage",
+            title: "Amazon Alexa + SmartThings",
             required: false,
-            image: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/AATT_hidpi.jpg")
+            image: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/amazon-echo-683x405-d.png")
+
+            emitProvisioningUrlHref()
 
             paragraph '''\
-This is a paragraph for describing things and stuff
+Amazon Echo is a hands-free speaker you control with your voice. Echo connects to the Alexa Voice Service to play music, provide information, news, sports scores, weather, and more—instantly. But, most importantly, you can use it to control your SmartThings Smart home!
 
-It's a triple-single quoted string, so we don't have to escape anything in it. It's just easier.
+Use Echo to switch on the lamp before getting out of bed, turn on the fan or space heater while reading in your favorite chair, or dim the lights from the couch to watch a movie—all without lifting a finger.
 
-Alexa is pretty rad, too. Check this out:'''
+Echo works with devices such as lights, switches, thermostats, and more, including SmartThings Routines. And, with our custom skill, SmartThings Extras, you'll also be able to control locks and Smart Home Monitoring.'''
 
             element(   name: "videoElement",
                 element: "video",
                 type:   "video",
-                title: "Watch this",
+                title: "Just ask Alexa",
                 required: false,
-                image: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/echo-beta.jpg",
-                video: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/echo-beta-720p.mp4")
+                image: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/Echo_vid_thumb.png",
+                video: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/Amazon-Echo-Alexa-Enabled.mp4")
 
-            href(name: "href",
-                title: "Let's Roll!",
-                required: false,
-                description: "So how about it? Tap here to install the skill.",
-                page: "installPage")
+            emitProvisioningUrlHref()
         }
     }
 }
 
+private def emitProvisioningUrlHref() {
+    href(name: "href",
+         title: "Tap to Link Alexa",
+         required: false,
+         style: "embedded",
+         description: "This will create a SmartApp in your SmartThings account",
+         image: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
+         url: AVS_SKILL_PROVISIONING_URL,
+         state: "complete")
+}
+
+private def buildDeviceAuthorizationPageFP() {
+    return dynamicPage(name: "firstPage", title: "Device Authorization", nextPage: "instructionPage") {
+        fillDeviceAuthorizationPage()
+    }
+}
+
 // The other option for firstPage
-def buildDeviceAuthorizationPage() {
-	// Initial page where user can pick which switches should be available to the Echo
-	// Assumption is that level switches all support regular switch as well. This is to avoid
-	// having two inputs that might confuse the user
-	log.debug "settings.allEnabled value is: ${settings?.allEnabled}. as Boolean: ${isBlanketAuthorized()}"
-	return dynamicPage(name: "firstPage", title: "Device Authorization", nextPage: "instructionPage") {
-		// log.trace "deviceAuthorization dynamic prefs page"
-		section("") {
-            String blanketALlEnabled = "Alexa can access\nall devices and routines"
-            String blanketSelectOnly = "Alexa can access\nonly the devices selected below"
-			input "allEnabled", "bool", title: "Allow Alexa to access\nall devices and routines", description: isBlanketAuthorized()?blanketALlEnabled:blanketSelectOnly, required: false, submitOnChange:true
-		}
+private def buildDeviceAuthorizationPage() {
+    // Initial page where user can pick which switches should be available to Alexa
+    // Assumption is that level switches all support regular switch as well. This is to avoid
+    // having two inputs that might confuse the user
+    log.debug "settings.allEnabled value is: ${settings?.allEnabled}. as Boolean: ${isBlanketAuthorized()}"
+    return dynamicPage(name: "deviceAuthorizationPage", title: "Device Authorization", nextPage: "instructionPage") {
+         fillDeviceAuthorizationPage()
+    }
+}
 
-		if (!isBlanketAuthorized()) {
-			section("SmartThings Optimized for Smart Home") {
-				input "switches", "capability.switch", title: "Selected Switches", multiple: true, required: false
-				input "thermostats", "capability.thermostat", title: "Selected Thermostats", multiple: true, required: false
-				input "routinesEnabled", "bool", title: "Routines", options: ["All routines"], description: "Select routines", required: false
-			}
-            section("SmartThings Extras Devices") {
-				input "locks", "capability.lock", title: "Selected Locks", multiple: true, required: false
-			}
-		}
 
-		section("") {
-			href(name: "href",
-					title: "Uninstall",
-					required: false,
-					description: "",
-					page: "uninstallPage")
-		}
-	}
+private def fillDeviceAuthorizationPage() {
+
+    section("") {
+        // String blanketAllEnabled = "Alexa can access\nall devices and routines" // TODO: uncomment for routines
+        // String blanketSelectOnly = "Alexa can access\n only the devices and routines\n selected below" // TODO: uncomment for routines
+        String blanketAllEnabled = "Alexa can access\nall devices" // TODO: remove for routines
+        String blanketSelectOnly = "Alexa can access\nonly the devices selected below" // TODO: remove for routines
+
+        // input "allEnabled", "bool", title: "Allow Alexa to access\nall devices and routines", description: isBlanketAuthorized()?blanketAllEnabled:blanketSelectOnly, required: false, submitOnChange:true // TODO  uncomment for routines
+        input "allEnabled", "bool", title: "Allow Alexa to access\nall devices", description: isBlanketAuthorized()?blanketAllEnabled:blanketSelectOnly, required: false, submitOnChange:true // TODO: remove for routines
+    }
+
+    if (!isBlanketAuthorized()) {
+        section("SmartThings Optimized for Smart Home") {
+            input "switches", "capability.switch", title: "Selected Switches", multiple: true, required: false
+            input "thermostats", "capability.thermostat", title: "Selected Thermostats", multiple: true, required: false
+            // TODO: uncomment for routunes // input "routinesEnabled", "bool", title: "Routines", description: "Select routines", required: false
+        }
+        section("SmartThings Extras") {
+            input "locks", "capability.lock", title: "Selected Locks", multiple: true, required: false
+        }
+    }
+
+    section("") {
+        href(name: "href",
+                title: "Help",
+                required: false,
+                description: "",
+                page: "helpPage")
+        href(name: "href",
+                title: "Uninstall",
+                required: false,
+                description: "",
+                page: "uninstallPage")
+    }
+}
+
+private def buildInstructionPageFP() {
+    dynamicPage(name: "firstPage", title: "Device Discovery", install: true) {
+        fillInstructionPage()
+    }
+}
+
+private def buildInstructionPage() {
+    dynamicPage(name: "instructionPage", title: "Device Discovery", install: true) {
+        fillInstructionPage()
+    }
+}
+
+private def fillInstructionPage() {
+    section("") {
+        paragraph "You have made a change to your device list.\n\n" +
+                "Now complete device discovery by saying the following to your Alexa device:"
+        paragraph title: "\"Alexa, discover new devices\"", ""
+        paragraph 'Finally, tap "Done" in the upper right corner'
+    }
 }
 
 /**
@@ -258,9 +326,28 @@ def buildDeviceAuthorizationPage() {
  * @method isBlanketAuthorized
  * @return Value of settings.allEnabled forced to a Boolean
  */
-Boolean isBlanketAuthorized() {
-    return "${settings?.allEnabled}".toBoolean()
-}
+ Boolean isBlanketAuthorized() {
+     return booleanize(settings?.allEnabled)
+ }
+
+ /**
+  * Returns the value of settings.allEnabled always as a Boolean, no matter how settings stores it.
+  * @method areRoutinesEnabled
+  * @return Value of settings.routinesEnabled forced to a Boolean
+  */
+ Boolean areRoutinesEnabled() {
+     return booleanize(settings?.routinesEnabled)
+ }
+
+ /**
+  * Run allegedly boolean values through this in case it ends up being a string "true" or "false"
+  *  namely to avoid the fact that "false" == true
+  * @method booleanize
+  * @return Boolean coercion of input parameter
+  */
+ Boolean booleanize(def inValue) {
+     return (inValue != null && inValue[0] == "true") || "$inValue".toBoolean()
+ }
 
 mappings {
 
@@ -299,6 +386,10 @@ mappings {
 
 def installed() {
     log.trace "installed()"
+    // only flag recent install if state has no record of recent installs
+    if (state?.recentInstall == null) {
+        state.recentInstall = true
+    }
     initialize()
 }
 
@@ -310,18 +401,13 @@ def updated() {
 def initialize() {
     log.trace "initialize()"
     state.showLandingPage = false // we have been installed at this point
-    unschedule()
-    state.heartbeatDevices = [:]
 
     if (!checkIfV1Hub()) {
-        // Refresh all z-wave devices to make sure we can identify them later
-        refreshHeartbeatDevices()
-
-        // settingUpAttempt handles retries of the heartbeat setup in case it fails for any reason
-        // -1 is done, at attempt 5 it will give up
-        state.settingUpAttempt = 0
-        // Schedule setup of heartbeat monitor in 60 seconds to make sure previous call to refreshHeartbeatDevices() has completed
-        runIn(60 * 1, setupHeartbeat)
+        if (state.heartbeatDevices == null) {
+            state.heartbeatDevices = [:]
+        }
+        runIn(1, deviceHeartbeatCheck)
+        runEvery30Minutes(deviceHeartbeatCheck)
     }
 }
 
@@ -333,9 +419,12 @@ def initialize() {
  */
 def discovery() {
     def switchList = getEnabledSwitches()?.collect { deviceItem(it) } ?: []
-	def thermostatList = getEnabledThermostats()?.collect { deviceItem(it) } ?: []
+    def thermostatList = getEnabledThermostats()?.collect { deviceItem(it) } ?: []
 
     def applianceList = switchList.plus thermostatList
+
+    setupHeartbeat()
+
     log.debug "discovery ${applianceList}"
     // Format according to Alexa API
     [discoveredAppliances: applianceList]
@@ -521,7 +610,7 @@ def customPost() {
 
     customSkillReq?.request?.intent?.slots?.each {
         key, valmap ->
-        // log.debug "slot key is $key, valmap is $valmap"
+
         if (valmap?.value != null) {
             interpretedSlots.put(key, valmap?.value)
         }
@@ -1157,25 +1246,25 @@ Map buildSingleLockFollowupDialogResponse(Map responseData=[:], def singleDevice
 }
 
 Map getBatteryStatuses(List devices = null) {
-	// Default to checking all devices
-	def devicesToCheck = locks
-	if (devices) {
-		devicesToCheck = devices
-	}
+    // Default to checking all devices
+    def devicesToCheck = locks
+    if (devices) {
+        devicesToCheck = devices
+    }
 
-	Map deviceBatteryStatus = [low: [], good: [], unknown:[]]
-	devicesToCheck.each {
-		device ->
-			if (device.currentBattery == null) {
-				deviceBatteryStatus.unknown << device.displayName
-			} else if (Integer.parseInt("$device.currentBattery") < LOW_BATTERY_PCT) {
-				deviceBatteryStatus.low << device.displayName
-			} else {
-				deviceBatteryStatus.good << device.displayName
-			}
-	}
-	return deviceBatteryStatus
-	// TODO
+    Map deviceBatteryStatus = [low: [], good: [], unknown:[]]
+    devicesToCheck.each {
+        device ->
+            if (device.currentBattery == null) {
+                deviceBatteryStatus.unknown << device.displayName
+            } else if (Integer.parseInt("$device.currentBattery") < LOW_BATTERY_PCT) {
+                deviceBatteryStatus.low << device.displayName
+            } else {
+                deviceBatteryStatus.good << device.displayName
+            }
+    }
+    return deviceBatteryStatus
+    // TODO
 }
 /**
  * Create a response text with a list of all locks with low battery.
@@ -1204,8 +1293,8 @@ def String batteryStatusReminder(List devices = null) {
         if (devicesBatteryStatus?.low?.size() > 1) {
             outputText = "Battery is low for ${convoList(devicesBatteryStatus.low)}."
         } else if (devicesBatteryStatus?.low?.size() == 1) {
-			outputText = "The battery in ${convoList(devicesBatteryStatus.low)} is low."
-		}
+            outputText = "The battery in ${convoList(devicesBatteryStatus.low)} is low."
+        }
     }
     state.checkBattery = (state.checkBattery + 1) % 5
     return outputText
@@ -1365,7 +1454,6 @@ Map newSHMStatus(String alarmSystemStatus) {
             shmStat.substate = null
             break
     }
-    // log.trace "newSHMStatus($alarmSystemStatus) initialized to $shmStat"
 
     shmStat.getSystemStatus = { return "$shmStat._alarmSystemStatus" }
 
@@ -1401,7 +1489,7 @@ Map newSHMStatus(String alarmSystemStatus) {
  */
 Map querySHMStatus() {
     String alarmSystemStatus = "${location?.currentState("alarmSystemStatus").stringValue}"
-    // log.trace "querySHMStatus() - current SHM state is $alarmSystemStatus"
+
     Map shmStatus = newSHMStatus(alarmSystemStatus)
     return shmStatus
 }
@@ -1463,7 +1551,6 @@ Map chooseDeviceDispatcher(def deviceList) {
     if (!transactionSessionAttributes?.nextHandler) {
         return buildFatalErrorResponse("Session is missing nextHandler for $transactionIntentName")
     } else if (!transactionDevices || transactionDevices.size() == 0) {
-        // FIXME - Continue here - count WhichLockintent breadcrumbs
         String repromptText = "Which $transactionDeviceKind did you mean?"
         String outputText = ""
         Integer retries = transactionSessionAttributes?.intentChain?.findAll { it == "WhichLockIntent" }?.size()?:0
@@ -1573,19 +1660,28 @@ String convoList(List listOfStrings, String conjunction="and") {
 def onOffCommand(device, turnOn, response) {
     if (turnOn) {
         log.debug "Turn on $device"
-
         if (device.currentSwitch == "on") {
             // Call on() anyways just in case platform is out of sync and currentLevel is wrong
             response << [error: "AlreadySetToTargetError", payload: [:]]
         }
-        device.on()
+        // This is a workaround for long running Harmony activities causing timeouts in lambda
+        if (device.name?.equalsIgnoreCase("Harmony Activity")) {
+            runIn(1, "runHarmony", [data: [id: "$device.id", command: "on"]])
+        } else {
+            device.on()
+        }
     } else {
         log.debug "Turn off $device"
         if (device.currentSwitch == "off") {
             // Call off() anyways just in case platform is out of sync and currentLevel is wrong
             response << [error: "AlreadySetToTargetError", payload: [:]]
         }
-        device.off()
+        // This is a workaround for long running Harmony activities causing timeouts in lambda
+        if (device.name?.equalsIgnoreCase("Harmony Activity")) {
+            runIn(1, "runHarmony", [data: [id: "$device.id", command: "off"]])
+        } else {
+            device.off()
+        }
     }
 }
 
@@ -1806,77 +1902,53 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
 }
 
 /**
- * Sends a refresh() command to all devices with device type Z-Wave Switch and Dimmer Switch. This will force them
- * to populate the MSR and manufacturer data fields used by this app to identify the brand and model number of each Z-Wave device.
- */
-private refreshHeartbeatDevices() {
-    // Used to wait one second between polls, because issuing Z-wave commands to offline devices can cause trouble if done to fast
-    def delayCounter = 0
-    switches?.each {
-        switch (it.getTypeName()) {
-            case "Z-Wave Switch":
-            case "Dimmer Switch":
-                // refresh to populate MSR data as well as verifying online status
-                if (it.hasCapability("Refresh")) {
-                    it.refresh([delay: delayCounter++ * 1000])
-                }
-                break
-        }
-    }
-}
-
-/**
  * Setup heartbeat service that will periodically poll heartbeat supported devices that have not been polled or checked in
  * in a timely manner.
  */
-def setupHeartbeat() {
-    if (state.settingUpAttempt == -1) {
-        return
-    } else if (state.settingUpAttempt < 5) {
-        // Schedule a check in 2 min that setupHeartbeat() actually completed ok
-        // There are instances when SmartApp execution takes to long and time outs
-        // and that would prevent the heartbeat loop from ever starting
-        state.settingUpAttempt = state.settingUpAttempt + 1
-        runIn(2 * 60, setupHeartbeat)
-    } else {
-        log.error "setupHeartbeat failed"
-        return
-    }
+ /**
+  * Setup heartbeat service that will periodically poll heartbeat supported devices that have not been polled or checked in
+  * in a timely manner.
+  */
+ def setupHeartbeat() {
+     // Reset exists flag for all current heartbeat devices, used to see if previously existing devices have been removed
+     state.heartbeatDevices?.each {
+         it.value?.exists = false
+     }
 
-    // Devices are checked every 30 min, and offline devices are polled every 2h
-    // (4 cycles of 30 min each, offline refresh() is done on cycle 0)
-    state.heartbeatPollCycle = 0
+     // Setup device health poll, store a list of device ids and online status for all supported device type handlers
+     // Devices are checked every 30 min, and offline devices are polled every 2h
+     // (4 cycles of 30 min each, offline refresh() is done on cycle 0)
+     getEnabledSwitches()?.each {
+         def timeout = getDeviceHeartbeatTimeout(it)
+         if (timeout > 0) {
+             if (state.heartbeatDevices[it.id] != null) {
+                 state.heartbeatDevices[it.id].exists = true
+             } else {
+                 state.heartbeatDevices[it.id] = [online: checkDeviceOnLine(it), timeout: timeout, exists: true, pollCycle: 0]
+             // , label: it.label ?: it.name (useful for debugging)
+             }
+         }
+     }
 
-    // Setup device health poll, store a list of device ids and online status for all supported device type handlers
-    switches?.each {
-        def timeout = getDeviceHeartbeatTimeout(it)
-        if (timeout > 0) {
-            state.heartbeatDevices[it.id] = [online: true, timeout: timeout]
-            // , label: it.label ?: it.name (useful for debugging)
-        }
-    }
-
-    if (state.heartbeatDevices != null && !state.heartbeatDevices.isEmpty()) {
-        // TODO this should ideally happen immediately the first time
-        runEvery30Minutes(deviceHeartbeatCheck)
-    }
-    // Setup succeeded
-    state.settingUpAttempt = -1
-}
+     // Remove heartbeat devices that we previously flagged as non existing
+     def toRemove = state.heartbeatDevices?.find {!it.value?.exists}
+     toRemove?.each {
+          state.heartbeatDevices.remove(it.key)
+     }
+ }
 
 /**
- * Every 30 min cycle Amazon Echo SmartApp will for each heartbeat device:
+ * Every 30 min cycle Amazon Alexa SmartApp will for each heartbeat device:
  * 1. If device has been heard from in the last 25 min, mark as Online (it must have been polled by hub (every 15 min) or checked in (every 10 min))
- * 2. If device has been heard from in the last 25-35 min, mark as Online and send a refresh() (it was probably polled by Echo SmartApp so poll again
+ * 2. If device has been heard from in the last 25-35 min, mark as Online and send a refresh() (it was probably polled by Alexa SmartApp so poll again
  *    to maintain device online, 30 min +-5 to account for delays in scheduler)
  * 3. if device was not heard from in the last 35 min but was heard from last cycle, mark it as Offline and send a refresh() in case status is wrong
  * 4. If devices was Offline last cycle, then try a refresh() every fourth cycle (i.e. 2h) for all devices marked as Offline
  */
+
 def deviceHeartbeatCheck() {
     if (state.heartbeatDevices == null || state.heartbeatDevices.isEmpty()) {
-        // This should not be happening unless state was damaged
-        log.warn "No heartbeat devices available, will stop checking"
-        unschedule()
+        // No devices to check
         return
     }
 
@@ -1886,39 +1958,40 @@ def deviceHeartbeatCheck() {
     Calendar time35 = Calendar.getInstance()
     time35.add(Calendar.MINUTE, -35)
 
-    // Only poll offline devices every 2h
-    if (state.heartbeatPollCycle == 0) {
-        log.debug "Polling Offline devices"
-    }
-
     // Used to delay one second between polls, because issuing Z-wave commands to offline devices too fast can cause trouble
     def delayCounter = 0
+    getEnabledSwitches()?.each {
+        if (state.heartbeatDevices[it.id] != null) {
+            // Previously, poll cycle was tracked by device so add it if not existing
+            if (state.heartbeatDevices[it.id].pollCycle == null) {
+                state.heartbeatDevices[it.id].pollCycle = 0
+            }
 
-    switches?.each {
-        int deviceTimeout = getDeviceHeartbeatTimeout(it)
-        if (deviceTimeout > 0 && it.getLastActivity() != null) {
-            Date deviceLastChecking = new Date(it.getLastActivity()?.getTime())
-            if (deviceLastChecking?.after(time25.getTime())) {
-                state.heartbeatDevices[it.id]?.online = true
-            } else if (deviceLastChecking?.after(time35.getTime())) {
-                state.heartbeatDevices[it.id]?.online = true
-                if (it.hasCapability("Refresh")) {
-                    it.refresh([delay: delayCounter++ * 1000])
-                    log.debug "refreshing $it (regular poll)"
+            if (it.getLastActivity() != null) {
+                Date deviceLastChecking = new Date(it.getLastActivity()?.getTime())
+                if (deviceLastChecking?.after(time25.getTime())) {
+                    state.heartbeatDevices[it.id]?.online = true
+                } else if (deviceLastChecking?.after(time35.getTime())) {
+                    state.heartbeatDevices[it.id]?.online = true
+                    if (it.hasCapability("Refresh")) {
+                        it.refresh([delay: delayCounter++ * 1000])
+                        log.debug "refreshing $it å(regular poll)"
+                    }
+                } else {
+                    // Device did not report in, mark as offline and if cycle 0 or it was previously online, then issue a refresh() command
+                    def previousStatus = state.heartbeatDevices[it.id]?.online
+                    state.heartbeatDevices[it.id]?.online = false
+                    if ((previousStatus || state.heartbeatDevices[it.id].pollCycle == 0) && it.hasCapability("Refresh")) {
+                        it.refresh([delay: delayCounter++ * 1000])
+                        log.debug "refreshing $it (one time or first cycle) ($delayCounter)"
+                    }
                 }
             } else {
-                // Device did not report in, mark as offline and if cycle 0 or it was previously online, then issue a refresh() command
-                def previousStatus = state.heartbeatDevices[it.id]?.online
-                state.heartbeatDevices[it.id]?.online = false
-                if ((previousStatus || state.heartbeatPollCycle == 0) && it.hasCapability("Refresh")) {
-                    it.refresh([delay: delayCounter++ * 1000])
-                    log.debug "refreshing $it (one time or first cycle) ($delayCounter)"
-                }
+                state.heartbeatDevices[it.id].online = false
             }
+            state.heartbeatDevices[it.id].pollCycle = (state.heartbeatDevices[it.id].pollCycle + 1) % 4
         }
     }
-    // Update cycle number
-    state.heartbeatPollCycle = (state.heartbeatPollCycle + 1) % 4
 }
 
 /**
@@ -1930,34 +2003,51 @@ def deviceHeartbeatCheck() {
 private getDeviceHeartbeatTimeout(device) {
     def timeout = 0
 
-    switch (device.getTypeName()) {
-        case "SmartPower Outlet":
-            timeout = 35
-            break
-        case "Z-Wave Switch":
-        case "Dimmer Switch":
-            if (device.getData()?.MSR != null) {
-                switch (device.getData()?.MSR) {
-                    case "001D-1B03-0334":  // ZWAVE In-Wall Switch (dimmable) (DZMX1-1LZ)
-                    case "001D-1C02-0334":  // ZWAVE Leviton In-Wall Switch (non-dimmable) (DZS15-1LZ)
-                    case "001D-1D04-0334":  // ZWAVE Leviton Receptacle (DZR15-1LZ)
-                    case "001D-1A02-0334":  // ZWAVE Plug in Appliance Module (Non-Dimmable) (DZPA1-1LW)
-                    case "001D-1902-0334":  // ZWAVE Plug in Lamp Dimmer Module (DZPD3-1LW)
-                        timeout = 60
-                        break
-                }
-            }
-            break
-    }
-
-    // Check DTHs with ambiguous names in type name
-    if (timeout == 0) {
-        switch (device.name) {
-            case "OSRAM LIGHTIFY LED Tunable White 60W":
+    try {
+        switch (device.getTypeName()) {
+            case "SmartPower Outlet":
                 timeout = 35
+                break
+            case "Z-Wave Switch":
+            case "Dimmer Switch":
+                def msr = "${device?.getZwaveInfo()?.mfr}-${device?.getZwaveInfo()?.prod}-${device?.getZwaveInfo()?.model}"
+                if (msr != null) {
+                    switch (msr) {
+                        case "001D-1B03-0334":  // ZWAVE Leviton In-Wall Switch (dimmable) (DZMX1-1LZ)
+                        case "001D-1C02-0334":  // ZWAVE Leviton In-Wall Switch (non-dimmable) (DZS15-1LZ)
+                        case "001D-1D04-0334":  // ZWAVE Leviton Receptacle (DZR15-1LZ)
+                        case "001D-1A02-0334":  // ZWAVE Leviton Plug in Appliance Module (Non-Dimmable) (DZPA1-1LW)
+                        case "001D-1902-0334":  // ZWAVE Leviton Plug in Lamp Dimmer Module (DZPD3-1LW)
+                        case "0063-4952-3031":  // ZWAVE Jasco In-Wall Smart Outlet (12721)
+                        case "0063-4952-3033":  // ZWAVE Jasco In-Wall Smart Switch (Toggle Style) (12727)
+                        case "0063-4952-3032":  // ZWAVE Jasco In-Wall Smart Switch (Decora) (12722)
+                        case "0063-5052-3031":  // ZWAVE Jasco Plug-in Smart Switch (12719)
+                        case "0063-4F50-3031":  // ZWAVE Jasco Plug-in Outdoor Smart Switch (12720)
+                        case "0063-4944-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Decora) (12724)
+                        // TODO Unknown why there are two devices with the same MSR
+                        // case "0063-5052-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Toggle Style) (12729)
+                        case "0063-5044-3031":  // ZWAVE Jasco Plug-in Smart Dimmer (12718)
+                        case "0063-4944-3034":  // ZWAVE Jasco In-Wall Smart Fan Control (12730)
+                            timeout = 60
+                            break
+                    }
+                }
                 break
         }
 
+        // Check DTHs with ambiguous names in type name
+        if (timeout == 0) {
+            switch (device.name) {
+                case "OSRAM LIGHTIFY LED Tunable White 60W":
+                    timeout = 35
+                    break
+            }
+
+        }
+    } catch (Exception e) {
+        // Catching blanket exception here, only reason is that getData() above is dependent on privileged access and
+        // we don't want to break device discovery if platform changes are made that breaks above code.
+        log.error "Heartbeat device lookup failed: $e"
     }
     return timeout
 }
@@ -1967,7 +2057,7 @@ private getDeviceHeartbeatTimeout(device) {
  * for lastActivity time. If timestamp has been updated the last X min (depending on DTH expectations), then the device is
  * considered online.
  *
- * If device is found to be offline, report that back to Echo but issue a refresh() command in case device is actually
+ * If device is found to be offline, report that back to AVS but issue a refresh() command in case device is actually
  * online. If status is indeed online, then if user tries again after a few seconds it will work.
  *
  * @param device
@@ -1985,19 +2075,20 @@ private checkDeviceOnLine(device) {
             // getLastActivity() == null means platform has not seen any activity for a long time and erased the field
             result = false
         } else {
-        Calendar c = Calendar.getInstance()
-        c.add(Calendar.MINUTE, -timeout)
-        Date deviceLastChecking = new Date(device.getLastActivity()?.getTime())
-        if (!deviceLastChecking.after(c.getTime())) {
-            // No heartbeat found but expected
-            // Send refresh in case device is actually online but just missed last poll
-            if (device.hasCapability("Refresh")) {
-                device.refresh()
-            }
-            result = false
+            Calendar c = Calendar.getInstance()
+            c.add(Calendar.MINUTE, -timeout)
+            Date deviceLastChecking = new Date(device.getLastActivity()?.getTime())
+            if (!deviceLastChecking.after(c.getTime())) {
+                // No heartbeat found but expected
+                // Send refresh in case device is actually online but just missed last poll
+                if (device.hasCapability("Refresh")) {
+                    device.refresh()
+                }
+                result = false
             }
         }
     }
+
     return result
 }
 
@@ -2023,17 +2114,30 @@ private checkIfV1Hub() {
 }
 
 /**
+ * Run a harmony activity
+ * @param input a map with id of device id and command, e.g. [id: "xx-yy", command: "on"]
+ */
+def runHarmony(Map input) {
+    def device = getDeviceById(input?.id)
+    if (input?.command == "on") {
+        device?.on()
+    } else {
+        device?.off()
+    }
+}
+
+/**
  * Find all switches the user has given Alexa access to, either by selecting specific switches or by selecting
  * allow all devices.
  *
  * @return a list of all switches accessible to Alexa
  */
 private getEnabledSwitches() {
-	if (isBlanketAuthorized) {
-		return findAllDevicesByCapability("switch")
-	} else {
-		return switches
-	}
+    if (isBlanketAuthorized()) {
+        return findAllDevicesByCapability("switch")
+    } else {
+        return switches
+    }
 }
 
 /**
@@ -2043,11 +2147,11 @@ private getEnabledSwitches() {
  * @return a list of all thermostats accessible to Alexa
  */
 private getEnabledThermostats() {
-	if (isBlanketAuthorized) {
-		return findAllDevicesByCapability("thermostat")
-	} else {
-		return thermostats
-	}
+    if (isBlanketAuthorized()) {
+        return findAllDevicesByCapability("thermostat")
+    } else {
+        return thermostats
+    }
 }
 
 /**
@@ -2057,11 +2161,11 @@ private getEnabledThermostats() {
  * @return a list of all locks accessible to Alexa
  */
 private getEnabledLocks() {
-    if (isBlanketAuthorized) {
-		return findAllDevicesByCapability("lock")
-	} else {
-		return locks
-	}
+    if (isBlanketAuthorized()) {
+        return findAllDevicesByCapability("lock")
+    } else {
+        return locks
+    }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -2076,18 +2180,18 @@ private getEnabledLocks() {
  * @return a device or null if device not found
  */
 private getDeviceById(id) {
-	// Start with switches which is the most common device
-	def device = getEnabledSwitches()?.find {
-		it.id == id
-	}
+    // Start with switches which is the most common device
+    def device = getEnabledSwitches()?.find {
+        it.id == id
+    }
 
-	// If device not found, check next input
-	if (!device) {
-		device = getEnabledThermostats()?.find {
-			it.id == id
-		}
-	}
-	return device
+    // If device not found, check next input
+    if (!device) {
+        device = getEnabledThermostats()?.find {
+            it.id == id
+        }
+    }
+    return device
 }
 
 private getDeviceByName(String spokenDeviceName) {

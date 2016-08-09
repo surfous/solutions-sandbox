@@ -1,24 +1,23 @@
 /**
- * Amazon Echo
+ * Amazon Alexa Home Skill release candidate
  *
- * Supports lights, dimmers and thermostats
+ * Supports lights, dimmers, thermostats, and scenes
  *
  * Author: SmartThings
  */
- import groovy.transform.Field
 
-definition(
-		name: "Amazon Echo (QA)",
-		namespace: "smartthings",
-		author: "SmartThings",
-		description: "Allows Amazon Echo to interact with your SmartThings devices.",
-		category: "Convenience",
-		iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
-		iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@2x.png",
-		iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@3x.png",
-		oauth: [displayName: "Amazon Echo (QA)", displayLink: ""],
-		singleInstance: true
-)
+ definition(
+ 		name: "Alexa Home Skill RC",
+ 		namespace: "smartthings",
+ 		author: "SmartThings",
+ 		description: "Allows Amazon Echo to interact with your SmartThings devices and routines.",
+ 		category: "Convenience",
+ 		iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
+ 		iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@2x.png",
+ 		iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@3x.png",
+ 		oauth: [displayName: "Amazon Home Skill RC", displayLink: ""],
+        singleInstance: true
+ )
 
 // Version 1.1.10
 
@@ -109,6 +108,8 @@ definition(
 // Add support for manufacturerName/modelName
 // Add support for appliance version
 // Add support for capabilities in createFriendlyText()
+
+import groovy.transform.Field
 
 @Field final List DEVICE_TYPE_NAME_EXCLUSION_LIST = ['Samsung Range']
 @Field final List DEVICE_CAPABILITY_EXCLUSION_LIST = ['Buffered Video Capture', 'Image Capture', 'Video Capture', 'Video Camera']
