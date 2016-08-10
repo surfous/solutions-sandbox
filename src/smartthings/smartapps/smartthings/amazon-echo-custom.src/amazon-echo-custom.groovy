@@ -154,13 +154,13 @@ preferences(oauthPage: "oauthPage") {
     page(name: "helpPage", title: "Help") {
         section("Knowledgebase Articles") {
             href(
-                name: "href",
+                name: "href_kb_205275404",
                 title: "Amazon Alexa",
                 url: "https://support.smartthings.com/hc/en-us/articles/205275404",
                 style: "embedded"
             )
             href(
-                name: "href",
+                name: "href_kb_207808076",
                 title: "SmartThings + Amazon Alexa FAQ",
                 url: "https://support.smartthings.com/hc/en-us/articles/207808076",
                 style: "embedded"
@@ -235,7 +235,7 @@ Echo works with devices such as lights, switches, thermostats, and more, includi
 }
 
 private def emitProvisioningUrlHref() {
-    href(name: "href",
+    href(name: "href_provision",
          title: "Tap to Link Alexa",
          required: false,
          style: "embedded",
@@ -287,12 +287,12 @@ private def fillDeviceAuthorizationPage() {
     }
 
     section("") {
-        href(name: "href",
+        href(name: "href_help",
                 title: "Help",
                 required: false,
                 description: "",
                 page: "helpPage")
-        href(name: "href",
+        href(name: "href_uninstall",
                 title: "Uninstall",
                 required: false,
                 description: "",
