@@ -840,57 +840,60 @@ def deviceHeartbeatCheck() {
  * @param device device to get heartbeat timeout for
  * @return number of minutes after last activity that the device should be considered offline for, or 0 if no support for heartbeat
  */
-private getDeviceHeartbeatTimeout(device) {
-	def timeout = 0
+ private getDeviceHeartbeatTimeout(device) {
+     def timeout = 0
 
-	try {
-		switch (device.getTypeName()) {
-			case "SmartPower Outlet":
-				timeout = 35
-				break
-			case "Z-Wave Switch":
-			case "Dimmer Switch":
-				def msr = "${device?.getZwaveInfo()?.mfr}-${device?.getZwaveInfo()?.prod}-${device?.getZwaveInfo()?.model}"
-				if (msr != null) {
-					switch (msr) {
-						case "001D-1B03-0334":  // ZWAVE Leviton In-Wall Switch (dimmable) (DZMX1-1LZ)
-						case "001D-1C02-0334":  // ZWAVE Leviton In-Wall Switch (non-dimmable) (DZS15-1LZ)
-						case "001D-1D04-0334":  // ZWAVE Leviton Receptacle (DZR15-1LZ)
-						case "001D-1A02-0334":  // ZWAVE Leviton Plug in Appliance Module (Non-Dimmable) (DZPA1-1LW)
-						case "001D-1902-0334":  // ZWAVE Leviton Plug in Lamp Dimmer Module (DZPD3-1LW)
-						case "0063-4952-3031":  // ZWAVE Jasco In-Wall Smart Outlet (12721)
-						case "0063-4952-3033":  // ZWAVE Jasco In-Wall Smart Switch (Toggle Style) (12727)
-						case "0063-4952-3032":  // ZWAVE Jasco In-Wall Smart Switch (Decora) (12722)
-						case "0063-5052-3031":  // ZWAVE Jasco Plug-in Smart Switch (12719)
-						case "0063-4F50-3031":  // ZWAVE Jasco Plug-in Outdoor Smart Switch (12720)
-						case "0063-4944-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Decora) (12724)
-						// TODO Unknown why there are two devices with the same MSR
-						// case "0063-5052-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Toggle Style) (12729)
-						case "0063-5044-3031":  // ZWAVE Jasco Plug-in Smart Dimmer (12718)
-						case "0063-4944-3034":  // ZWAVE Jasco In-Wall Smart Fan Control (12730)
-							timeout = 60
-							break
-					}
-				}
-				break
-		}
+     try {
+         switch (device.getTypeName()) {
+             case "SmartPower Outlet":
+                 timeout = 35
+                 break
+             case "Z-Wave Switch":
+             case "Z-Wave Switch Generic":
+             case "Dimmer Switch":
+             case "Z-Wave Dimmer Switch Generic":
 
-		// Check DTHs with ambiguous names in type name
-		if (timeout == 0) {
-			switch (device.name) {
-				case "OSRAM LIGHTIFY LED Tunable White 60W":
-					timeout = 35
-					break
-			}
+                 def msr = "${device?.getZwaveInfo()?.mfr}-${device?.getZwaveInfo()?.prod}-${device?.getZwaveInfo()?.model}"
+                 if (msr != null) {
+                     switch (msr) {
+                         case "001D-1B03-0334":  // ZWAVE Leviton In-Wall Switch (dimmable) (DZMX1-1LZ)
+                         case "001D-1C02-0334":  // ZWAVE Leviton In-Wall Switch (non-dimmable) (DZS15-1LZ)
+                         case "001D-1D04-0334":  // ZWAVE Leviton Receptacle (DZR15-1LZ)
+                         case "001D-1A02-0334":  // ZWAVE Leviton Plug in Appliance Module (Non-Dimmable) (DZPA1-1LW)
+                         case "001D-1902-0334":  // ZWAVE Leviton Plug in Lamp Dimmer Module (DZPD3-1LW)
+                         case "0063-4952-3031":  // ZWAVE Jasco In-Wall Smart Outlet (12721)
+                         case "0063-4952-3033":  // ZWAVE Jasco In-Wall Smart Switch (Toggle Style) (12727)
+                         case "0063-4952-3032":  // ZWAVE Jasco In-Wall Smart Switch (Decora) (12722)
+                         case "0063-5052-3031":  // ZWAVE Jasco Plug-in Smart Switch (12719)
+                         case "0063-4F50-3031":  // ZWAVE Jasco Plug-in Outdoor Smart Switch (12720)
+                         case "0063-4944-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Decora) (12724)
+                         case "0063-4944-3032":  // ZWAVE Jasco In-Wall 1000 Watt Smart Dimmer (Decora) (12725)
+                         case "0063-4944-3033":  // ZWAVE Jasco In-Wall Smart Dimmer (Toggle Style) (12729)
+                         case "0063-5044-3031":  // ZWAVE Jasco Plug-in Smart Dimmer (12718)
+                         case "0063-4944-3034":  // ZWAVE Jasco In-Wall Smart Fan Control (12730)
+                             timeout = 60
+                             break
+                     }
+                 }
+                 break
+         }
 
-		}
-	} catch (Exception e) {
-		// Catching blanket exception here, only reason is that getData() above is dependent on privileged access and
-		// we don't want to break device discovery if platform changes are made that breaks above code.
-		log.error "Heartbeat device lookup failed: $e"
-	}
-	return timeout
-}
+         // Check DTHs with ambiguous names in type name
+         if (timeout == 0) {
+             switch (device.name) {
+                 case "OSRAM LIGHTIFY LED Tunable White 60W":
+                     timeout = 35
+                     break
+             }
+
+         }
+     } catch (Exception e) {
+         // Catching blanket exception here, only reason is that getData() above is dependent on privileged access and
+         // we don't want to break device discovery if platform changes are made that breaks above code.
+         log.error "Heartbeat device lookup failed: $e"
+     }
+     return timeout
+ }
 
 /**
  * Determine if a device is online, temporary solution is to check only a restricted number of supported devices

@@ -2009,7 +2009,10 @@ private getDeviceHeartbeatTimeout(device) {
                 timeout = 35
                 break
             case "Z-Wave Switch":
+            case "Z-Wave Switch Generic":
             case "Dimmer Switch":
+            case "Z-Wave Dimmer Switch Generic":
+
                 def msr = "${device?.getZwaveInfo()?.mfr}-${device?.getZwaveInfo()?.prod}-${device?.getZwaveInfo()?.model}"
                 if (msr != null) {
                     switch (msr) {
@@ -2024,8 +2027,8 @@ private getDeviceHeartbeatTimeout(device) {
                         case "0063-5052-3031":  // ZWAVE Jasco Plug-in Smart Switch (12719)
                         case "0063-4F50-3031":  // ZWAVE Jasco Plug-in Outdoor Smart Switch (12720)
                         case "0063-4944-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Decora) (12724)
-                        // TODO Unknown why there are two devices with the same MSR
-                        // case "0063-5052-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Toggle Style) (12729)
+                        case "0063-4944-3032":  // ZWAVE Jasco In-Wall 1000 Watt Smart Dimmer (Decora) (12725)
+                        case "0063-4944-3033":  // ZWAVE Jasco In-Wall Smart Dimmer (Toggle Style) (12729)
                         case "0063-5044-3031":  // ZWAVE Jasco Plug-in Smart Dimmer (12718)
                         case "0063-4944-3034":  // ZWAVE Jasco In-Wall Smart Fan Control (12730)
                             timeout = 60
