@@ -6,22 +6,31 @@
  * Author: SmartThings
  */
 
- definition(
- 		name: "Alexa Home Skill RC",
- 		namespace: "smartthings",
- 		author: "SmartThings",
- 		description: "Allows Amazon Echo to interact with your SmartThings devices and routines.",
- 		category: "Convenience",
- 		iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
- 		iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@2x.png",
- 		iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@3x.png",
- 		oauth: [displayName: "Amazon Home Skill RC", displayLink: ""],
-        singleInstance: true
- )
+definition(
+		name: "Alexa Home Skill RC",
+		namespace: "smartthings",
+		author: "SmartThings",
+		description: "Allows Amazon Echo to interact with your SmartThings devices and Routines.",
+		category: "Convenience",
+		iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
+		iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@2x.png",
+		iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho@3x.png",
+		oauth: [displayName: "Amazon Home Skill RC", displayLink: ""],
+		singleInstance: true
+)
 
-// Version 1.1.10
+// Version 1.1.11
 
 // Changelist:
+
+// 1.1.11
+// Handle restricted routines:
+// Send push notification first time routine is executed if restriced
+// Educate users about restrictions on OAUTH, Alexa app and device selection page
+// Hack to fix "I'am Back!"
+// Heartbeat fix for new Zwaeve device types
+// Updated Jasco devices
+
 // 1.1.10
 // Dynamic preferences
 // Harmony workaround
@@ -120,18 +129,11 @@ preferences(oauthPage: "oauthPage") {
 	// This is a static page for generating the OAUTH page - this is not shown in the SmartApp
 	page(name: "oauthPage", title: "", nextPage: "instructionPage", uninstall: false) {
 		section("") {
-			input "allEnabled", type: "enum", title: "Grant access to all devices and routines?", options: [[(true): "All devices and routines shown below"]], defaultValue: false, multiple: false, required: false
-			paragraph title: "Or choose individual devices below", ""
-			input "switches", "capability.switch", title: "My Switches", multiple: true, required: false
-			input "thermostats", "capability.thermostat", title: "My Thermostats", multiple: true, required: false
-			input "routinesEnabled", type: "enum", title: "Enable Routines?", options: [[(true): "Yes"]], defaultValue: false, multiple: false, required: false
-		}
-		section() {
-			href(name: "href",
-					title: "Uninstall",
-					required: false,
-					description: "",
-					page: "uninstallPage")
+			input "allEnabled", type: "enum", title: "Access to all devices and routines", options: [[(true): "Yes, grant access to all devices and Routines (Note: At this time, Amazon will only support lighting and thermostat devices in a Routine)"]], defaultValue: false, multiple: false, required: false
+			paragraph title: "No, I wish to choose which items listed below...", ""
+			input "switches", "capability.switch", title: "Switches", multiple: true, required: false
+			input "thermostats", "capability.thermostat", title: "Thermostats", multiple: true, required: false
+			input "routinesEnabled", type: "enum", title: "Routines", options: [[(true): "All Routines (Note: At this time, Amazon will only support lighting and thermostat devices in a routine)"]], defaultValue: false, multiple: false, required: false
 		}
 	}
 
@@ -181,25 +183,48 @@ def deviceAuthorization() {
 		section("") {
 			String allEnabledDescr = "Alexa can access\nonly the devices selected below"
 			if (isBlanketAuthorized()) {
-				allEnabledDescr = "Alexa can access\nall devices and routines"
+				allEnabledDescr = "Alexa can access\nall devices and Routines"
 			}
-			input "allEnabled", "bool", title: "Allow Alexa to access\nall devices and routines", description: allEnabledDescr, required: false, submitOnChange:true
+			input "allEnabled", "bool", title: "Allow Alexa to access\nall devices and Routines", description: allEnabledDescr, required: false, submitOnChange:true
 		}
 
 		if (!isBlanketAuthorized()) {
 			section("Select Devices") {
-				input "switches", "capability.switch", multiple: true, required: false, title: "Selected Switches"
-				input "thermostats", "capability.thermostat", title: "Selected Thermostats", multiple: true, required: false
-				input "routinesEnabled", "bool", title: "Routines", options: ["All routines"], description: "Select routines", required: false
+				input "switches", "capability.switch", multiple: true, required: false, title: "Switches"
+				input "thermostats", "capability.thermostat", title: "Thermostats", multiple: true, required: false
+				input "routinesEnabled", "bool", title: "Routines", options: ["All Routines"], description: "", required: false, submitOnChange:true
+			}
+		}
+		if (isBlanketAuthorized() || areRoutinesEnabled()) {
+				def routines = location.helloHome?.getPhrases()
+			def restrictedRoutines = ""
+			if (routines) {
+				// sort them alphabetically
+				routines.sort()
+				routines.each {
+					if (it.hasSecureActions) {
+						if (restrictedRoutines.isEmpty()) {
+								restrictedRoutines += it.label
+						} else {
+								restrictedRoutines += ", ${it.label}"
+						}
+					}
+				}
+
+				if (!restrictedRoutines.isEmpty()) {
+					section("") {
+						paragraph title: "Note: The following Routines cannot fully be used by Alexa. If you try to use one, only lighting and thermostat devices will activate. For security reasons, locks, garage doors, and security systems have been disabled by Amazon.", "$restrictedRoutines"
+					}
+				}
 			}
 		}
 
 		section("") {
 			href(name: "href",
-					title: "Uninstall",
-					required: false,
-					description: "",
-					page: "uninstallPage")
+				title: "Uninstall",
+				required: false,
+				description: "",
+				page: "uninstallPage")
 		}
 	}
 }
@@ -260,9 +285,9 @@ def initialize() {
  * @return a list of available devices and each device's supported information
  */
 def discovery() {
-    // removing isDeviceAllowed filtering for now - This is done on the backend for routines only
-    // def switchList = getEnabledSwitches()?.findAll{isDeviceAllowed(it)}.collect {deviceItem(it)} ?: []
-    def switchList = getEnabledSwitches()?.collect { deviceItem(it) } ?: []
+	// removing isDeviceAllowed filtering for now - This is done on the backend for routines only
+	// def switchList = getEnabledSwitches()?.findAll{isDeviceAllowed(it)}.collect {deviceItem(it)} ?: []
+	def switchList = getEnabledSwitches()?.collect { deviceItem(it) } ?: []
 	def thermostatList = getEnabledThermostats()?.collect { deviceItem(it) } ?: []
 
 	def applianceList = switchList.plus thermostatList
@@ -401,8 +426,14 @@ private deviceItem(it) {
  */
 private routineItem(it) {
 	def actions = []
+	def description = "SmartThings Routine"
+	// Temporary workaround since "I'm Back!" is not recognized by Amazon Voice Model
+	def label = it.label == "I'm Back!" ? "IAmBack": it.label
+	if (it.hasSecureActions) {
+		description = "SmartThings Routine (contains devices unsupported by Alexa)"
+	}
 	actions.add "turnOn"
-	it ? [applianceId: it.id, manufacturerName: "SmartThings", modelName: "SmartThings", version: "V1.0", friendlyName: it.label, friendlyDescription: "Routine connected via SmartThings", isReachable: true, actions: actions] : null
+	it ? [applianceId: it.id, manufacturerName: "SmartThings", modelName: "SmartThings", version: "V1.0", friendlyName: label , friendlyDescription: description, isReachable: true, actions: actions] : null
 }
 
 /**
@@ -427,7 +458,7 @@ private findRoutine(id) {
  */
 private createFriendlyText(device) {
 	// Friendly name prefix = SmartThings:
-	def result = "SmartThings: "
+	def result = "SmartThings "
 
 	if (device.hasCapability("Thermostat")) {
 		result += "Thermostat"
@@ -527,6 +558,20 @@ def onOffCommand(device, turnOn, response, routine = null) {
 			}
 		}
 	} else if (routine) {
+		// Stores the id of a routine if it contains secure actions and is executed
+		// This is used to prevent more than one push notification for each routine to
+		// warn the user that they are using restricted devices with Alexa
+		if (state.routineNotifications == null) {
+			state.routineNotifications = [:]
+		}
+		if (routine.hasSecureActions) {
+			if (!state.routineNotifications[routine.id]) {
+				state.routineNotifications[routine.id] = true
+				sendPush("Your $routine.label Routine contains unsupported locking or security devices by Alexa. Those devices were not activated.")
+			}
+		} else {
+			state.routineNotifications[routine.id] = false
+		}
 		runIn(1, "runRoutine", [data: [routine: "$routine.label"]])
 	}
 }
@@ -841,58 +886,58 @@ def deviceHeartbeatCheck() {
  * @return number of minutes after last activity that the device should be considered offline for, or 0 if no support for heartbeat
  */
  private getDeviceHeartbeatTimeout(device) {
-     def timeout = 0
+	 def timeout = 0
 
-     try {
-         switch (device.getTypeName()) {
-             case "SmartPower Outlet":
-                 timeout = 35
-                 break
-             case "Z-Wave Switch":
-             case "Z-Wave Switch Generic":
-             case "Dimmer Switch":
-             case "Z-Wave Dimmer Switch Generic":
+	 try {
+		 switch (device.getTypeName()) {
+			 case "SmartPower Outlet":
+				 timeout = 35
+				 break
+			 case "Z-Wave Switch":
+			 case "Z-Wave Switch Generic":
+			 case "Dimmer Switch":
+			 case "Z-Wave Dimmer Switch Generic":
 
-                 def msr = "${device?.getZwaveInfo()?.mfr}-${device?.getZwaveInfo()?.prod}-${device?.getZwaveInfo()?.model}"
-                 if (msr != null) {
-                     switch (msr) {
-                         case "001D-1B03-0334":  // ZWAVE Leviton In-Wall Switch (dimmable) (DZMX1-1LZ)
-                         case "001D-1C02-0334":  // ZWAVE Leviton In-Wall Switch (non-dimmable) (DZS15-1LZ)
-                         case "001D-1D04-0334":  // ZWAVE Leviton Receptacle (DZR15-1LZ)
-                         case "001D-1A02-0334":  // ZWAVE Leviton Plug in Appliance Module (Non-Dimmable) (DZPA1-1LW)
-                         case "001D-1902-0334":  // ZWAVE Leviton Plug in Lamp Dimmer Module (DZPD3-1LW)
-                         case "0063-4952-3031":  // ZWAVE Jasco In-Wall Smart Outlet (12721)
-                         case "0063-4952-3033":  // ZWAVE Jasco In-Wall Smart Switch (Toggle Style) (12727)
-                         case "0063-4952-3032":  // ZWAVE Jasco In-Wall Smart Switch (Decora) (12722)
-                         case "0063-5052-3031":  // ZWAVE Jasco Plug-in Smart Switch (12719)
-                         case "0063-4F50-3031":  // ZWAVE Jasco Plug-in Outdoor Smart Switch (12720)
-                         case "0063-4944-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Decora) (12724)
-                         case "0063-4944-3032":  // ZWAVE Jasco In-Wall 1000 Watt Smart Dimmer (Decora) (12725)
-                         case "0063-4944-3033":  // ZWAVE Jasco In-Wall Smart Dimmer (Toggle Style) (12729)
-                         case "0063-5044-3031":  // ZWAVE Jasco Plug-in Smart Dimmer (12718)
-                         case "0063-4944-3034":  // ZWAVE Jasco In-Wall Smart Fan Control (12730)
-                             timeout = 60
-                             break
-                     }
-                 }
-                 break
-         }
+				 def msr = "${device?.getZwaveInfo()?.mfr}-${device?.getZwaveInfo()?.prod}-${device?.getZwaveInfo()?.model}"
+				 if (msr != null) {
+					 switch (msr) {
+						 case "001D-1B03-0334":  // ZWAVE Leviton In-Wall Switch (dimmable) (DZMX1-1LZ)
+						 case "001D-1C02-0334":  // ZWAVE Leviton In-Wall Switch (non-dimmable) (DZS15-1LZ)
+						 case "001D-1D04-0334":  // ZWAVE Leviton Receptacle (DZR15-1LZ)
+						 case "001D-1A02-0334":  // ZWAVE Leviton Plug in Appliance Module (Non-Dimmable) (DZPA1-1LW)
+						 case "001D-1902-0334":  // ZWAVE Leviton Plug in Lamp Dimmer Module (DZPD3-1LW)
+						 case "0063-4952-3031":  // ZWAVE Jasco In-Wall Smart Outlet (12721)
+						 case "0063-4952-3033":  // ZWAVE Jasco In-Wall Smart Switch (Toggle Style) (12727)
+						 case "0063-4952-3032":  // ZWAVE Jasco In-Wall Smart Switch (Decora) (12722)
+						 case "0063-5052-3031":  // ZWAVE Jasco Plug-in Smart Switch (12719)
+						 case "0063-4F50-3031":  // ZWAVE Jasco Plug-in Outdoor Smart Switch (12720)
+						 case "0063-4944-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Decora) (12724)
+						 case "0063-4944-3032":  // ZWAVE Jasco In-Wall 1000 Watt Smart Dimmer (Decora) (12725)
+						 case "0063-4944-3033":  // ZWAVE Jasco In-Wall Smart Dimmer (Toggle Style) (12729)
+						 case "0063-5044-3031":  // ZWAVE Jasco Plug-in Smart Dimmer (12718)
+						 case "0063-4944-3034":  // ZWAVE Jasco In-Wall Smart Fan Control (12730)
+							 timeout = 60
+							 break
+					 }
+				 }
+				 break
+		 }
 
-         // Check DTHs with ambiguous names in type name
-         if (timeout == 0) {
-             switch (device.name) {
-                 case "OSRAM LIGHTIFY LED Tunable White 60W":
-                     timeout = 35
-                     break
-             }
+		 // Check DTHs with ambiguous names in type name
+		 if (timeout == 0) {
+			 switch (device.name) {
+				 case "OSRAM LIGHTIFY LED Tunable White 60W":
+					 timeout = 35
+					 break
+			 }
 
-         }
-     } catch (Exception e) {
-         // Catching blanket exception here, only reason is that getData() above is dependent on privileged access and
-         // we don't want to break device discovery if platform changes are made that breaks above code.
-         log.error "Heartbeat device lookup failed: $e"
-     }
-     return timeout
+		 }
+	 } catch (Exception e) {
+		 // Catching blanket exception here, only reason is that getData() above is dependent on privileged access and
+		 // we don't want to break device discovery if platform changes are made that breaks above code.
+		 log.error "Heartbeat device lookup failed: $e"
+	 }
+	 return timeout
  }
 
 /**
@@ -936,19 +981,19 @@ private checkDeviceOnLine(device) {
 }
 
 private boolean isDeviceAllowed(device) {
-    // by device type name
-    string deviceTypeName = device.getTypeName()
+	// by device type name
+	string deviceTypeName = device.getTypeName()
 	boolean isDeviceExcludedByTypeName = DEVICE_TYPE_NAME_EXCLUSION_LIST.contains(deviceTypeName)
-    def forbiddenCap = device.capabilities.find {
-        DEVICE_CAPABILITY_EXCLUSION_LIST.contains(it.name)
-    }
+	def forbiddenCap = device.capabilities.find {
+		DEVICE_CAPABILITY_EXCLUSION_LIST.contains(it.name)
+	}
 
-    if (isDeviceExcludedByTypeName || forbiddenCap != null) {
-        String exclusionReason = isDeviceExcludedByTypeName?"type name $deviceTypeName":"capability $forbiddenCap.name"
-        log.info "Device $device.displayName is excluded by $exclusionReason"
-        return false
-    }
-    return true
+	if (isDeviceExcludedByTypeName || forbiddenCap != null) {
+		String exclusionReason = isDeviceExcludedByTypeName?"type name $deviceTypeName":"capability $forbiddenCap.name"
+		log.info "Device $device.displayName is excluded by $exclusionReason"
+		return false
+	}
+	return true
 }
 /**
  * Checks if the current hub is V1 which we do not support heartbeat for
@@ -1043,3 +1088,5 @@ private getDevice(id) {
 	}
 	return device
 }
+
+
