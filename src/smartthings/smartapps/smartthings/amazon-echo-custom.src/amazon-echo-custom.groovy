@@ -21,8 +21,8 @@ definition(
 
 // // Uncomment the provisioning URL for the instance this SmartApp services
 
-@Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.2bdbc74f-ce4d-4e2d-b741-326c7ba358f0%3Bstage%3Dlive' // certification superuser instance
-// @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.e706fbba-7f07-441a-b264-a01175dae7a5%3Bstage%3Dlive' // Home Skill RC
+@Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.2bdbc74f-ce4d-4e2d-b741-326c7ba358f0%3Bstage%3Dlive' // Custom Skill RC superuser instance
+// @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.e706fbba-7f07-441a-b264-a01175dae7a5%3Bstage%3Dlive' // Home Skill RC superuser instance
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.2130fb6c-7e17-41e1-9735-f99602bcddba%3Bstage%3Ddevelopment' // test-prod superuser instance
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.5c7bce44-5049-4d92-b9a3-f8b1f3a5a496%3Bstage%3Ddevelopment' // kshuk - home + custom
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.214e2164-ce6e-42ba-9dc2-88af56c2df80%3Bstage%3Ddevelopment' // kshuk - home only
@@ -128,6 +128,8 @@ definition(
 import groovy.transform.Field
 import static groovy.json.JsonOutput.*
 
+// setSimpleLogLevel('trace') // comment to dial simpleLog logging back to 'warn'
+
 @Field String CUSTOM_SKILL_RESPONSE_FORMAT_VERSION = "1.0"
 @Field final Integer LOW_BATTERY_PCT = 25
 
@@ -138,13 +140,14 @@ preferences(oauthPage: "oauthPage") {
 
     // This is a static page for generating the OAUTH page - this is not shown in the SmartApp
     page(name: "oauthPage", title: "", install: true) {
+        simpleLog('trace', 'page oauthPage')
         section("") {
-            input "allEnabled", type: "enum", options: [[(true): "All devices shown below"]], title: "Grant access to all devices?", defaultValue: false, multiple: false, required: false
-            paragraph title: "Or choose individual devices below", ""
-            input "switches", "capability.switch", title: "Select Switches", multiple: true, required: false
-            input "thermostats", "capability.thermostat", title: "Select Thermostats", multiple: true, required: false
-            input "locks", "capability.lock", title: "Select Locks", multiple: true, required: false
-            // TODO: uncomment for routines // input "routinesEnabled", options: [[(true): "Yes"]], type: "enum", title: "Enable Routines?", defaultValue: false, multiple: false, required: false
+            input "allEnabled", type: "enum", title: "Access to all devices", options: [[(true): "All devices"]], defaultValue: false, multiple: false, required: false
+            paragraph title: "No, I wish to choose which items listed below...", ""
+            input "switches", "capability.switch", title: "Switches", multiple: true, required: false
+            input "thermostats", "capability.thermostat", title: "Thermostats", multiple: true, required: false
+            input "locks", "capability.lock", title: "Locks", multiple: true, required: false
+            // TODO: uncomment for routines // input "routinesEnabled", type: "enum", title: "Routines", options: [[(true): "All Routines (Note: At this time, Amazon will only support lighting and thermostat devices in a routine)"]], defaultValue: false, multiple: false, required: false
         }
     }
 
@@ -153,6 +156,7 @@ preferences(oauthPage: "oauthPage") {
     page(name: "instructionPage", content: "buildInstructionPage", install: true)
 
     page(name: "helpPage", title: "Help") {
+        simpleLog('trace', 'page helpPage')
         section("Knowledgebase Articles") {
             href(
                 name: "href_kb_205275404",
@@ -170,8 +174,8 @@ preferences(oauthPage: "oauthPage") {
     }
 
     // Separate page for uninstalling, we dont want the user to accidentaly uninstall since the app can only be automatically reinstalled
-    page(name: "uninstallPage", title: "Uninstall", uninstall: true, nextPage: "deviceAuthorization") {
-
+    page(name: "uninstallPage", title: "Uninstall", uninstall: true) {
+        simpleLog('trace', 'page uninstallPage')
         section("") {
             paragraph '''\
 If you uninstall this SmartApp, remember to unlink your SmartThings account from Alexa:
@@ -188,27 +192,37 @@ If you uninstall this SmartApp, remember to unlink your SmartThings account from
  * @method firstPage
  * @return dynamicPage object
  */
- private def chooseFirstPage() {
-     if (state?.showLandingPage != false && state?.showLandingPage != true) {
-         state.showLandingPage = true
-     }
-     log.trace "in chooseFirstPage() state.showLandingPage == ${state.showLandingPage}"
-     if (state?.recentInstall == true) {
-         state.recentInstall = false
-         buildInstructionPageFP()
-     } else if (state.showLandingPage) {
-         buildLandingPage()
-     } else {
-         buildDeviceAuthorizationPageFP()
-     }
- }
+private def chooseFirstPage() {
+    simpleLog('debug', "app.installationState is currently: ${app?.installationState}")
+    def firstPage
+    Boolean showLandingPage = true
+    if (state?.showLandingPage != null) {
+        showLandingPage = booleanize(state?.showLandingPage)
+    }
+    if (app?.installationState == "COMPLETE") {
+        // app has already been installed - don't show landing page
+        showLandingPage = false
+    }
+    state.showLandingPage = showLandingPage // save back to state
+
+    simpleLog('trace', "chooseFirstPage(); showLandingPage == ${showLandingPage}; state.recentInstall == ${state.recentInstall}")
+    if (booleanize(state?.recentInstall) == true) {
+        state.recentInstall = false
+        firstPage = buildInstructionPageFP()
+    } else if (showLandingPage) {
+        firstPage = buildLandingPage()
+    } else {
+        firstPage = buildDeviceAuthorizationPageFP()
+    }
+    return firstPage
+}
 
 
 private def buildLandingPage() {
-
     dynamicPage(name: "firstPage", title: "Use your Amazon Echo with SmartThings", install: true) {
+        simpleLog('trace', 'dynamicPage landingPage')
         section("What's an Amazon Echo?") {
-              image(name: "heroImage",
+            image(name: "heroImage",
             title: "Amazon Alexa + SmartThings",
             required: false,
             image: "https://dl.dropboxusercontent.com/u/14683815/st/alexa/amazon-echo-683x405-d.png")
@@ -222,7 +236,7 @@ Use Echo to switch on the lamp before getting out of bed, turn on the fan or spa
 
 Echo works with devices such as lights, switches, thermostats, and more, including SmartThings Routines. And, with our custom skill, SmartThings Extras, you'll also be able to control locks and Smart Home Monitoring.'''
 
-            element(   name: "videoElement",
+            element(name: "videoElement",
                 element: "video",
                 type:   "video",
                 title: "Just ask Alexa",
@@ -237,13 +251,13 @@ Echo works with devices such as lights, switches, thermostats, and more, includi
 
 private def emitProvisioningUrlHref() {
     href(name: "href_provision",
-         title: "Tap to Link Alexa",
-         required: false,
-         style: "embedded",
-         description: "This will create a SmartApp in your SmartThings account",
-         image: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
-         url: AVS_SKILL_PROVISIONING_URL,
-         state: "complete")
+        title: "Tap to Link Alexa",
+        required: false,
+        style: "embedded",
+        description: "This will create a SmartApp in your SmartThings account",
+        image: "https://s3.amazonaws.com/smartapp-icons/Convenience/App-AmazonEcho.png",
+        url: AVS_SKILL_PROVISIONING_URL,
+        state: "complete")
 }
 
 private def buildDeviceAuthorizationPageFP() {
@@ -257,15 +271,15 @@ private def buildDeviceAuthorizationPage() {
     // Initial page where user can pick which switches should be available to Alexa
     // Assumption is that level switches all support regular switch as well. This is to avoid
     // having two inputs that might confuse the user
-    log.debug "settings.allEnabled value is: ${settings?.allEnabled}. as Boolean: ${isBlanketAuthorized()}"
+    simpleLog('debug', "settings.allEnabled value is: ${settings?.allEnabled}. as Boolean: ${isBlanketAuthorized()}")
     return dynamicPage(name: "deviceAuthorizationPage", title: "Device Authorization", nextPage: "instructionPage") {
-         fillDeviceAuthorizationPage()
+        fillDeviceAuthorizationPage()
     }
 }
 
 
 private def fillDeviceAuthorizationPage() {
-
+    simpleLog('trace', 'dynamicPage deviceAuthorizationPage')
     section("") {
         // String blanketAllEnabled = "Alexa can access\nall devices and routines" // TODO: uncomment for routines
         // String blanketSelectOnly = "Alexa can access\n only the devices and routines\n selected below" // TODO: uncomment for routines
@@ -278,21 +292,28 @@ private def fillDeviceAuthorizationPage() {
 
     if (!isBlanketAuthorized()) {
         section("SmartThings Optimized for Smart Home") {
-            input "switches", "capability.switch", title: "Selected Switches", multiple: true, required: false
-            input "thermostats", "capability.thermostat", title: "Selected Thermostats", multiple: true, required: false
+            input "switches", "capability.switch", title: "Switches", multiple: true, required: false
+            input "thermostats", "capability.thermostat", title: "Thermostats", multiple: true, required: false
             // TODO: uncomment for routunes // input "routinesEnabled", "bool", title: "Routines", description: "Select routines", required: false
         }
         section("SmartThings Extras") {
-            input "locks", "capability.lock", title: "Selected Locks", multiple: true, required: false
+            input "locks", "capability.lock", title: "Locks", multiple: true, required: false
         }
     }
 
     section("") {
+        href(name: "href_continue",
+                title: "Continue",
+                state: 'complete',
+                required: false,
+                description: "",
+                page: "instructionPage")
         href(name: "href_help",
                 title: "Help",
                 required: false,
                 description: "",
                 page: "helpPage")
+        paragraph "\n"
         href(name: "href_uninstall",
                 title: "Uninstall",
                 required: false,
@@ -314,10 +335,11 @@ private def buildInstructionPage() {
 }
 
 private def fillInstructionPage() {
+    simpleLog('trace', 'dynamicPage instructionPage')
     section("") {
         paragraph "You have made a change to your device list.\n\n" +
-                "Now complete device discovery by saying the following to your Alexa device:"
-        paragraph title: "\"Alexa, discover new devices\"", ""
+                "Now complete device discovery by saying the following to Alexa:"
+        paragraph title: "\"Alexa, discover my devices\"", ""
         paragraph 'Finally, tap "Done" in the upper right corner'
     }
 }
@@ -327,37 +349,64 @@ private def fillInstructionPage() {
  * @method isBlanketAuthorized
  * @return Value of settings.allEnabled forced to a Boolean
  */
- Boolean isBlanketAuthorized() {
-     return booleanize(settings?.allEnabled)
- }
+Boolean isBlanketAuthorized() {
+    return booleanize(settings?.allEnabled)
+}
 
- /**
-  * Returns the value of settings.allEnabled always as a Boolean, no matter how settings stores it.
-  * @method areRoutinesEnabled
-  * @return Value of settings.routinesEnabled forced to a Boolean
-  */
- Boolean areRoutinesEnabled() {
-     return booleanize(settings?.routinesEnabled)
- }
+/**
+ * Returns the value of settings.allEnabled always as a Boolean, no matter how settings stores it.
+ * @method areRoutinesEnabled
+ * @return Value of settings.routinesEnabled forced to a Boolean
+ */
+Boolean areRoutinesEnabled() {
+    return booleanize(settings?.routinesEnabled)
+}
 
- /**
-  * Run allegedly boolean values through this in case it ends up being a string "true" or "false"
-  *  namely to avoid the fact that "false" == true
-  * @method booleanize
-  * @return Boolean coercion of input parameter
-  */
- Boolean booleanize(def inValue) {
-     return (inValue != null && inValue[0] == "true") || "$inValue".toBoolean()
- }
+/**
+ * Evaluates a collection as a Boolean by considering the first value
+ * @method booleanize
+ * @param inValue  A collection for which the first element will be put through general booleanize()
+ * @return Boolean coercion of input parameter
+ */
+Boolean booleanize(Collection inCollection) {
+    simpleLog('trace', "booleanize('$inCollection') - (Collection)")
+    def inValue
+    if (inCollection != null && !inCollection.isEmpty() ) {
+        inValue = inCollection[0]
+    } else {
+        inValue = "${inCollection}"
+    }
+    return booleanize(inValue)
+}
+
+/**
+ * Evaluates a value as a boolean by first forcing to a string. If the string is either '1' or
+ * 'true' (case insensitive), the return will be true (Boolean), otherwise false (Boolean)
+ *  namely to avoid the fact that "false" == true
+ *
+ * @method booleanize
+ * @param  inValue Any scalar value
+ * @return         Boolean evaluation of string representation of input parameter
+ */
+Boolean booleanize(def inValue) {
+    simpleLog('trace', "booleanize('$inValue')")
+    Boolean outBoolean
+    try {
+        outBoolean = "$inValue".toBoolean()
+    } catch (Exception ex) {
+        outBoolean = false
+        simpleLog('warn', "booleanize failure on value '$inValue'; returning 'false'; exception: ", ex)
+    }
+    return outBoolean
+}
 
 mappings {
-
     // handle custom skill
     path("/custom") {
         action:
         [
-                GET:  "customGet",
-                POST: "customPost"
+            GET:  "customGet",
+            POST: "customPost"
         ]
     }
 
@@ -365,7 +414,7 @@ mappings {
     path("/discovery") {
         action:
         [
-                GET: "discovery"
+            GET: "discovery"
         ]
     }
 
@@ -373,20 +422,20 @@ mappings {
     path("/control/:id/:command") {
         action:
         [
-                POST: "control"
+            POST: "control"
         ]
     }
     // set devices to specific level
     path("/control/:id/:command/:value") { //
         action:
         [
-                POST: "control"
+            POST: "control"
         ]
     }
 }
 
 def installed() {
-    log.trace "installed()"
+    simpleLog('trace', "installed()")
     // only flag recent install if state has no record of recent installs
     if (state?.recentInstall == null) {
         state.recentInstall = true
@@ -395,12 +444,12 @@ def installed() {
 }
 
 def updated() {
-    log.trace "updated()"
+    simpleLog('trace', "updated()")
     initialize()
 }
 
 def initialize() {
-    log.trace "initialize()"
+    simpleLog('trace', "initialize()")
     state.showLandingPage = false // we have been installed at this point
 
     if (!checkIfV1Hub()) {
@@ -419,6 +468,9 @@ def initialize() {
  * @return a list of available devices and each device's supported information
  */
 def discovery() {
+    // landing page is no longer relevant if we attempt
+    state.showLandingPage = false
+
     def switchList = getEnabledSwitches()?.collect { deviceItem(it) } ?: []
     def thermostatList = getEnabledThermostats()?.collect { deviceItem(it) } ?: []
 
@@ -426,7 +478,9 @@ def discovery() {
 
     setupHeartbeat()
 
-    log.debug "discovery ${applianceList}"
+    simpleLog('debug', "discovery ${applianceList}")
+    // never a recent install after discovery completes once
+    state.recentInstall = false
     // Format according to Alexa API
     [discoveredAppliances: applianceList]
 }
@@ -594,7 +648,7 @@ def customPost() {
 
     if (!isIntentValid(transactionIntentName)) {
         // Yes an No are only valid responses if the session indicates that it was an appropriate response
-        log.error "intent $transactionIntentName is invalid at this point in the session"
+        simpleLog('error', "intent $transactionIntentName is invalid at this point in the session")
         String badUtteranceResponse = "I'm sorry, I don't understand how that relates to what I'd asked. Let's start over if you'd like to try again."
         return buildNoCardResponse(badUtteranceResponse)
     }
@@ -617,8 +671,7 @@ def customPost() {
         }
     }
 
-    log.debug "intentName: $transactionIntentName; Interpreted Slots $interpretedSlots; isNewSession: $transactionIsNewSession"
-
+    simpleLog('debug', "intentName: $transactionIntentName; Interpreted Slots $interpretedSlots; isNewSession: $transactionIsNewSession")
     if (transactionIsNewSession) {
         // specific to locks
         if (transactionIntentName.startsWith('Lock') || transactionIntentName.startsWith('SHM')) {
@@ -628,7 +681,7 @@ def customPost() {
 
             if (transactionCandidateDevices.size() == 0) {
                 // User has no matching devices
-                log.debug "No devices having the $transactionDeviceKind capability are among the user's SmartThings devices"
+                simpleLog('debug', "No devices having the $transactionDeviceKind capability are among the user's SmartThings devices")
                 return buildCustomSkillResponse(titleText:"No $transactionDeviceKindPlural devices found", sayText:"Sorry, I couldn't find any $transactionDeviceKindPlural connected to your SmartThings setup.")
             } else if (interpretedSlots?.AllLocks != null || interpretedSlots?.MyHome != null || transactionCandidateDevices.size() == 1) {
                 if (interpretedSlots?.AllLocks != null || interpretedSlots?.MyHome != null) {
@@ -655,7 +708,7 @@ def customPost() {
         }
 
         if (transactionSessionAttributes?.deviceIds) {
-            log.debug "Evaluating each known device to see if it matches an ID in ${transactionSessionAttributes.deviceIds}"
+            simpleLog('debug', "Evaluating each known device to see if it matches an ID in ${transactionSessionAttributes.deviceIds}")
             transactionDevices = []
             transactionCandidateDevices.each {
                 device ->
@@ -743,12 +796,12 @@ def customPost() {
             responseToLambda = stopCommandHandler()
             break
         default:
-            log.warn 'could not determine which kind of device this command is for'
+            simpleLog('warn', 'could not determine which kind of device this command is for')
             responseToLambda = buildCustomSkillResponse(sayText:"I'm not sure what you wanted me to do.")
             break
     }
 
-    log.debug "Returning this to the Lambda function:\n${prettyPrint(toJson(responseToLambda))}"
+    simpleLog('debug', "Returning this to the Lambda function:\n${prettyPrint(toJson(responseToLambda))}")
     return responseToLambda
 }
 
@@ -781,18 +834,17 @@ def control() {
     def command = params.command
     def device = getDeviceById(params.id)
 
-    log.debug "control, params: ${params}, request: ${data}, devices: ${devices*.id} params.id: ${params?.id} params.command: ${params?.command} params.value: ${params?.value}"
-
+    simpleLog('debug', "control, params: ${params}, request: ${data}, devices: ${devices*.id} params.id: ${params?.id} params.command: ${params?.command} params.value: ${params?.value}")
     if (!command) {
         // TODO There might be a better error code for this in the future
         response << [error: "DriverInternalError", payload: [:]]
-        log.error "Command missing"
+        simpleLog('error', "Command missing")
     } else if (!device) {
         response << [error: "NoSuchTargetError", payload: [:]]
-        log.error "Device ${params?.id} is not found"
+        simpleLog('error', "Device ${params?.id} is not found")
     } else if (!checkDeviceOnLine(device)) {
         response << [error: "TargetOfflineError", payload: [:]]
-        log.warn "$device is offline"
+        simpleLog('warn', "$device is offline")
     } else {
         // Set if command is to increase or decrease a value
         def changeValue = 0;
@@ -826,7 +878,7 @@ def control() {
 
             default:
                 // TODO There might be a better error code for this in the future
-                log.error "$command is an unknown command"
+                simpleLog('error', "$command is an unknown command")
                 response << [error: "DriverInternalError", payload: [:]]
         }
     }
@@ -993,21 +1045,20 @@ def unlockFailCommandHandler(def singleDevice) {
 }
 
 def unlockFailCommandHandler() {
-    log.warn "Unlock operation *** NOT PERMITTED"
+    simpleLog('warn', "Unlock operation *** NOT PERMITTED")
     return buildSecurityDisallowResponse("Unlock is currently not permitted")
 }
 
 @Field final List KNOWN_LOCK_STATES = ['locked', 'unlocked']
 
 def lockCommandHandler(List deviceList=[]) {
-    log.trace "lockCommandHandler($deviceList)"
+    simpleLog('trace', "lockCommandHandler($deviceList)")
     Map responseDataMap = lockAction(deviceList)
     return buildCustomSkillResponse(responseDataMap)
 }
 
 Map lockAction(List deviceList=[]) {
-    log.trace "lockAction($deviceList)"
-
+    simpleLog('trace', "lockAction($deviceList)")
     if (!deviceList && transactionCandidateDevices.size() >= 1) {
         transactionSessionAttributes.initialIntent = transactionIntentName
         String outputText = ""
@@ -1084,8 +1135,7 @@ Map lockAction(List deviceList=[]) {
 }
 
 def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
-    log.trace "lockStatusHandler($deviceList)"
-
+    simpleLog('trace', "lockStatusHandler($deviceList)")
     if (!deviceList && transactionCandidateDevices.size() >= 1) {
         transactionSessionAttributes.initialIntent = transactionIntentName
         String outputText = ""
@@ -1134,7 +1184,7 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
     String confirmDeny = ""
     if (queriedStatus) {
         confirmDeny = "No. "
-        log.debug "queriedStatus: $queriedStatus; statesWithDevices: $statesWithDevices}"
+        simpleLog('debug', "queriedStatus: $queriedStatus; statesWithDevices: $statesWithDevices}")
         if (statesWithDevices.size() == 1 && queriedStatus == statesWithDevices[0]) {
             confirmDeny = "Yes. "
         }
@@ -1182,7 +1232,7 @@ def lockStatusHandler(List deviceList=[], String queriedStatus=null) {
  * @return  AVS Custom Skill response formatted map (will be converted to JSON)
  */
 def lockQueryHandler(def singleDevice, String queryState) {
-    log.trace "lockQueryHandler(${singleDevice.displayName}, $queryState)"
+    simpleLog('trace', "lockQueryHandler(${singleDevice.displayName}, $queryState)")
     Set lockCapabilityStates = ['locked', 'unlocked']
     Set lockedSynonyms = ['locked', 'closed', 'shut']
     Set unlockedSynonyms = ['unlocked', 'opened', 'open']
@@ -1192,7 +1242,7 @@ def lockQueryHandler(def singleDevice, String queryState) {
         normalQueryState = 'unlocked'
     } else if (!lockedSynonyms.contains(queryState.toLowerCase())) {
         // canonicalLockState is still locked
-        log.warn "We don't know about the lock state queried: $queryState. Assuming it means 'locked'"
+        simpleLog('warn', "We don't know about the lock state queried: $queryState. Assuming it means 'locked'")
     }
 
     def deviceCurrentState = singleDevice?.currentValue('lock')?.toLowerCase()?:'unknown'
@@ -1221,7 +1271,7 @@ def lockQueryHandler(def singleDevice, String queryState) {
 }
 
 Map buildSingleLockFollowupDialogResponse(Map responseData=[:], def singleDevice) {
-    log.trace "buildSingleLockFollowupDialogResponse($responseData, $singleDevice)"
+    simpleLog('trace', "buildSingleLockFollowupDialogResponse($responseData, $singleDevice)")
     if (responseData?.titleText?.isEmpty()) {
         responseData.titleText = "Is my door locked/unlocked?"
     }
@@ -1302,7 +1352,7 @@ def String batteryStatusReminder(List devices = null) {
 }
 
 def batteryStatusCommand(List deviceList) {
-    log.trace "batteryStatusCommand($deviceList)"
+    simpleLog('trace', "batteryStatusCommand($deviceList)")
     String statusTarget = "my devices"
     String title = "What is the battery status "
     String outputText = ""
@@ -1377,13 +1427,13 @@ def armHomeCommandHandler() {
 }
 
 def armSHMCommandHandler() {
-    log.trace "armSHMCommandHandler()"
+    simpleLog('trace', "armSHMCommandHandler()")
     Map responseDataMap = armSHMAction()
     return buildCustomSkillResponse(responseDataMap)
 }
 
 Map armSHMAction() {
-    log.trace "armSHMAction()"
+    simpleLog('trace', "armSHMAction()")
     Map targetSHMStatus = newSHMStatus(AlarmStatusDef.STAY) // desired state
     Map beforeSHMStatus = querySHMStatus() // current state
 
@@ -1406,8 +1456,8 @@ Map armSHMAction() {
 }
 
 def disarmSHMCommandHandler() {
-    log.trace "disarmSHMCommandHandler()"
-    log.warn "Disarm operation *** NOT PERMITTED"
+    simpleLog('trace', "disarmSHMCommandHandler()")
+    simpleLog('warn', "Disarm operation *** NOT PERMITTED")
     return buildSecurityDisallowResponse("Disarming Secure Home Monitor is currently not permitted")
 }
 
@@ -1416,7 +1466,7 @@ def disarmSHMCommandHandler() {
 @Field final Map AlarmStatusDef = [ STAY: 'stay', AWAY: 'away', DISARMED: 'off', OFF: 'off']
 
 def shmStatusCommandHandler(String shmStateValue) {
-    log.trace "shmStatusCommandHandler($shmStateValue)"
+    simpleLog('trace', "shmStatusCommandHandler($shmStateValue)")
     Map shmStatus = querySHMStatus()
 
     def outputText = "No, "
@@ -1429,7 +1479,7 @@ def shmStatusCommandHandler(String shmStateValue) {
 }
 
 def shmStatusCommandHandler() {
-    log.trace "shmStatusCommandHandler()"
+    simpleLog('trace', "shmStatusCommandHandler()")
     Map shmStatus = querySHMStatus()
     return buildCustomSkillResponse(titleText: "What is the status of Smart Home Monitor?", sayText: shmStatus.getStatusSpeech(), checkBattery:true)
 }
@@ -1450,7 +1500,7 @@ Map newSHMStatus(String alarmSystemStatus) {
             shmStat.substate = null
             break
         default:
-            log.warn "SHM alarmSystemStatus of '$alarmSystemStatus' is invalid"
+            simpleLog('warn', "SHM alarmSystemStatus of '$alarmSystemStatus' is invalid")
             shmStat.state = "$SHMStateDef.UNKNOWN"
             shmStat.substate = null
             break
@@ -1596,7 +1646,7 @@ Boolean isIntentValid(String intentName=null) {
     if (intentName && validIntents && validIntents.contains(intentName)) {
         return true
     }
-    log.warn "Intent $intentName is not among the list of valid intenets at this point: $validIntents"
+    simpleLog('warn', "Intent $intentName is not among the list of valid intenets at this point: $validIntents")
     return false
 }
 
@@ -1629,7 +1679,7 @@ String deviceIndicator(Integer howMany, String singularInd="this $transactionDev
 }
 
 String convoList(List listOfStrings, String conjunction="and") {
-    log.trace "convoList($listOfStrings, $conjunction)"
+    simpleLog('trace', "convoList($listOfStrings, $conjunction)")
     String conversationalList = ""
     Integer numStringsToJoin = listOfStrings.size()
     Integer ctr = numStringsToJoin
@@ -1660,7 +1710,7 @@ String convoList(List listOfStrings, String conjunction="and") {
  */
 def onOffCommand(device, turnOn, response) {
     if (turnOn) {
-        log.debug "Turn on $device"
+        simpleLog('debug', "Turn on $device")
         if (device.currentSwitch == "on") {
             // Call on() anyways just in case platform is out of sync and currentLevel is wrong
             response << [error: "AlreadySetToTargetError", payload: [:]]
@@ -1672,7 +1722,7 @@ def onOffCommand(device, turnOn, response) {
             device.on()
         }
     } else {
-        log.debug "Turn off $device"
+        simpleLog('debug', "Turn off $device")
         if (device.currentSwitch == "off") {
             // Call off() anyways just in case platform is out of sync and currentLevel is wrong
             response << [error: "AlreadySetToTargetError", payload: [:]]
@@ -1699,14 +1749,14 @@ def setPercentageCommand(device, value, changeValue, changeSign, response) {
     Float newLevel = Float.parseFloat(value)
 
     if (changeValue != 0) {
-        log.debug "Change $device level with ${changeValue * changeSign}"
+        simpleLog('debug', "Change $device level with ${changeValue * changeSign}")
     } else {
-        log.debug "Set $device level to $newLevel"
+        simpleLog('debug', "Set $device level to $newLevel")
     }
 
     if (!device.hasCapability("Switch Level")) {
         response << [error: DriverInternalError, payload: [:]]
-        log.error "$device does not support this command"
+        simpleLog('error', "$device does not support this command")
     } else if (changeValue != 0) {
         newLevel = device.currentLevel
         // If device is off, brighten should start from 0 and not current value
@@ -1720,8 +1770,7 @@ def setPercentageCommand(device, value, changeValue, changeSign, response) {
         } else if (newLevel < 0) {
             newLevel = 0
         }
-        log.debug "Change $device to $newLevel (diff=${changeValue * changeSign}, currentValue=$device.currentLevel)"
-
+        simpleLog('debug', "Change $device to $newLevel (diff=${changeValue * changeSign}, currentValue=$device.currentLevel)")
         if (device.currentLevel == newLevel) {
             // Call setLevel anyways just in case platform is out of sync and currentLevel is wrong
             response << [error: "AlreadySetToTargetError", payload: [:]]
@@ -1729,7 +1778,7 @@ def setPercentageCommand(device, value, changeValue, changeSign, response) {
         device.setLevel(newLevel)
     } else if (newLevel < 0 || newLevel > 100) {
         response << [error: "ValueOutOfRangeError", payload: [minimumValue: 0, maximumValue: 100]]
-        log.error "Level $newLevel is outside of allowed range, (0-100)"
+        simpleLog('error', "Level $newLevel is outside of allowed range, (0-100)")
     } else {
         if (device.currentLevel == newLevel) {
             // Call setLevel anyways just in case platform is out of sync and currentLevel is wrong
@@ -1798,7 +1847,7 @@ def isTemperatureWithinRange(device, Float temperature, response) {
 
     if (min != max && (temperature < min || temperature > max)) {
         response << [error: "ValueOutOfRangeError", payload: [minimumValue: toCelsius(min), maximumValue: toCelsius(max)]]
-        log.error "Temperature $temperature is outside of allowed range, ($min-$max)"
+        simpleLog('error', "Temperature $temperature is outside of allowed range, ($min-$max)")
         return false
     }
     return true
@@ -1816,21 +1865,20 @@ def isTemperatureWithinRange(device, Float temperature, response) {
 def setTemperatureCommand(device, value, changeValue, changeSign, response) {
     Float newTemp = Float.parseFloat(value)
     if (changeValue != 0) {
-        log.debug "Change $device temperature with ${changeValue * changeSign}"
+        simpleLog('debug', "Change $device temperature with ${changeValue * changeSign}")
     } else {
-        log.debug "Set $device temperature to $newTemp"
+        simpleLog('debug', "Set $device temperature to $newTemp")
     }
 
     if (!device.hasCapability("Thermostat")) {
         response << [error: "DriverInternalError", payload: [:]]
-        log.error "$device does not support this command"
+        simpleLog('error', "$device does not support this command")
     } else {
-        log.debug "Mode: $device.currentThermostatMode TemperatureScale: ${getTemperatureScale()}"
-
+        simpleLog('debug', "Mode: $device.currentThermostatMode TemperatureScale: ${getTemperatureScale()}")
         switch (device.currentThermostatMode) {
             case "emergency heat":
             case "heat":
-                log.debug "currentHeatingSetpoint: $device.currentHeatingSetpoint currentThermostatSetpoint: $device.currentThermostatSetpoint"
+                simpleLog('debug', "currentHeatingSetpoint: $device.currentHeatingSetpoint currentThermostatSetpoint: $device.currentThermostatSetpoint")
                 if (changeValue != 0) {
                     if (getTemperatureScale() == "F")
                         newTemp = cToF(fToC(device.currentHeatingSetpoint) + (changeValue * changeSign))
@@ -1844,14 +1892,14 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
                 if (newTemp == device.currentHeatingSetpoint) {
                     response << [error: "AlreadySetToTargetError", payload: [:]]
                 } else if (isTemperatureWithinRange(device, newTemp, response)) {
-                    log.debug "set to $newTemp (heat)"
+                    simpleLog('debug', "set to $newTemp (heat)")
                     newTemp = newTemp.round()
                     response << [targetTemperature: [value: "${toCelsius(newTemp)}"], temperatureMode: [value: "Heating"]]
                     device.setHeatingSetpoint(newTemp)
                 }
                 break;
             case "cool":
-                log.debug "currentCoolingSetpoint: $device.currentCoolingSetpoint currentThermostatSetpoint: $device.currentThermostatSetpoint"
+                simpleLog('debug', "currentCoolingSetpoint: $device.currentCoolingSetpoint currentThermostatSetpoint: $device.currentThermostatSetpoint")
                 if (changeValue != 0) {
                     if (getTemperatureScale() == "F")
                         newTemp = cToF(fToC(device.currentCoolingSetpoint) + (changeValue * changeSign))
@@ -1865,13 +1913,13 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
                 if (newTemp == device.currentCoolingSetpoint) {
                     response << [error: "AlreadySetToTargetError", payload: [:]]
                 } else if (isTemperatureWithinRange(device, newTemp, response)) {
-                    log.debug "set to $newTemp (cool)"
+                    simpleLog('debug', "set to $newTemp (cool)")
                     response << [targetTemperature: [value: "${toCelsius(newTemp)}"], temperatureMode: [value: "Cooling"]]
                     device.setCoolingSetpoint(newTemp)
                 }
                 break;
             case "auto":
-                log.debug "currentHeatingSetpoint: $device.currentHeatingSetpoint currentCoolingSetpoint: $device.currentCoolingSetpoint currentThermostatSetpoint: $device.currentThermostatSetpoint"
+                simpleLog('debug', "currentHeatingSetpoint: $device.currentHeatingSetpoint currentCoolingSetpoint: $device.currentCoolingSetpoint currentThermostatSetpoint: $device.currentThermostatSetpoint")
                 if (changeValue != 0) {
                     if (getTemperatureScale() == "F")
                         newTemp = cToF(fToC(device.currentThermostatSetpoint) + (changeValue * changeSign))
@@ -1882,7 +1930,7 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
                 }
                 newTemp = newTemp.round()
 
-                log.debug "set to $newTemp (auto)"
+                simpleLog('debug', "set to $newTemp (auto)")
                 if (newTemp == device.currentThermostatSetpoint) {
                     response << [error: "AlreadySetToTargetError", payload: [:]]
                 } else if (isTemperatureWithinRange(device, newTemp, response)) {
@@ -1893,11 +1941,11 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
                 break;
             case "off":
                 response << [error: "UnwillingToSetValueError", payload: [errorInfo: [code: "ThermostatIsOff", description: "Thermostat is in Off mode"]]]
-                log.warn "$device is Off"
+                simpleLog('warn', "$device is Off")
                 break;
             default:
                 response << [error: "NotSupportedInCurrentModeError", payload: [currentDeviceMode: "OTHER"]]
-                log.error "Unsupported thermostat mode"
+                simpleLog('error', "Unsupported thermostat mode")
         }
     }
 }
@@ -1910,33 +1958,33 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
   * Setup heartbeat service that will periodically poll heartbeat supported devices that have not been polled or checked in
   * in a timely manner.
   */
- def setupHeartbeat() {
-     // Reset exists flag for all current heartbeat devices, used to see if previously existing devices have been removed
-     state.heartbeatDevices?.each {
-         it.value?.exists = false
-     }
+def setupHeartbeat() {
+    // Reset exists flag for all current heartbeat devices, used to see if previously existing devices have been removed
+    state.heartbeatDevices?.each {
+        it.value?.exists = false
+    }
 
-     // Setup device health poll, store a list of device ids and online status for all supported device type handlers
-     // Devices are checked every 30 min, and offline devices are polled every 2h
-     // (4 cycles of 30 min each, offline refresh() is done on cycle 0)
-     getEnabledSwitches()?.each {
-         def timeout = getDeviceHeartbeatTimeout(it)
-         if (timeout > 0) {
-             if (state.heartbeatDevices[it.id] != null) {
-                 state.heartbeatDevices[it.id].exists = true
-             } else {
-                 state.heartbeatDevices[it.id] = [online: checkDeviceOnLine(it), timeout: timeout, exists: true, pollCycle: 0]
-             // , label: it.label ?: it.name (useful for debugging)
-             }
-         }
-     }
+    // Setup device health poll, store a list of device ids and online status for all supported device type handlers
+    // Devices are checked every 30 min, and offline devices are polled every 2h
+    // (4 cycles of 30 min each, offline refresh() is done on cycle 0)
+    getEnabledSwitches()?.each {
+        def timeout = getDeviceHeartbeatTimeout(it)
+        if (timeout > 0) {
+            if (state.heartbeatDevices[it.id] != null) {
+                state.heartbeatDevices[it.id].exists = true
+            } else {
+                state.heartbeatDevices[it.id] = [online: checkDeviceOnLine(it), timeout: timeout, exists: true, pollCycle: 0]
+                // , label: it.label ?: it.name (useful for debugging)
+            }
+        }
+    }
 
-     // Remove heartbeat devices that we previously flagged as non existing
-     def toRemove = state.heartbeatDevices?.find {!it.value?.exists}
-     toRemove?.each {
-          state.heartbeatDevices.remove(it.key)
-     }
- }
+    // Remove heartbeat devices that we previously flagged as non existing
+    def toRemove = state.heartbeatDevices?.find {!it.value?.exists}
+    toRemove?.each {
+        state.heartbeatDevices.remove(it.key)
+    }
+}
 
 /**
  * Every 30 min cycle Amazon Alexa SmartApp will for each heartbeat device:
@@ -1976,7 +2024,7 @@ def deviceHeartbeatCheck() {
                     state.heartbeatDevices[it.id]?.online = true
                     if (it.hasCapability("Refresh")) {
                         it.refresh([delay: delayCounter++ * 1000])
-                        log.debug "refreshing $it å(regular poll)"
+                        simpleLog('debug', "refreshing $it å(regular poll)")
                     }
                 } else {
                     // Device did not report in, mark as offline and if cycle 0 or it was previously online, then issue a refresh() command
@@ -1984,7 +2032,7 @@ def deviceHeartbeatCheck() {
                     state.heartbeatDevices[it.id]?.online = false
                     if ((previousStatus || state.heartbeatDevices[it.id].pollCycle == 0) && it.hasCapability("Refresh")) {
                         it.refresh([delay: delayCounter++ * 1000])
-                        log.debug "refreshing $it (one time or first cycle) ($delayCounter)"
+                        simpleLog('debug', "refreshing $it (one time or first cycle) ($delayCounter)")
                     }
                 }
             } else {
@@ -2051,7 +2099,7 @@ private getDeviceHeartbeatTimeout(device) {
     } catch (Exception e) {
         // Catching blanket exception here, only reason is that getData() above is dependent on privileged access and
         // we don't want to break device discovery if platform changes are made that breaks above code.
-        log.error "Heartbeat device lookup failed: $e"
+        simpleLog('error', "Heartbeat device lookup failed: $e")
     }
     return timeout
 }
@@ -2199,7 +2247,7 @@ private getDeviceById(id) {
 }
 
 private getDeviceByName(String spokenDeviceName) {
-    log.debug "Evaluating each authorized device name to see if it matches $spokenDeviceName"
+    simpleLog('debug', "Evaluating each authorized device name to see if it matches $spokenDeviceName")
     List deviceNameCompLog = []
     List foundDevices = []
     transactionCandidateDevices.each {
@@ -2223,4 +2271,57 @@ private Boolean compareDeviceNames(String left='', String right='') {
         return true
     }
     return false
+}
+
+////
+// simpleLog related code
+////
+
+// My kingdom for a horse^H^H^H^H^H^H^H real encapsulation!!
+@Field final List SIMPLE_LOG_LEVELS = ['error', 'warn', 'info', 'debug', 'trace'] // leg levels from most to least urgent
+@Field final String DEFAULT_SIMPLE_MSG_LEVEL = SIMPLE_LOG_LEVELS[2] // log msg at this level if level invalid or omitted
+@Field final String DEFAULT_SIMPLE_LOG_LEVEL = SIMPLE_LOG_LEVELS[1] // default level simpleLog will log at if not set
+@Field String currentSimpleLogLevel = DEFAULT_SIMPLE_LOG_LEVEL //
+
+/**
+ * Emit log message with optional throwable only if message level is equal or more urgent than
+ * currentSimpleLogLevel
+ * @method simpleLog
+ * @param {String}      msgLevel    level to log this message at; one of SIMPLE_LOG_LEVELS
+ * @param {String}      logMsg      message to be logged
+ * @param {Throwable}   ex          exception object of type Throwable (optional; for logging a caught
+ *                                  exception)
+ */
+private void simpleLog(String msgLevel=DEFAULT_SIMPLE_MSG_LEVEL, String logMsg, Throwable ex=null) {
+    Integer logLevelValue = SIMPLE_LOG_LEVELS.indexOf(currentSimpleLogLevel)
+    Integer msgLevelValue = SIMPLE_LOG_LEVELS.indexOf(msgLevel.toLowerCase())
+    if (msgLevelValue < 0) {
+        if (msgLevel) {
+            log.warn "simpleLog: no such log level '$msgLevel'. Logging message as '$DEFAULT_SIMPLE_MSG_LEVEL' instead."
+        }
+        msgLevelValue = SIMPLE_LOG_LEVELS.indexOf(DEFAULT_SIMPLE_MSG_LEVEL)
+    }
+
+    if (msgLevelValue <= logLevelValue) {
+        if (ex) {
+            log."${msgLevel}"(logMsg, ex)
+        } else {
+            log."${msgLevel}"(logMsg)
+        }
+    }
+}
+
+/**
+ * sets the minimum priority level at which simpleLog should emit log messages
+ * @method setSimpleLogLevel
+ * @param  {String} level   log level to set; one of SIMPLE_LOG_LEVELS; optional
+ * @return {String}         newly set or current simpleLog level
+ */
+private String setSimpleLogLevel(String level=null) {
+    if (level && SIMPLE_LOG_LEVELS.contains(level)) {
+        currentSimpleLogLevel = level
+    } else if (level) {
+        log.warn "simpleLog: no such log level '$level'. Leaving logLevel at '$currentSimpleLogLevel'."
+    }
+    return currentSimpleLogLevel
 }
