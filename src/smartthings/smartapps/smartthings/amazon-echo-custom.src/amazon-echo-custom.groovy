@@ -133,6 +133,8 @@ import static groovy.json.JsonOutput.*
 @Field String CUSTOM_SKILL_RESPONSE_FORMAT_VERSION = "1.0"
 @Field final Integer LOW_BATTERY_PCT = 25
 
+@Field final String HOME_SKILL_TYPE = 'home'
+@Field final String CUSTOM_SKILL_TYPE = 'custom'
 
 preferences(oauthPage: "oauthPage") {
     page(name: "firstPage", content: "chooseFirstPage")
@@ -823,15 +825,8 @@ def customPost() {
 def control() {
     def data = request.JSON
     def response = [:]
-
-    // Collect all devices
-    def devices = []
-    for (d in settings) {
-        if (d.value)
-            devices.addAll(d.value)
-    }
-
     def command = params.command
+
     def device = getDeviceById(params.id)
 
     simpleLog('debug', "control, params: ${params}, request: ${data}, devices: ${devices*.id} params.id: ${params?.id} params.command: ${params?.command} params.value: ${params?.value}")
@@ -2185,12 +2180,14 @@ def runHarmony(Map input) {
  * @return a list of all switches accessible to Alexa
  */
 private getEnabledSwitches() {
-    if (isBlanketAuthorized()) {
-        return findAllDevicesByCapability("switch")
-    } else {
-        return switches
-    }
+    // if (isBlanketAuthorized()) {
+    //     return findAllDevicesByCapability("switch")
+    // } else {
+    //     return switches
+    //
+	return getEnabledByCapability("switch", "switches")
 }
+registerCapability("switch", "switches", HOME_SKILL_TYPE)
 
 /**
  * Find all thermostats the user has given Alexa access to, either by selecting specific thermostats or by selecting
@@ -2199,12 +2196,16 @@ private getEnabledSwitches() {
  * @return a list of all thermostats accessible to Alexa
  */
 private getEnabledThermostats() {
-    if (isBlanketAuthorized()) {
-        return findAllDevicesByCapability("thermostat")
-    } else {
-        return thermostats
-    }
+    // if (isBlanketAuthorized()) {
+    //     return findAllDevicesByCapability("thermostat")
+    // } else {
+    //     return thermostats
+    // }
+	return getEnabledByCapability("thermostat", "thermostats")
+
 }
+registerCapability("thermostat", "thermostats", HOME_SKILL_TYPE)
+
 
 /**
  * Find all locks the user has given Alexa access to, either by selecting specific locks or by selecting
@@ -2213,12 +2214,52 @@ private getEnabledThermostats() {
  * @return a list of all locks accessible to Alexa
  */
 private getEnabledLocks() {
-    if (isBlanketAuthorized()) {
-        return findAllDevicesByCapability("lock")
-    } else {
-        return locks
-    }
+    // if (isBlanketAuthorized()) {
+    //     return findAllDevicesByCapability("lock")
+    // } else {
+    //     return locks
+    // }
+	return getEnabledByCapability("lock", "locks")
 }
+registerCapability("lock", "locks", CUSTOM_SKILL_TYPE)
+
+@Field Map smartHomeRegisteredCapabilities = [:]
+@Field Map customRegisteredCapabilities = [:]
+private void registerCapability(String capName, String settingsVarName, String skillType=null) {
+	if (skillType == HOME_SKILL_TYPE) {
+		smartHomeRegisteredCapabilities[capName] = settingsVarName
+	} else if (skillType == CUSTOM_SKILL_TYPE) {
+		customRegisteredCapabilities[capName] = settingsVarName
+	} else if (skillType == null) {
+		// register capability for both types
+		registerCapability(capName, settingsVarName, HOME_SKILL_TYPE)
+		registerCapability(capName, settingsVarName, CUSTOM_SKILL_TYPE)
+	} else {
+		simpleLog('warn', 'skillType of $skillType is invalid')
+	}
+}
+
+private List getEnabledByCapability(String capName, String settingsVarName) {
+	List enabledDevices = []
+	if (isBlanketAuthorized()) {
+		enabledDevices = findAllDevicesByCapability(capName)
+	} else {
+		enabledDevices = settings?."$settingsVarName"?:[]
+	}
+	return enabledDevices
+}
+
+// TODO - resume here 
+private List getEnabled(String skillType=null) {
+	List enabledDevices = []
+	Map capabilityMap = [:]
+	if (skillType == CUSTOM_SKILL_TYPE || skillType == null) {
+		capabilityMap.
+	}
+
+	return enabledDevices
+}
+
 
 /////////////////////////////////////////////////////////////////
 ////  Helper methods for finding devices by name or by id
