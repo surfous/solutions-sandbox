@@ -19,9 +19,13 @@ definition(
 		singleInstance: true
 )
 
-// Version 1.1.11
+
+// Version 1.1.12
 
 // Changelist:
+
+// 1.1.12
+// Add UK heartbeat devices
 
 // 1.1.11
 // Handle restricted routines:
@@ -886,59 +890,84 @@ def deviceHeartbeatCheck() {
  * @return number of minutes after last activity that the device should be considered offline for, or 0 if no support for heartbeat
  */
  private getDeviceHeartbeatTimeout(device) {
-	 def timeout = 0
+	def timeout = 0
+	String timeoutReason = "no heartbeat profile was found for ${device.name} (${device.getTypeName()})"
+	try {
+		String deviceTypeName = device.getTypeName()
+		switch (deviceTypeName) {
+			case "SmartPower Outlet":
+				// works for US and UK SmartPower Outlets
+				timeout = 35
+				timeoutReason = "device type is SmartPower Outlet"
+				break
+			case "Z-Wave Switch":
+			case "Z-Wave Switch Generic":
+			case "Dimmer Switch":
+			case "Z-Wave Dimmer Switch Generic":
+				def msr = "${device?.getZwaveInfo()?.mfr}-${device?.getZwaveInfo()?.prod}-${device?.getZwaveInfo()?.model}"
+				if (msr != null) {
+					switch (msr) {
+						case "001D-1B03-0334":  // ZWAVE Leviton In-Wall Switch (dimmable) (DZMX1-1LZ)
+						case "001D-1C02-0334":  // ZWAVE Leviton In-Wall Switch (non-dimmable) (DZS15-1LZ)
+						case "001D-1D04-0334":  // ZWAVE Leviton Receptacle (DZR15-1LZ)
+						case "001D-1A02-0334":  // ZWAVE Leviton Plug in Appliance Module (Non-Dimmable) (DZPA1-1LW)
+						case "001D-1902-0334":  // ZWAVE Leviton Plug in Lamp Dimmer Module (DZPD3-1LW)
+						case "0063-4952-3031":  // ZWAVE Jasco In-Wall Smart Outlet (12721)
+						case "0063-4952-3033":  // ZWAVE Jasco In-Wall Smart Switch (Toggle Style) (12727)
+						case "0063-4952-3032":  // ZWAVE Jasco In-Wall Smart Switch (Decora) (12722)
+						case "0063-5052-3031":  // ZWAVE Jasco Plug-in Smart Switch (12719)
+						case "0063-4F50-3031":  // ZWAVE Jasco Plug-in Outdoor Smart Switch (12720)
+						case "0063-4944-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Decora) (12724)
+						case "0063-4944-3032":  // ZWAVE Jasco In-Wall 1000 Watt Smart Dimmer (Decora) (12725)
+						case "0063-4944-3033":  // ZWAVE Jasco In-Wall Smart Dimmer (Toggle Style) (12729)
+						case "0063-5044-3031":  // ZWAVE Jasco Plug-in Smart Dimmer (12718)
+						case "0063-4944-3034":  // ZWAVE Jasco In-Wall Smart Fan Control (12730)
+							timeout = 60
+							timeoutReason = "device type is $deviceTypeName and msr $msr is in the list of heartbeat supported devices"
+							break
+					}
+				}
+				break
+		}
 
-	 try {
-		 switch (device.getTypeName()) {
-			 case "SmartPower Outlet":
-				 timeout = 35
-				 break
-			 case "Z-Wave Switch":
-			 case "Z-Wave Switch Generic":
-			 case "Dimmer Switch":
-			 case "Z-Wave Dimmer Switch Generic":
+		// Check the Data
+		if (timeout == 0 && (deviceTypeName.startsWith('ZigBee') || deviceTypeName.startsWith('ZLL'))) {
+			String dataManufacturer = device.device?.getDataValue("manufacturer")
+			String dataApplication = device.device?.getDataValue("application")
+			String dataModel = device.device?.getDataValue("model")
+			String dataEval = [dataManufacturer, dataApplication, dataModel].toString()
+			switch (dataEval) {
+				case ['OSRAM', '07', 'PAR16 50 TW'].toString():  // UK
+				case ['OSRAM', '03', 'Flex RGBW'].toString():  // UK
+				case ['OSRAM', '15', 'Classic A60 W clear - LIGHTIFY'].toString():  // UK
+				case ['OSRAM', '14', 'Classic B40 TW - LIGHTIFY'].toString():  // UK
+					timeout = 35
+					timeoutReason = "device type is a ZigBee device and product data is recognized ($dataEval)"
+					break
+			}
+		}
 
-				 def msr = "${device?.getZwaveInfo()?.mfr}-${device?.getZwaveInfo()?.prod}-${device?.getZwaveInfo()?.model}"
-				 if (msr != null) {
-					 switch (msr) {
-						 case "001D-1B03-0334":  // ZWAVE Leviton In-Wall Switch (dimmable) (DZMX1-1LZ)
-						 case "001D-1C02-0334":  // ZWAVE Leviton In-Wall Switch (non-dimmable) (DZS15-1LZ)
-						 case "001D-1D04-0334":  // ZWAVE Leviton Receptacle (DZR15-1LZ)
-						 case "001D-1A02-0334":  // ZWAVE Leviton Plug in Appliance Module (Non-Dimmable) (DZPA1-1LW)
-						 case "001D-1902-0334":  // ZWAVE Leviton Plug in Lamp Dimmer Module (DZPD3-1LW)
-						 case "0063-4952-3031":  // ZWAVE Jasco In-Wall Smart Outlet (12721)
-						 case "0063-4952-3033":  // ZWAVE Jasco In-Wall Smart Switch (Toggle Style) (12727)
-						 case "0063-4952-3032":  // ZWAVE Jasco In-Wall Smart Switch (Decora) (12722)
-						 case "0063-5052-3031":  // ZWAVE Jasco Plug-in Smart Switch (12719)
-						 case "0063-4F50-3031":  // ZWAVE Jasco Plug-in Outdoor Smart Switch (12720)
-						 case "0063-4944-3031":  // ZWAVE Jasco In-Wall Smart Dimmer (Decora) (12724)
-						 case "0063-4944-3032":  // ZWAVE Jasco In-Wall 1000 Watt Smart Dimmer (Decora) (12725)
-						 case "0063-4944-3033":  // ZWAVE Jasco In-Wall Smart Dimmer (Toggle Style) (12729)
-						 case "0063-5044-3031":  // ZWAVE Jasco Plug-in Smart Dimmer (12718)
-						 case "0063-4944-3034":  // ZWAVE Jasco In-Wall Smart Fan Control (12730)
-							 timeout = 60
-							 break
-					 }
-				 }
-				 break
-		 }
-
-		 // Check DTHs with ambiguous names in type name
-		 if (timeout == 0) {
-			 switch (device.name) {
-				 case "OSRAM LIGHTIFY LED Tunable White 60W":
-					 timeout = 35
-					 break
-			 }
-
-		 }
-	 } catch (Exception e) {
-		 // Catching blanket exception here, only reason is that getData() above is dependent on privileged access and
-		 // we don't want to break device discovery if platform changes are made that breaks above code.
-		 log.error "Heartbeat device lookup failed: $e"
-	 }
-	 return timeout
- }
+		// Check DTHs with ambiguous names in type name
+		if (timeout == 0) { // Still!
+			switch (device.name) {
+				case "OSRAM LIGHTIFY LED Tunable White 60W": // US
+				case "OSRAM LIGHTIFY LED FLEXIBLE STRIP RGBW": // UK - belt and suspenders
+				case "OSRAM LIGHTIFY LED PAR16 50 Tunable White GU10": // UK - belt and suspenders
+				case "OSRAM LIGHTIFY LED Smart Connected Light": // UK - belt and suspenders
+					timeout = 35
+					timeoutReason = "device.name is recognized to support heartbeat"
+					break
+			}
+		}
+	} catch (Exception e) {
+		// Catching blanket exception here, only reason is that getData() above is dependent on privileged access and
+		// we don't want to break device discovery if platform changes are made that breaks above code.
+		log.error "Heartbeat device lookup failed: $e"
+		timeoutReason = "heartbeat device lookup failed with an exception which has already been logged"
+	}
+	log.debug "Heartbeat timeout for $device.name is $timeout because $timeoutReason"
+	return timeout
+}
 
 /**
  * Determine if a device is online, temporary solution is to check only a restricted number of supported devices
@@ -1088,5 +1117,3 @@ private getDevice(id) {
 	}
 	return device
 }
-
-
