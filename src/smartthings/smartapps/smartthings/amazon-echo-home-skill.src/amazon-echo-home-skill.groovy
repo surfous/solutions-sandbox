@@ -20,9 +20,12 @@ definition(
 )
 
 
-// Version 1.1.12
+// Version 1.1.12.1
 
 // Changelist:
+
+// 1.1.12.1
+// Add Hue heartbeat support
 
 // 1.1.12
 // Add UK heartbeat devices
@@ -928,8 +931,14 @@ def deviceHeartbeatCheck() {
 					}
 				}
 				break
+			case "Hue Bloom":
+			case "Hue Bulb":
+			case "Hue Lux Bulb":
+			case "Hue White Ambiance Bulb":
+				timeout = 30
+				timeoutReason = "device type is a $deviceTypeName which is a supported Hue device"
+				break
 		}
-
 		// Check the Data
 		if (timeout == 0 && (deviceTypeName.startsWith('ZigBee') || deviceTypeName.startsWith('ZLL'))) {
 			String dataManufacturer = device.device?.getDataValue("manufacturer")
