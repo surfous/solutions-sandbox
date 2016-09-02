@@ -928,6 +928,11 @@ def deviceHeartbeatCheck() {
 					}
 				}
 				break
+			case "LIFX Color Bulb":
+			case "LIFX White Bulb":
+				timeout = 30
+				timeoutReason = "device type is a $deviceTypeName which is a LIFX bulb that may or may not do heartbeat"
+				break
 		}
 
 		// Check the Data
