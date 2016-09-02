@@ -930,20 +930,15 @@ def deviceHeartbeatCheck() {
 				break
 		}
 
-		// Check the Data
-		if (timeout == 0 && (deviceTypeName.startsWith('ZigBee') || deviceTypeName.startsWith('ZLL'))) {
+		// Check the device data
+		if (timeout == 0 && deviceTypeName.startsWith('ZLL')) {
 			String dataManufacturer = device.device?.getDataValue("manufacturer")
 			String dataApplication = device.device?.getDataValue("application")
 			String dataModel = device.device?.getDataValue("model")
 			String dataEval = [dataManufacturer, dataApplication, dataModel].toString()
-			switch (dataEval) {
-				case ['OSRAM', '07', 'PAR16 50 TW'].toString():  // UK
-				case ['OSRAM', '03', 'Flex RGBW'].toString():  // UK
-				case ['OSRAM', '15', 'Classic A60 W clear - LIGHTIFY'].toString():  // UK
-				case ['OSRAM', '14', 'Classic B40 TW - LIGHTIFY'].toString():  // UK
-					timeout = 35
-					timeoutReason = "device type is a ZigBee device and product data is recognized ($dataEval)"
-					break
+			if (dataManufacturer == 'OSRAM') {
+				timeout = 35
+				timeoutReason = "device type is a ZigBee ZLL device mfd by OSRAM ($dataEval)"
 			}
 		}
 
