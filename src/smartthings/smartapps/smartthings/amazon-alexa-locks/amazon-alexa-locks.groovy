@@ -1024,6 +1024,60 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
 	}
 }
 
+private def lockPreviousState
+private def lockCurrentState
+
+private Boolean hasLockStateBeenUpdated(device) {
+	if (!lockPreviousState) {
+		recordLockPreviousState(device)
+	}
+	lockCurrentState = recordLockCurrentState(device)
+	if (lockCurrentState?.getDate() > lockPreviousState?.getDate()) {
+		return true
+	}
+	return false
+}
+
+private def recordLockPreviousState(device) {
+	lockPreviousState = device.currentState("lock")
+}
+
+private def recordLockCurrentState(device) {
+	lockCurrentState = device.currentState("lock")
+}
+
+def getLockStateCommand(device, response) {
+	// params.id, params
+	def payload
+	try {
+		recordLockCurrentState()
+		String lockState = deviceState.getStringValue()
+		Date lockStateDate = deviceState.getDate()
+		def lockStateTimestamp = lockStateDate.getTime()
+		payload = [lockState: deviceState, stateTimestamp: lockStateTimestamp]
+		log.debug "getLockState payload: $payload"
+	} catch (Exception ex) {
+		payload = [error: DriverInternalError, payload: []]
+		log.error "getLockState payload: $payload"
+	}
+	response << payload
+}
+
+def setLockStateCommand(device, value, response) {
+	Integer timeoutMs = 19000
+	Integer startTime = now()
+	recordLockPreviousState()
+
+	device.lock()
+
+	while (now() - startTime < timeoutMs && !hasLockStateBeenUpdated(device)) {
+		// all loop operations are in the loop condition!
+	}
+
+	payload = [previousState: [lockState: ]
+
+}
+
 /**
  * Setup heartbeat service that will periodically poll heartbeat supported devices that have not been polled or checked in
  * in a timely manner.
@@ -1059,21 +1113,6 @@ def setupHeartbeat() {
 	toRemove?.each {
 	 	state.heartbeatDevices.remove(it.key)
 	}
-}
-
-def getLockStateCommand(device, response) {
-	// params.id, params.
-	String deviceState = device.currentState()
-	String lockState = deviceState.getStringValue()
-	Date lockStateDate = deviceState.getDate()
-	def lockStateTimestamp = lockStateDate.getTime()
-	def payload = [lockState: deviceState, stateTimestamp: lockStateTimestamp]
-	log.debug "getLockState payload: $payload"
-	response << payload
-}
-
-def setLockStateCommand(device, params.value, response) {
-
 }
 
 /**
