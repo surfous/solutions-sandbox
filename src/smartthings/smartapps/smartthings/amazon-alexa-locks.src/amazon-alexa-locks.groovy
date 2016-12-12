@@ -21,7 +21,7 @@ definition(
 
 // // Uncomment the provisioning URL for the instance this SmartApp services
 
-@Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.2bdbc74f-ce4d-4e2d-b741-326c7ba358f0%3Bstage%3Dlive' // US production instance
+// @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.2bdbc74f-ce4d-4e2d-b741-326c7ba358f0%3Bstage%3Dlive' // US production instance
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Flayla.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.ef172d0e-8408-4120-b0f9-deab2d0572c1%3Bstage%3Dlive' // UK production instance
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.2bdbc74f-ce4d-4e2d-b741-326c7ba358f0%3Bstage%3Ddevelopment' // Custom Skill RC superuser instance
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.e706fbba-7f07-441a-b264-a01175dae7a5%3Bstage%3Ddevelopment' // US Home Skill RC superuser instance
@@ -29,15 +29,21 @@ definition(
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Flayla.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.dc0e3954-91d3-4fa4-b2fe-9f078fbd1cc6%3Bstage%3Ddevelopment' // amazonalexa@smartthings.com UK Home Skill
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.2130fb6c-7e17-41e1-9735-f99602bcddba%3Bstage%3Ddevelopment' // test-prod superuser instance
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.5c7bce44-5049-4d92-b9a3-f8b1f3a5a496%3Bstage%3Ddevelopment' // kshuk - home + custom
-// @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.214e2164-ce6e-42ba-9dc2-88af56c2df80%3Bstage%3Ddevelopment' // kshuk - home only
+@Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.214e2164-ce6e-42ba-9dc2-88af56c2df80%3Bstage%3Ddevelopment' // kshuk - home only
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.ace36df2-76c7-464d-9449-34b746b12f0c%3Bstage%3Ddevelopment' // Alex - home + custom
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.151c9883-5155-4b8a-90b0-81de29fdaeed%3Bstage%3Ddevelopment' // Alex - home only
 // @Field final String AVS_SKILL_PROVISIONING_URL = 'https://www.amazon.com/ap/signin?_encoding=UTF8&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fpitangui.amazon.com%2Fapi%2Fskills%2Fredirect-to-skill-authorization-uri%3FskillId%3Damzn1.ask.skill.14f0c291-7aed-4777-8a91-c3bf075ed3b5%3Bstage%3Ddevelopment' // Igor
 
 
-// Version 1.1.17
+// Version kshuk_dev
 
 // Changelist:
+
+// In development
+// Add lock locking
+
+// 1.1.18
+// Updated thermostat response to HEAT,COOL and AUTO according to Amazon API
 
 // 1.1.17
 // Re-enable Routines
@@ -157,6 +163,10 @@ definition(
 
 import groovy.transform.Field
 
+@Field final String LOCK_LOCKED_STATE = "LOCKED"
+@Field final String LOCK_UNLOCKED_STATE = "UNLOCKED"
+@Field final List VALID_LOCK_STATES = [LOCK_LOCKED_STATE, LOCK_UNLOCKED_STATE]
+
 @Field final List DEVICE_TYPE_NAME_EXCLUSION_LIST = ['Samsung Range']
 @Field final List DEVICE_CAPABILITY_EXCLUSION_LIST = ['Buffered Video Capture', 'Image Capture', 'Video Capture', 'Video Camera']
 
@@ -170,6 +180,7 @@ preferences(oauthPage: "oauthPage") {
 			input "allEnabled", type: "enum", title: "Access to all devices and Routines", options: [[(true): "Yes (Note: At this time, Amazon will only support Routines with lighting and thermostat devices) OR No, I wish to choose from the following:"]], defaultValue: false, multiple: false, required: false
 			input "switches", "capability.switch", title: "Switches", multiple: true, required: false
 			input "thermostats", "capability.thermostat", title: "Thermostats", multiple: true, required: false
+			input "locks", "capability.lock", title: "Locks", multiple: true, required: false
 			input "routinesEnabled", type: "enum", title: "Routines", options: [[(true): "All Routines (Note: At this time, Amazon will only support Routines with lighting and thermostat devices)"]], defaultValue: false, multiple: false, required: false
 		}
 	}
@@ -315,6 +326,7 @@ private def fillDeviceAuthorizationPage() {
 		section("Please choose from the following") {
 			input "switches", "capability.switch", title: "Switches", description: "Tap to select", multiple: true, required: false
 			input "thermostats", "capability.thermostat", title: "Thermostats", multiple: true, required: false
+			input "locks", "capability.lock", title: "locks", multiple: true, required: false
 			input "routinesEnabled", "bool", title: "Routines", required: false, submitOnChange: true
 		}
 	}
@@ -439,6 +451,14 @@ mappings {
 		]
 	}
 
+	// query the nominal state of the appliance
+	path("/query/:id/:command") {
+		action:
+		[
+				GET: "query"
+		]
+	}
+
 	// turn devices on an off
 	path("/control/:id/:command") {
 		action:
@@ -446,6 +466,7 @@ mappings {
 				POST: "control"
 		]
 	}
+
 	// set devices to specific level
 	path("/control/:id/:command/:value") { //
 		action:
@@ -489,10 +510,11 @@ def initialize() {
 def discovery() {
 	// removing isDeviceAllowed filtering for now - This is done on the backend for routines only
 	// def switchList = getEnabledSwitches()?.findAll{isDeviceAllowed(it)}.collect {deviceItem(it)} ?: []
-	def switchList = getEnabledSwitches()?.collect { deviceItem(it) } ?: []
-	def thermostatList = getEnabledThermostats()?.collect { deviceItem(it) } ?: []
+	def applianceList = []
 
-	def applianceList = switchList.plus thermostatList
+	applianceList += getEnabledSwitches()?.collect { deviceItem(it) } ?: []
+	applianceList += getEnabledThermostats()?.collect { deviceItem(it) } ?: []
+	applianceList += getEnabledLocks()?.collect { deviceItem(it) } ?: []
 
 	if (areRoutinesEnabled() || isBlanketAuthorized()) {
 		def routines = location.helloHome?.getPhrases()
@@ -519,6 +541,50 @@ def discovery() {
 }
 
 /**
+ * Queries a device attribute
+ *
+ * Supported commands:
+ * 	-GetLockStateRequest - returns the current value of device.lock for a device with capability.lock
+ *
+ *  return 200 and JSON body with appropriate Amazon COHO error if applicable
+ */
+def query() {
+	def data = request.JSON
+	def response = [:]
+	def command = params.command
+
+	def device = getDevice(params.id)
+
+	log.debug "query, params: ${params}, request: ${data}, devices: ${devices*.id} params.id: ${params?.id} params.command: ${params?.command} params.value: ${params?.value}"
+
+	if (!command) {
+		// TODO There might be a better error code for this in the future
+		response << [error: "DriverInternalError", payload: [:]]
+		log.error "Command missing"
+	} else if (!device) {
+		response << [error: "NoSuchTargetError", payload: [:]]
+		log.error "Device ${params?.id} is not found"
+	} else if (!checkDeviceOnLine(device)) {
+		response << [error: "TargetOfflineError", payload: [:]]
+		log.warn "$device is offline"
+	} else {
+		// Handle command
+		switch (command) {
+			case "GetLockStateRequest":
+				getLockStateCommand(device, response)
+				break;
+
+			default:
+				// TODO There might be a better error code for this in the future
+				log.error "$command is an unknown command"
+				response << [error: "DriverInternalError", payload: [:]]
+		}
+	}
+	return response
+}
+
+
+/**
  * Sends a command to a device
  *
  * Supported commands:
@@ -530,7 +596,7 @@ def discovery() {
  *  -SetTargetTemperatureRequest (expects temp in celcius, within allowed bounds if thermostat supports min/max attributes)
  *  -DecrementTargetTemperatureRequest (expects temp in celcius, within allowed bounds if thermostat supports min/max attributes)
  *  -IncrementTargetTemperatureRequest (expects temp in celcius, within allowed bounds if thermostat supports min/max attributes)
- *
+ *  -SetLockStateRequest (expects target lock value - only LOCKED is supported at present)
  *  return 200 and JSON body with appropriate Amazon COHO error if applicable
  */
 def control() {
@@ -589,6 +655,10 @@ def control() {
 				setTemperatureCommand(device, params.value, changeValue, changeSign, response);
 				break;
 
+			case "SetLockStateRequest":
+				setLockStateCommand(device, params.value, response)
+				break;
+
 			default:
 				// TODO There might be a better error code for this in the future
 				log.error "$command is an unknown command"
@@ -619,6 +689,10 @@ private deviceItem(it) {
 		actions.add "incrementTargetTemperature"
 		actions.add "decrementTargetTemperature"
 		actions.add "setTargetTemperature"
+	}
+	if (it.hasCapability("Lock")) {
+		actions.add "getLockState"
+		actions.add "setLockState"
 	}
 	// Format according to Alexa API
 	it ? [applianceId: it.id, manufacturerName: "SmartThings", modelName: it.name, version: "V1.0", friendlyName: it.displayName, friendlyDescription: createFriendlyText(it), isReachable: checkDeviceOnLine(it), actions: actions] : null
@@ -668,6 +742,8 @@ private createFriendlyText(device) {
 
 	if (device.hasCapability("Thermostat")) {
 		result += "Thermostat"
+	} else if (device.hasCapability("Lock")) {
+		result += "Door Lock"
 	} else if (device.hasCapability("Switch")) {
 		// Strings indicating a device type is a light, see createFriendlyText()
 		// dimmer should be checked for capability later once Amazon supports dimmer, for now call it light
@@ -948,7 +1024,7 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
 				} else if (isTemperatureWithinRange(device, newTemp, response)) {
 					log.debug "set to $newTemp (heat)"
 					newTemp = newTemp.round()
-					response << [targetTemperature: [value: "${toCelsius(newTemp)}"], temperatureMode: [value: "Heating"]]
+					response << [targetTemperature: [value: "${toCelsius(newTemp)}"], temperatureMode: [value: "HEAT"]]
 					device.setHeatingSetpoint(newTemp)
 				}
 				break;
@@ -968,7 +1044,7 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
 					response << [error: "AlreadySetToTargetError", payload: [:]]
 				} else if (isTemperatureWithinRange(device, newTemp, response)) {
 					log.debug "set to $newTemp (cool)"
-					response << [targetTemperature: [value: "${toCelsius(newTemp)}"], temperatureMode: [value: "Cooling"]]
+					response << [targetTemperature: [value: "${toCelsius(newTemp)}"], temperatureMode: [value: "COOL"]]
 					device.setCoolingSetpoint(newTemp)
 				}
 				break;
@@ -988,7 +1064,7 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
 				if (newTemp == device.currentThermostatSetpoint) {
 					response << [error: "AlreadySetToTargetError", payload: [:]]
 				} else if (isTemperatureWithinRange(device, newTemp, response)) {
-					response << [targetTemperature: [value: "${toCelsius(newTemp)}"], temperatureMode: [value: "Auto"]]
+					response << [targetTemperature: [value: "${toCelsius(newTemp)}"], temperatureMode: [value: "AUTO"]]
 					device.setHeatingSetpoint(newTemp)
 					device.setCoolingSetpoint(newTemp)
 				}
@@ -1002,6 +1078,107 @@ def setTemperatureCommand(device, value, changeValue, changeSign, response) {
 				log.error "Unsupported thermostat mode"
 		}
 	}
+}
+
+@Field def lockPreviousState = null
+@Field def lockCurrentState = null
+
+private Boolean hasLockStateBeenUpdated(device) {
+	if (!lockPreviousState) {
+		recordLockPreviousState(device)
+	}
+	lockCurrentState = recordLockCurrentState(device)
+	// log.debug "Previous: ${lockPreviousState?.getDate()}; Current: ${lockCurrentState?.getDate()}"
+	if (lockCurrentState?.getDate() > lockPreviousState?.getDate()) {
+		return true
+	}
+	return false
+}
+
+private def recordLockPreviousState(device) {
+	lockPreviousState = device.currentState("lock")
+}
+
+private def recordLockCurrentState(device) {
+	lockCurrentState = device.currentState("lock")
+}
+
+private String stLockStateToAmazon(lockState) {
+	String amazonLockState
+	lockState = lockState as String
+	if (lockState.toLowerCase().startsWith("locked")) {
+		amazonLockState = LOCK_LOCKED_STATE
+	} else if (lockState.toLowerCase().startsWith("unlocked")) {
+		amazonLockState = LOCK_UNLOCKED_STATE
+	}
+	log.debug "lock state is currently $lockState; returning $amazonLockState"
+	return amazonLockState
+}
+
+def void getLockStateCommand(device, response) {
+	// params.id, params
+	def payload
+	try {
+		recordLockCurrentState(device)
+		String lockState = lockCurrentState.getStringValue()
+		String amazonLockState = stLockStateToAmazon(lockState)
+		Date lockStateDate = lockCurrentState.getDate()
+		def lockStateTimestamp = lockStateDate.getTime()
+		payload = [lockState: [value: amazonLockState], stateTimestamp: [value: lockStateTimestamp]]
+		log.debug "getLockStateCommand returning payload: $payload"
+	} catch (Exception ex) {
+		payload = [error: "DriverInternalError", payload: [:]]
+		log.error "An error occurred in getLockStateCommand: ${ex}. Returning payload: $payload"
+	}
+	response << payload
+}
+
+def void setLockStateCommand(device, value, response) {
+	Integer timeoutMs = 19000
+	Integer startTime = now()
+	def payload
+
+	String lockLabel = device.getLabel()
+
+	recordLockPreviousState(device)
+	String amazonLockPreviousState = stLockStateToAmazon(lockPreviousState.getStringValue())
+
+	log.debug "setLockState to $value"
+	if (!amazonLockPreviousState) {
+		// starting lock state is questionable
+		payload = [error: "UnableToSetValueError", payload: [errorInfo: [code: [value: "HARDWARE_FAILURE"], description: [value: "The $lockLabel is in an unknown state. Please check it before retrying the command."]]]]
+	} else if (VALID_LOCK_STATES.any {it == value}) {
+		// target lock state is valid
+		try {
+			device.lock()
+			Integer elapsedMs = 1
+			Boolean lockStateUpdated = false
+			while (elapsedMs < timeoutMs && !lockStateUpdated) {
+				// update the loop conditions
+				elapsedMs = now() - startTime
+				lockStateUpdated = hasLockStateBeenUpdated(device)
+				// log.debug "elapsed ms: $elapsedMs; updated lock state? $lockStateUpdated" // useful for debugging
+			}
+
+			if (!lockStateUpdated) {
+				log.warn "We didn't get an updated device state before timeout"
+			}
+
+			// prepare the return payload
+			String amazonLockCurrentState = stLockStateToAmazon(lockCurrentState.getStringValue())
+			payload = [previousState: [lockState: [value: amazonLockPreviousState]], lockState: [value: amazonLockCurrentState]]
+			log.info "Returning setLockStateResponse after $elapsedMs ms: $payload"
+		} catch (Exception ex) {
+			// handle and log unexpected error
+			payload = [error: "DriverInternalError", payload: [:]]
+			log.error "An error occurred while trying to set $lockLabel lock attribute to $value: ${ex}. Returning $payload"
+		}
+	} else {
+		// target lock state is not valid
+		payload = [error: "UnsupportedTargetSettingError", payload: [:]]
+		log.error "Device $lockLabel cannot be set to $value: $payload"
+	}
+	response << payload
 }
 
 /**
@@ -1306,6 +1483,20 @@ private getEnabledThermostats() {
 }
 
 /**
+ * Find all locks the user has given Alexa access to, either by selecting specific locks or by selecting
+ * allow all locks.
+ *
+ * @return a list of all locks accessible to Alexa
+ */
+private getEnabledLocks() {
+	if (isBlanketAuthorized()) {
+		return findAllDevicesByCapability("lock")
+	} else {
+		return locks
+	}
+}
+
+/**
  * Find a specific device amongst all the devices the user has given access to in the SmartHome skill.
  *
  * (devices for custom skill will not be returned)
@@ -1322,6 +1513,12 @@ private getDevice(id) {
 	// If device not found, check next input
 	if (!device) {
 		device = getEnabledThermostats()?.find {
+			it.id == id
+		}
+	}
+
+	if (!device) {
+		device = getEnabledLocks()?.find {
 			it.id == id
 		}
 	}
